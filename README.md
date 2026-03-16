@@ -1,8 +1,8 @@
-# ArtGuide
+# ArtSlaw
 
-An AI-powered art tour guide. Paste a link to any museum or gallery exhibition and chat with ArtGuide — your knowledgeable, friendly gallery companion.
+An AI-powered art tour guide. Paste a link to any museum or gallery exhibition and chat with ArtSlaw — your knowledgeable, friendly gallery companion.
 
-ArtGuide uses Claude (`claude-sonnet-4-5`) with live web search to research exhibitions in real time, then explains the artist, the works, the movement, and related artists in an accessible, engaging way.
+ArtSlaw uses Claude (`claude-sonnet-4-5`) with live web search to research exhibitions in real time, then explains the artist, the works, the movement, and related artists in an accessible, engaging way.
 
 ---
 
@@ -62,7 +62,7 @@ The Vite dev server proxies `/api/*` requests to the Express backend automatical
 ## Usage
 
 1. Paste any exhibition URL into the input field (e.g. a MoMA, Tate, or gallery page)
-2. Click **Begin the Tour** — ArtGuide will research the exhibition using live web search
+2. Click **Begin the Tour** — ArtSlaw will research the exhibition using live web search
 3. Ask follow-up questions in the chat: about the artist, the genre, related works, what to look for, and more
 
 ---

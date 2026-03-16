@@ -15,5 +15,5 @@ app.use(express.json());
 app.use('/api/chat', chatRouter);
 
 app.listen(PORT, () => {
-  console.log(`ArtGuide server running at http://localhost:${PORT}`);
+  console.log(`ArtSlaw server running at http://localhost:${PORT}`);
 });

@@ -1,7 +1,7 @@
 {
   "name": "artslaw-server",
   "version": "1.0.0",
-  "description": "ArtGuide AI chatbot backend",
+  "description": "ArtSlaw AI chatbot backend",
   "main": "dist/index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",

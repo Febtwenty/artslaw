@@ -1,7 +1,7 @@
 {
   "name": "artslaw-client",
   "version": "1.0.0",
-  "description": "ArtGuide AI chatbot frontend",
+  "description": "ArtSlaw AI chatbot frontend",
   "type": "module",
   "scripts": {
     "dev": "vite",

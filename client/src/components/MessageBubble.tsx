@@ -23,7 +23,7 @@ export default function MessageBubble({ message }: Props) {
 
   return (
     <div className="flex gap-3 items-start">
-      {/* ArtGuide avatar */}
+      {/* ArtSlaw avatar */}
       <div className="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center mt-0.5">
         <span className="text-indigo-600 text-xs font-semibold">A</span>
       </div>
@@ -31,7 +31,7 @@ export default function MessageBubble({ message }: Props) {
       {/* Message content */}
       <div className="flex-1 min-w-0">
         <span className="text-indigo-500 text-xs font-medium block mb-2">
-          ArtGuide
+          ArtSlaw
         </span>
         <div className="prose-art text-slate-700 text-sm">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>

@@ -181,7 +181,7 @@ function App() {
       <header className="flex-shrink-0 border-b border-slate-200 bg-white px-6 py-4 flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold text-slate-900">
-            ArtGuide
+            ArtSlaw
           </h1>
           <p className="text-slate-400 text-xs mt-0.5">
             Your personal gallery companion

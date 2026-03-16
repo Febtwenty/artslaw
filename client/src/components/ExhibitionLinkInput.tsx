@@ -29,7 +29,7 @@ export default function ExhibitionLinkInput({ onStart }: Props) {
       </h2>
 
       <p className="text-slate-500 text-base max-w-md leading-relaxed mb-10">
-        Paste a link to any gallery or museum exhibition. ArtGuide will research it and walk you through the artist, the works, and the ideas.
+        Paste a link to any gallery or museum exhibition. ArtSlaw will research it and walk you through the artist, the works, and the ideas.
       </p>
 
       <form onSubmit={handleSubmit} className="w-full max-w-xl">
