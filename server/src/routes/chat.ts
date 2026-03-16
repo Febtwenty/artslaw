@@ -3,6 +3,34 @@ import Anthropic from '@anthropic-ai/sdk';
 
 const router = Router();
 
+async function fetchPageContent(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; ArtGuide/1.0)' },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return null;
+    const html = await res.text();
+
+    const text = html
+      .replace(/<script[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[\s\S]*?<\/style>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+
+    return text.length > 3000 ? text.slice(0, 3000) + '…' : text;
+  } catch {
+    return null;
+  }
+}
+
 // Instantiated lazily so dotenv in index.ts has time to populate process.env
 // before the Anthropic client reads ANTHROPIC_API_KEY.
 let _anthropic: Anthropic | null = null;
@@ -50,13 +78,19 @@ router.post('/', async (req: Request, res: Response) => {
     }));
 
     if (isInitialRequest) {
-      // Inject the URL into the first user message
+      // Fetch the exhibition page directly so Claude has its actual content,
+      // not just whatever a search engine happens to have indexed.
+      const pageContent = await fetchPageContent(exhibitionUrl!);
+
       const firstUserIdx = apiMessages.findIndex((m) => m.role === 'user');
       if (firstUserIdx !== -1) {
         const original = apiMessages[firstUserIdx].content as string;
+        const pageSection = pageContent
+          ? `\n\nHere is the text content of the exhibition page:\n"""\n${pageContent}\n"""`
+          : '';
         apiMessages[firstUserIdx] = {
           role: 'user',
-          content: `I'm looking at this exhibition: ${exhibitionUrl}\n\n${original}`,
+          content: `I'm looking at this exhibition: ${exhibitionUrl}${pageSection}\n\n${original}`,
         };
       }
     } else {
