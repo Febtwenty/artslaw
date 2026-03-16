@@ -16,20 +16,20 @@ export default function ExhibitionLinkInput({ onStart }: Props) {
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
-      {/* Ornamental top rule */}
-      <div className="flex items-center gap-4 mb-10 w-full max-w-sm">
-        <div className="flex-1 h-px bg-gradient-to-r from-transparent to-amber-800/50" />
-        <span className="text-amber-700 text-xs tracking-[0.3em] uppercase font-light">ArtGuide</span>
-        <div className="flex-1 h-px bg-gradient-to-l from-transparent to-amber-800/50" />
+      {/* Icon */}
+      <div className="w-14 h-14 rounded-2xl bg-indigo-600 flex items-center justify-center mb-8 shadow-sm">
+        <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+        </svg>
       </div>
 
-      <h2 className="font-serif text-4xl md:text-5xl font-semibold text-amber-50 leading-tight mb-5">
+      <h2 className="text-3xl md:text-4xl font-semibold text-slate-900 leading-tight mb-4">
         Discover the Story<br />
-        <em className="font-normal text-amber-200">Behind the Art</em>
+        <span className="text-indigo-600">Behind the Art</span>
       </h2>
 
-      <p className="text-stone-400 text-base font-light max-w-md leading-relaxed mb-10">
-        Paste a link to any gallery or museum exhibition. I'll research it and guide you through the artist, the works, and the ideas — like a personal gallery tour.
+      <p className="text-slate-500 text-base max-w-md leading-relaxed mb-10">
+        Paste a link to any gallery or museum exhibition. ArtGuide will research it and walk you through the artist, the works, and the ideas.
       </p>
 
       <form onSubmit={handleSubmit} className="w-full max-w-xl">
@@ -40,11 +40,11 @@ export default function ExhibitionLinkInput({ onStart }: Props) {
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://www.moma.org/exhibitions/..."
-              className="w-full bg-stone-900 border border-stone-700 rounded-xl px-4 py-3.5 pr-12 text-stone-100 placeholder-stone-600 focus:outline-none focus:border-amber-700 focus:ring-1 focus:ring-amber-700/50 transition-all font-light text-sm"
+              className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3.5 pr-12 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all text-sm shadow-sm"
             />
             {/* Link icon */}
             <svg
-              className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-600"
+              className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -61,23 +61,16 @@ export default function ExhibitionLinkInput({ onStart }: Props) {
           <button
             type="submit"
             disabled={!url.trim()}
-            className="w-full bg-amber-800 hover:bg-amber-700 disabled:bg-stone-800 disabled:text-stone-600 disabled:cursor-not-allowed text-amber-50 rounded-xl px-6 py-3.5 font-medium transition-all tracking-wide text-sm"
+            className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white rounded-xl px-6 py-3.5 font-medium transition-all text-sm shadow-sm"
           >
             Begin the Tour
           </button>
         </div>
 
-        <p className="text-stone-600 text-xs mt-4 font-light">
+        <p className="text-slate-400 text-xs mt-4">
           Works with museum sites, gallery pages, or any exhibition URL
         </p>
       </form>
-
-      {/* Ornamental bottom rule */}
-      <div className="flex items-center gap-4 mt-12 w-full max-w-sm">
-        <div className="flex-1 h-px bg-gradient-to-r from-transparent to-stone-800" />
-        <div className="w-1 h-1 rounded-full bg-stone-700" />
-        <div className="flex-1 h-px bg-gradient-to-l from-transparent to-stone-800" />
-      </div>
     </div>
   );
 }

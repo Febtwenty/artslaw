@@ -37,7 +37,7 @@ export default function InputBar({ onSend, isLoading }: Props) {
   const canSend = input.trim().length > 0 && !isLoading;
 
   return (
-    <div className="flex-shrink-0 border-t border-stone-800/60 pt-4 mt-2">
+    <div className="flex-shrink-0 border-t border-slate-200 bg-white pt-4 mt-2">
       {/* Suggestion chips (shown when input is empty) */}
       {input === '' && !isLoading && (
         <div className="flex flex-wrap gap-2 mb-3">
@@ -53,7 +53,7 @@ export default function InputBar({ onSend, isLoading }: Props) {
                 setInput(suggestion);
                 textareaRef.current?.focus();
               }}
-              className="text-xs text-stone-500 border border-stone-800 rounded-full px-3 py-1 hover:border-amber-800/50 hover:text-stone-400 transition-colors font-light"
+              className="text-xs text-slate-500 border border-slate-200 rounded-full px-3 py-1 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
             >
               {suggestion}
             </button>
@@ -71,7 +71,7 @@ export default function InputBar({ onSend, isLoading }: Props) {
           placeholder="Ask about the artist, the works, or anything you're curious about…"
           rows={1}
           disabled={isLoading}
-          className="flex-1 bg-stone-900 border border-stone-700 rounded-xl px-4 py-3 text-stone-100 placeholder-stone-600 focus:outline-none focus:border-amber-800 focus:ring-1 focus:ring-amber-800/40 transition-all font-light text-sm resize-none disabled:opacity-40 min-h-[46px]"
+          className="flex-1 bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all text-sm resize-none disabled:opacity-40 min-h-[46px] shadow-sm"
           style={{ lineHeight: '1.5' }}
         />
 
@@ -79,10 +79,10 @@ export default function InputBar({ onSend, isLoading }: Props) {
           onClick={handleSend}
           disabled={!canSend}
           aria-label="Send message"
-          className="flex-shrink-0 w-11 h-11 flex items-center justify-center rounded-xl bg-amber-800 hover:bg-amber-700 disabled:bg-stone-800 disabled:cursor-not-allowed transition-all"
+          className="flex-shrink-0 w-11 h-11 flex items-center justify-center rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 disabled:cursor-not-allowed transition-all shadow-sm"
         >
           {isLoading ? (
-            <svg className="w-4 h-4 text-stone-500 animate-spin" fill="none" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-slate-400 animate-spin" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path
                 className="opacity-75"
@@ -92,7 +92,7 @@ export default function InputBar({ onSend, isLoading }: Props) {
             </svg>
           ) : (
             <svg
-              className={`w-4 h-4 transition-colors ${canSend ? 'text-amber-100' : 'text-stone-600'}`}
+              className={`w-4 h-4 transition-colors ${canSend ? 'text-white' : 'text-slate-400'}`}
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -104,7 +104,7 @@ export default function InputBar({ onSend, isLoading }: Props) {
         </button>
       </div>
 
-      <p className="text-stone-700 text-xs mt-2 font-light text-center">
+      <p className="text-slate-400 text-xs mt-2 text-center">
         Enter to send · Shift+Enter for new line
       </p>
     </div>
