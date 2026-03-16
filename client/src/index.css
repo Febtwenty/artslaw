@@ -1,0 +1,87 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background-color: rgb(12 10 9); /* stone-950 */
+    color: rgb(231 229 228); /* stone-100 */
+  }
+}
+
+/* Markdown content styles for assistant messages */
+.prose-art h1,
+.prose-art h2,
+.prose-art h3 {
+  font-family: 'Playfair Display', Georgia, serif;
+  color: rgb(254 243 199); /* amber-100 */
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.prose-art h1 { font-size: 1.2rem; }
+.prose-art h2 { font-size: 1.1rem; }
+.prose-art h3 { font-size: 1rem; }
+
+.prose-art p {
+  margin-bottom: 0.75rem;
+  line-height: 1.7;
+}
+
+.prose-art ul,
+.prose-art ol {
+  margin: 0.5rem 0 0.75rem 1.25rem;
+}
+
+.prose-art li {
+  margin-bottom: 0.25rem;
+  line-height: 1.6;
+}
+
+.prose-art ul li { list-style-type: disc; }
+.prose-art ol li { list-style-type: decimal; }
+
+.prose-art strong {
+  color: rgb(254 243 199); /* amber-100 */
+  font-weight: 500;
+}
+
+.prose-art em {
+  color: rgb(214 211 209); /* stone-300 */
+  font-style: italic;
+}
+
+.prose-art a {
+  color: rgb(251 191 36); /* amber-400 */
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.prose-art blockquote {
+  border-left: 2px solid rgb(180 83 9); /* amber-700 */
+  padding-left: 0.75rem;
+  color: rgb(168 162 158); /* stone-400 */
+  font-style: italic;
+  margin: 0.75rem 0;
+}
+
+.prose-art code {
+  background: rgb(41 37 36); /* stone-800 */
+  padding: 0.1rem 0.3rem;
+  border-radius: 0.25rem;
+  font-size: 0.85em;
+}
+
+.prose-art hr {
+  border-color: rgb(68 64 60); /* stone-700 */
+  margin: 1rem 0;
+}
