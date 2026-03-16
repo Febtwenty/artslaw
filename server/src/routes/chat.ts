@@ -15,8 +15,12 @@ function getClient(): Anthropic {
 
 const SYSTEM_PROMPT = `You are ArtGuide, a friendly and knowledgeable art tour guide. When a user provides a link to an art exhibition, use the web search tool to research it thoroughly. Then explain the artist, the exhibition, the genre, and related artists in a warm, accessible, and engaging way — as if giving a personal gallery tour to someone with no art background. Always be curious, enthusiastic, and educational. Avoid jargon unless you explain it. Suggest what to look for and why it matters.`;
 
-const MODEL = 'claude-sonnet-4-5';
-const MAX_TOKENS = 3000;
+const MODEL = 'claude-haiku-4-5';
+// Initial research (with web search) can be longer; follow-ups are short Q&A
+const INITIAL_MAX_TOKENS = 1500;
+const FOLLOWUP_MAX_TOKENS = 800;
+// How many messages to send on follow-ups (prevents history ballooning)
+const MAX_HISTORY_MESSAGES = 6;
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -37,13 +41,16 @@ router.post('/', async (req: Request, res: Response) => {
       return;
     }
 
-    // Build Anthropic message params, injecting the exhibition URL into the first user message
+    const isInitialRequest = Boolean(exhibitionUrl);
+
+    // Build message list for the API call
     let apiMessages: Anthropic.MessageParam[] = messages.map((m) => ({
       role: m.role,
       content: m.content,
     }));
 
-    if (exhibitionUrl) {
+    if (isInitialRequest) {
+      // Inject the URL into the first user message
       const firstUserIdx = apiMessages.findIndex((m) => m.role === 'user');
       if (firstUserIdx !== -1) {
         const original = apiMessages[firstUserIdx].content as string;
@@ -52,22 +59,29 @@ router.post('/', async (req: Request, res: Response) => {
           content: `I'm looking at this exhibition: ${exhibitionUrl}\n\n${original}`,
         };
       }
+    } else {
+      // Follow-up: trim history to the last MAX_HISTORY_MESSAGES to keep
+      // input tokens low. Always keep at least the most recent user message.
+      if (apiMessages.length > MAX_HISTORY_MESSAGES) {
+        apiMessages = apiMessages.slice(-MAX_HISTORY_MESSAGES);
+      }
     }
+
+    // Only use web search on the initial request — it adds significant token
+    // overhead that follow-up Q&A doesn't need.
+    const tools: Anthropic.Messages.WebSearchTool20250305[] = isInitialRequest
+      ? [{ type: 'web_search_20250305', name: 'web_search' } as Anthropic.Messages.WebSearchTool20250305]
+      : [];
 
     const callParams = {
       model: MODEL,
-      max_tokens: MAX_TOKENS,
+      max_tokens: isInitialRequest ? INITIAL_MAX_TOKENS : FOLLOWUP_MAX_TOKENS,
       system: SYSTEM_PROMPT,
-      tools: [
-        {
-          type: 'web_search_20250305',
-          name: 'web_search',
-        } as Anthropic.Messages.WebSearchTool20250305,
-      ],
+      ...(tools.length > 0 ? { tools } : {}),
     };
 
-    // web_search_20250305 is a server-side tool — Anthropic handles searches
-    // internally within the API call, so a single call is normally sufficient.
+    // web_search_20250305 is server-side — Anthropic handles searches
+    // internally, so a single call is normally sufficient.
     let response = await getClient().messages.create({
       ...callParams,
       messages: apiMessages,
