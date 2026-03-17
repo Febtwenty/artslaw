@@ -1,0 +1,11 @@
+{
+  "name": "artslaw",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "npm ci --prefix client && npm ci --prefix server && npm run build --prefix client && npm run build --prefix server",
+    "start": "node server/dist/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
