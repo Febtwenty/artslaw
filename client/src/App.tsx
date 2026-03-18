@@ -60,6 +60,7 @@ function App() {
     () => loadConversationsFromStorage()
   );
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   if (!isLoaded) {
     return (
@@ -208,14 +209,22 @@ function App() {
   return (
     <div className="h-full flex flex-col bg-slate-50">
       {/* Header */}
-      <header className="flex-shrink-0 border-b border-slate-200 bg-white px-6 py-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-slate-900">
-            ArtSlaw
-          </h1>
-          <p className="text-slate-400 text-xs mt-0.5">
-            Your personal gallery companion
-          </p>
+      <header className="flex-shrink-0 border-b border-slate-200 bg-white px-4 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          {/* Hamburger — mobile only */}
+          <button
+            className="md:hidden p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Open menu"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+              <path fillRule="evenodd" d="M3 6.75A.75.75 0 0 1 3.75 6h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 6.75ZM3 12a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 12Zm0 5.25a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75a.75.75 0 0 1-.75-.75Z" clipRule="evenodd" />
+            </svg>
+          </button>
+          <div>
+            <h1 className="text-xl font-semibold text-slate-900">ArtSlaw</h1>
+            <p className="text-slate-400 text-xs mt-0.5">Your personal gallery companion</p>
+          </div>
         </div>
         <UserButton />
       </header>
@@ -223,10 +232,12 @@ function App() {
       {/* Body row: sidebar + content */}
       <div className="flex-1 flex overflow-hidden">
         <Sidebar
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
           conversations={conversations}
           activeId={activeConversationId}
-          onSelect={loadConversation}
-          onNew={startNewTour}
+          onSelect={(id) => { loadConversation(id); setSidebarOpen(false); }}
+          onNew={() => { startNewTour(); setSidebarOpen(false); }}
           onDelete={deleteConversation}
         />
 

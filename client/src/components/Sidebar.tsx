@@ -1,6 +1,8 @@
 import { Conversation } from '../App';
 
 interface Props {
+  isOpen: boolean;
+  onClose: () => void;
   conversations: Conversation[];
   activeId: string | null;
   onSelect: (id: string) => void;
@@ -20,17 +22,41 @@ function formatDate(ts: number): string {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-export default function Sidebar({ conversations, activeId, onSelect, onNew, onDelete }: Props) {
+export default function Sidebar({ isOpen, onClose, conversations, activeId, onSelect, onNew, onDelete }: Props) {
   return (
-    <div className="w-56 flex-shrink-0 bg-white border-r border-slate-200 flex flex-col">
-      {/* New Tour button */}
-      <div className="flex-shrink-0 p-3">
+    <>
+      {/* Mobile backdrop */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/30 md:hidden"
+          onClick={onClose}
+        />
+      )}
+
+      {/* Sidebar panel */}
+      <div className={[
+        'fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 flex flex-col',
+        'transform transition-transform duration-200 ease-in-out',
+        isOpen ? 'translate-x-0' : '-translate-x-full',
+        'md:static md:inset-auto md:z-auto md:w-56 md:flex-shrink-0 md:translate-x-0',
+      ].join(' ')}>
+      {/* Mobile header row with close button */}
+      <div className="flex-shrink-0 flex items-center justify-between p-3 md:block">
         <button
           onClick={onNew}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium transition-colors shadow-sm"
+          className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium transition-colors shadow-sm"
         >
           <span className="text-base leading-none">+</span>
           New Tour
+        </button>
+        <button
+          onClick={onClose}
+          className="md:hidden ml-2 p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+          aria-label="Close menu"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+            <path fillRule="evenodd" d="M5.47 5.47a.75.75 0 0 1 1.06 0L12 10.94l5.47-5.47a.75.75 0 1 1 1.06 1.06L13.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+          </svg>
         </button>
       </div>
 
@@ -88,5 +114,6 @@ export default function Sidebar({ conversations, activeId, onSelect, onNew, onDe
         )}
       </div>
     </div>
+    </>
   );
 }

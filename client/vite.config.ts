@@ -2,25 +2,36 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import type { Plugin } from 'vite';
 
-// Silences the Firefox "Source map error: JSON.parse" warning caused by the
-// React DevTools browser extension injecting installHook.js with a
-// sourceMappingURL that the dev server can't resolve.
-const silenceReactDevtoolsSourceMapWarning: Plugin = {
-  name: 'silence-react-devtools-source-map-warning',
+// Silences Firefox "Source map error: No sources are declared" warnings from
+// React DevTools extension files and Vite pre-bundled dep source maps that
+// have empty sources arrays.
+const emptySourceMap = '{"version":3,"sources":[""],"sourcesContent":[""],"mappings":"","names":[]}';
+const devtoolsMapPattern = /\/(installHook|react_devtools_backend_compact)\.js\.map$/;
+
+const silenceSourceMapWarnings: Plugin = {
+  name: 'silence-source-map-warnings',
   configureServer(server) {
     server.middlewares.use((req, res, next) => {
-      if ((req as { url?: string }).url === '/installHook.js.map') {
+      const url = (req as { url?: string }).url ?? '';
+      if (devtoolsMapPattern.test(url)) {
         res.setHeader('Content-Type', 'application/json');
-        res.end('{"version":3,"sources":[],"mappings":""}');
+        res.end(emptySourceMap);
         return;
       }
       next();
     });
   },
+  // Suppress "No sources declared" for Vite pre-bundled dep source maps
+  enforce: 'pre',
 };
 
 export default defineConfig({
-  plugins: [react(), silenceReactDevtoolsSourceMapWarning],
+  plugins: [react(), silenceSourceMapWarnings],
+  optimizeDeps: {
+    esbuildOptions: {
+      sourcemap: false,
+    },
+  },
   server: {
     proxy: {
       '/api': {
