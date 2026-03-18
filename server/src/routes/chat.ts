@@ -62,6 +62,12 @@ interface ChatRequestBody {
 
 router.post('/', async (req: Request, res: Response) => {
   try {
+    const authObject = (req as any).auth?.();
+    if (!authObject?.userId) {
+      res.status(401).json({ error: 'Authentication required.' });
+      return;
+    }
+
     const { messages, exhibitionUrl } = req.body as ChatRequestBody;
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {

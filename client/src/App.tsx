@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useAuth, SignIn, UserButton } from '@clerk/react';
 import ChatWindow from './components/ChatWindow';
 import InputBar from './components/InputBar';
 import ExhibitionLinkInput from './components/ExhibitionLinkInput';
@@ -49,6 +50,7 @@ function titleFromUrl(url: string): string {
 }
 
 function App() {
+  const { isLoaded, isSignedIn, getToken } = useAuth();
   const [exhibitionUrl, setExhibitionUrl] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -59,23 +61,51 @@ function App() {
   );
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
 
+  if (!isLoaded) {
+    return (
+      <div className="h-full flex items-center justify-center bg-slate-50">
+        <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!isSignedIn) {
+    return (
+      <div className="h-full flex items-center justify-center bg-slate-50">
+        <SignIn />
+      </div>
+    );
+  }
+
   const sendToApi = async (
     nextMessages: Message[],
     url?: string
   ): Promise<string> => {
+    const token = await getToken();
     const response = await fetch('/api/chat', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
       body: JSON.stringify({
         messages: nextMessages,
         ...(url ? { exhibitionUrl: url } : {}),
       }),
     });
 
-    const data = await response.json();
+    let data: Record<string, unknown> = {};
+    try {
+      data = await response.json();
+    } catch {
+      if (response.status === 401) {
+        throw new Error('Authentication failed. Please sign out and sign in again.');
+      }
+      throw new Error(`Server error (${response.status}). Please try again.`);
+    }
 
     if (!response.ok) {
-      throw new Error(data.error ?? 'Something went wrong. Please try again.');
+      throw new Error((data.error as string) ?? 'Something went wrong. Please try again.');
     }
 
     return data.content as string;
@@ -187,6 +217,7 @@ function App() {
             Your personal gallery companion
           </p>
         </div>
+        <UserButton />
       </header>
 
       {/* Body row: sidebar + content */}
