@@ -16,6 +16,14 @@ app.use(clerkMiddleware());
 
 app.use('/api/chat', chatRouter);
 
+// Serve valid empty source maps for React DevTools extension files so Firefox
+// doesn't throw a JSON.parse error when the SPA catch-all returns index.html.
+const emptySourceMap = JSON.stringify({ version: 3, sources: [''], sourcesContent: [''], mappings: '', names: [] });
+app.get(/\/(installHook|react_devtools_backend_compact)\.js\.map$/, (_req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(emptySourceMap);
+});
+
 // Serve the built React app in production
 const clientDist = path.resolve(__dirname, '../../client/dist');
 app.use(express.static(clientDist));
