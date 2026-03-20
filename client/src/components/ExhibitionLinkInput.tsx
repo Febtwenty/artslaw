@@ -40,7 +40,7 @@ export default function ExhibitionLinkInput({ onStart }: Props) {
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://www.moma.org/exhibitions/..."
-              className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3.5 pr-12 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all text-sm shadow-sm"
+              className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3.5 pr-12 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all text-base md:text-sm shadow-sm"
             />
             {/* Link icon */}
             <svg

@@ -71,7 +71,7 @@ export default function InputBar({ onSend, isLoading }: Props) {
           placeholder="Ask about the artist, the works, or anything you're curious about…"
           rows={1}
           disabled={isLoading}
-          className="flex-1 bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all text-sm resize-none disabled:opacity-40 min-h-[46px] shadow-sm"
+          className="flex-1 bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all text-base md:text-sm resize-none disabled:opacity-40 min-h-[46px] shadow-sm"
           style={{ lineHeight: '1.5' }}
         />
 
