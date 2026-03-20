@@ -54,6 +54,7 @@ function App() {
   const [exhibitionUrl, setExhibitionUrl] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasStarted, setHasStarted] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>(
@@ -80,7 +81,8 @@ function App() {
 
   const sendToApi = async (
     nextMessages: Message[],
-    url?: string
+    url?: string,
+    onChunk?: (accumulated: string) => void
   ): Promise<string> => {
     const token = await getToken();
     const response = await fetch('/api/chat', {
@@ -95,21 +97,40 @@ function App() {
       }),
     });
 
-    let data: Record<string, unknown> = {};
-    try {
-      data = await response.json();
-    } catch {
+    if (!response.ok) {
+      let errorMessage = `Server error (${response.status}). Please try again.`;
+      try {
+        const data = await response.json();
+        if (data.error) errorMessage = data.error;
+      } catch {}
       if (response.status === 401) {
         throw new Error('Authentication failed. Please sign out and sign in again.');
       }
-      throw new Error(`Server error (${response.status}). Please try again.`);
+      throw new Error(errorMessage);
     }
 
-    if (!response.ok) {
-      throw new Error((data.error as string) ?? 'Something went wrong. Please try again.');
+    if (!response.body) {
+      throw new Error('No response body received.');
     }
 
-    return data.content as string;
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value, { stream: true });
+      fullText += chunk;
+      // Switch from loading dots to streaming text on first chunk
+      if (fullText.length > 0) {
+        setIsLoading(false);
+        setIsStreaming(true);
+      }
+      onChunk?.(fullText);
+    }
+
+    return fullText || "I wasn't able to complete the research. Please try again.";
   };
 
   const startConversation = async (url: string) => {
@@ -124,10 +145,13 @@ function App() {
     setHasStarted(true);
     setMessages([userMessage]);
     setIsLoading(true);
+    setIsStreaming(false);
     setError(null);
 
     try {
-      const reply = await sendToApi([userMessage], url);
+      const reply = await sendToApi([userMessage], url, (accumulated) => {
+        setMessages([userMessage, { role: 'assistant', content: accumulated }]);
+      });
       const finalMessages: Message[] = [userMessage, { role: 'assistant', content: reply }];
       setMessages(finalMessages);
 
@@ -146,6 +170,7 @@ function App() {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
     } finally {
       setIsLoading(false);
+      setIsStreaming(false);
     }
   };
 
@@ -155,10 +180,13 @@ function App() {
 
     setMessages(nextMessages);
     setIsLoading(true);
+    setIsStreaming(false);
     setError(null);
 
     try {
-      const reply = await sendToApi(nextMessages);
+      const reply = await sendToApi(nextMessages, undefined, (accumulated) => {
+        setMessages([...nextMessages, { role: 'assistant', content: accumulated }]);
+      });
       const finalMessages: Message[] = [...nextMessages, { role: 'assistant', content: reply }];
       setMessages(finalMessages);
 
@@ -175,6 +203,7 @@ function App() {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
     } finally {
       setIsLoading(false);
+      setIsStreaming(false);
     }
   };
 
@@ -195,6 +224,7 @@ function App() {
     setHasStarted(true);
     setError(null);
     setIsLoading(false);
+    setIsStreaming(false);
   };
 
   const deleteConversation = (id: string) => {
@@ -266,7 +296,7 @@ function App() {
                   </div>
                 )}
 
-                <InputBar onSend={sendMessage} isLoading={isLoading} />
+                <InputBar onSend={sendMessage} isLoading={isLoading || isStreaming} />
               </div>
             )}
           </div>

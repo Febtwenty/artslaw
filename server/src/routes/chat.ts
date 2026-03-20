@@ -61,6 +61,7 @@ interface ChatRequestBody {
 }
 
 router.post('/', async (req: Request, res: Response) => {
+  let streamStarted = false;
   try {
     const authObject = (req as any).auth?.();
     if (!authObject?.userId) {
@@ -120,41 +121,46 @@ router.post('/', async (req: Request, res: Response) => {
       ...(tools.length > 0 ? { tools } : {}),
     };
 
-    // web_search_20250305 is server-side — Anthropic handles searches
-    // internally, so a single call is normally sufficient.
-    let response = await getClient().messages.create({
-      ...callParams,
-      messages: apiMessages,
-    });
+    // Switch to streaming mode
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('Transfer-Encoding', 'chunked');
+    res.setHeader('Cache-Control', 'no-cache');
+    streamStarted = true;
 
-    // pause_turn means the API's internal search loop hit its iteration cap.
-    // Append what we got and make exactly one more call to let it finish.
-    if (response.stop_reason === 'pause_turn') {
-      apiMessages.push({ role: 'assistant', content: response.content });
-      response = await getClient().messages.create({
-        ...callParams,
-        messages: apiMessages,
-      });
+    const runStream = async (msgs: Anthropic.MessageParam[]) => {
+      const stream = getClient().messages.stream({ ...callParams, messages: msgs });
+      for await (const event of stream) {
+        if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+          res.write(event.delta.text);
+        }
+      }
+      return stream.finalMessage();
+    };
+
+    // web_search_20250305 is server-side — Anthropic handles searches internally.
+    // pause_turn means the internal search loop hit its iteration cap; resume once.
+    const finalMessage = await runStream(apiMessages);
+    if (finalMessage.stop_reason === 'pause_turn') {
+      apiMessages.push({ role: 'assistant', content: finalMessage.content });
+      await runStream(apiMessages);
     }
 
-    const finalText =
-      response.content
-        .filter((block): block is Anthropic.TextBlock => block.type === 'text')
-        .map((block) => block.text)
-        .join('\n') || "I wasn't able to complete the research. Please try again.";
-
-    res.json({ role: 'assistant', content: finalText });
+    res.end();
   } catch (error) {
     console.error('Chat error:', error);
 
-    if (error instanceof Anthropic.AuthenticationError) {
-      res.status(401).json({ error: 'Invalid API key. Check your ANTHROPIC_API_KEY.' });
-    } else if (error instanceof Anthropic.RateLimitError) {
-      res.status(429).json({ error: 'Rate limited. Please wait a moment and try again.' });
-    } else if (error instanceof Anthropic.APIError) {
-      res.status(500).json({ error: `API error: ${error.message}` });
+    if (!streamStarted) {
+      if (error instanceof Anthropic.AuthenticationError) {
+        res.status(401).json({ error: 'Invalid API key. Check your ANTHROPIC_API_KEY.' });
+      } else if (error instanceof Anthropic.RateLimitError) {
+        res.status(429).json({ error: 'Rate limited. Please wait a moment and try again.' });
+      } else if (error instanceof Anthropic.APIError) {
+        res.status(500).json({ error: `API error: ${error.message}` });
+      } else {
+        res.status(500).json({ error: 'An unexpected error occurred.' });
+      }
     } else {
-      res.status(500).json({ error: 'An unexpected error occurred.' });
+      res.end();
     }
   }
 });
