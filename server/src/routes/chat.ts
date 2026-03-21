@@ -121,10 +121,14 @@ router.post('/', async (req: Request, res: Response) => {
       ...(tools.length > 0 ? { tools } : {}),
     };
 
-    // Switch to streaming mode
+    // Switch to streaming mode.
+    // X-Accel-Buffering: no disables nginx buffering on Render so chunks
+    // are forwarded to the client immediately instead of being held until
+    // the full response is ready.
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     res.setHeader('Transfer-Encoding', 'chunked');
     res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('X-Accel-Buffering', 'no');
     streamStarted = true;
 
     const runStream = async (msgs: Anthropic.MessageParam[]) => {
@@ -132,6 +136,8 @@ router.post('/', async (req: Request, res: Response) => {
       for await (const event of stream) {
         if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
           res.write(event.delta.text);
+          // flush() pushes the chunk through any intermediate buffers immediately
+          (res as any).flush?.();
         }
       }
       return stream.finalMessage();
