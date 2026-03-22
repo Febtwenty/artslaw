@@ -38,7 +38,7 @@ export default function InputBar({ onSend, isLoading }: Props) {
 
   return (
     <div className="flex-shrink-0 py-2">
-      <div className="flex flex-col rounded-2xl border border-slate-300 shadow-sm focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all bg-white">
+      <div className="flex flex-col rounded-2xl border border-slate-300 dark:border-slate-600 shadow-sm focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all bg-white dark:bg-slate-800">
         <textarea
           ref={textareaRef}
           value={input}
@@ -48,7 +48,7 @@ export default function InputBar({ onSend, isLoading }: Props) {
           placeholder="Answer ArtSlaw"
           rows={1}
           disabled={isLoading}
-          className="flex-1 bg-transparent px-4 pt-3 pb-1 text-slate-900 placeholder-slate-400 focus:outline-none text-base md:text-sm resize-none disabled:opacity-40"
+          className="flex-1 bg-transparent px-4 pt-3 pb-1 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none text-base md:text-sm resize-none disabled:opacity-40"
           style={{ lineHeight: '1.5' }}
         />
 
@@ -57,7 +57,7 @@ export default function InputBar({ onSend, isLoading }: Props) {
             onClick={handleSend}
             disabled={!canSend}
             aria-label="Send message"
-            className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 disabled:cursor-not-allowed transition-all"
+            className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 dark:disabled:bg-slate-700 disabled:cursor-not-allowed transition-all"
           >
             {isLoading ? (
               <svg className="w-4 h-4 text-slate-400 animate-spin" fill="none" viewBox="0 0 24 24">

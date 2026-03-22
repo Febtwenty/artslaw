@@ -23,12 +23,12 @@ export default function ExhibitionLinkInput({ onStart }: Props) {
         </svg>
       </div>
 
-      <h2 className="text-3xl md:text-4xl font-semibold text-slate-900 leading-tight mb-4">
+      <h2 className="text-3xl md:text-4xl font-semibold text-slate-900 dark:text-slate-100 leading-tight mb-4">
         Discover the Story<br />
         <span className="text-indigo-600">Behind the Art</span>
       </h2>
 
-      <p className="text-slate-500 text-base max-w-md leading-relaxed mb-10">
+      <p className="text-slate-500 dark:text-slate-400 text-base max-w-md leading-relaxed mb-10">
         Paste a link to any gallery or museum exhibition. ArtSlaw will research it and walk you through the artist, the works, and the ideas.
       </p>
 
@@ -40,7 +40,7 @@ export default function ExhibitionLinkInput({ onStart }: Props) {
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://www.moma.org/exhibitions/..."
-              className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3.5 pr-12 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all text-base md:text-sm shadow-sm"
+              className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl px-4 py-3.5 pr-12 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all text-base md:text-sm shadow-sm"
             />
             {/* Link icon */}
             <svg
@@ -61,7 +61,7 @@ export default function ExhibitionLinkInput({ onStart }: Props) {
           <button
             type="submit"
             disabled={!url.trim()}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white rounded-xl px-6 py-3.5 font-medium transition-all text-sm shadow-sm"
+            className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 dark:disabled:bg-slate-700 disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded-xl px-6 py-3.5 font-medium transition-all text-sm shadow-sm"
           >
             Begin the Tour
           </button>

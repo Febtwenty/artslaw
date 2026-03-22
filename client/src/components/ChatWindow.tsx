@@ -29,8 +29,8 @@ export default function ChatWindow({ messages, isLoading }: Props) {
       {isLoading && (
         <div className="flex gap-3 items-start">
           {/* ArtSlaw avatar */}
-          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center mt-0.5">
-            <span className="text-indigo-600 text-xs font-semibold">A</span>
+          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center mt-0.5">
+            <span className="text-indigo-600 dark:text-indigo-400 text-xs font-semibold">A</span>
           </div>
           <div className="flex flex-col gap-1.5 pt-1.5">
             <div className="flex gap-1.5 items-center">

@@ -35,7 +35,7 @@ export default function Sidebar({ isOpen, onClose, conversations, activeId, onSe
 
       {/* Sidebar panel */}
       <div className={[
-        'fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 flex flex-col',
+        'fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col',
         'transform transition-transform duration-200 ease-in-out',
         isOpen ? 'translate-x-0' : '-translate-x-full',
         'md:static md:inset-auto md:z-auto md:w-56 md:flex-shrink-0 md:translate-x-0',
@@ -51,7 +51,7 @@ export default function Sidebar({ isOpen, onClose, conversations, activeId, onSe
         </button>
         <button
           onClick={onClose}
-          className="md:hidden ml-2 p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+          className="md:hidden ml-2 p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:text-slate-200 dark:hover:bg-slate-700 transition-colors"
           aria-label="Close menu"
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
@@ -66,7 +66,7 @@ export default function Sidebar({ isOpen, onClose, conversations, activeId, onSe
           <span className="text-slate-400 text-xs font-medium tracking-wide uppercase">
             Past Tours
           </span>
-          <div className="mt-1.5 h-px bg-slate-100" />
+          <div className="mt-1.5 h-px bg-slate-100 dark:bg-slate-700" />
         </div>
       )}
 
@@ -87,8 +87,8 @@ export default function Sidebar({ isOpen, onClose, conversations, activeId, onSe
                     className={[
                       'w-full text-left pl-4 pr-8 py-2.5 transition-colors border-l-2',
                       isActive
-                        ? 'bg-indigo-50 border-indigo-500 text-indigo-900'
-                        : 'border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900',
+                        ? 'bg-indigo-50 border-indigo-500 text-indigo-900 dark:bg-indigo-950 dark:border-indigo-400 dark:text-indigo-200'
+                        : 'border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-100',
                     ].join(' ')}
                   >
                     <div className="truncate text-xs font-medium leading-snug capitalize">
@@ -101,7 +101,7 @@ export default function Sidebar({ isOpen, onClose, conversations, activeId, onSe
                   <button
                     onClick={(e) => { e.stopPropagation(); onDelete(conv.id); }}
                     title="Delete conversation"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-all"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3">
                       <path fillRule="evenodd" d="M5 3.25V4H2.75a.75.75 0 0 0 0 1.5h.3l.815 8.15A1.5 1.5 0 0 0 5.357 15h5.285a1.5 1.5 0 0 0 1.493-1.35l.815-8.15h.3a.75.75 0 0 0 0-1.5H11v-.75A2.25 2.25 0 0 0 8.75 1h-1.5A2.25 2.25 0 0 0 5 3.25Zm2.25-.75a.75.75 0 0 0-.75.75V4h3v-.75a.75.75 0 0 0-.75-.75h-1.5ZM6.05 6a.75.75 0 0 1 .787.713l.275 5.5a.75.75 0 0 1-1.498.075l-.275-5.5A.75.75 0 0 1 6.05 6Zm3.9 0a.75.75 0 0 1 .712.787l-.275 5.5a.75.75 0 0 1-1.498-.075l.275-5.5A.75.75 0 0 1 9.95 6Z" clipRule="evenodd" />

@@ -14,6 +14,11 @@
     background-color: rgb(248 250 252); /* slate-50 */
     color: rgb(15 23 42); /* slate-900 */
   }
+
+  .dark body {
+    background-color: rgb(15 23 42); /* slate-900 */
+    color: rgb(226 232 240); /* slate-200 */
+  }
 }
 
 /* Markdown content styles for assistant messages */
@@ -85,4 +90,37 @@
 .prose-art hr {
   border-color: rgb(226 232 240); /* slate-200 */
   margin: 1rem 0;
+}
+
+/* Dark mode overrides for prose content */
+.dark .prose-art h1,
+.dark .prose-art h2,
+.dark .prose-art h3 {
+  color: rgb(226 232 240); /* slate-200 */
+}
+
+.dark .prose-art strong {
+  color: rgb(226 232 240); /* slate-200 */
+}
+
+.dark .prose-art em {
+  color: rgb(148 163 184); /* slate-400 */
+}
+
+.dark .prose-art a {
+  color: rgb(129 140 248); /* indigo-400 */
+}
+
+.dark .prose-art blockquote {
+  border-left-color: rgb(99 102 241); /* indigo-500 */
+  color: rgb(148 163 184); /* slate-400 */
+}
+
+.dark .prose-art code {
+  background: rgb(30 41 59); /* slate-800 */
+  color: rgb(203 213 225); /* slate-300 */
+}
+
+.dark .prose-art hr {
+  border-color: rgb(51 65 85); /* slate-700 */
 }
