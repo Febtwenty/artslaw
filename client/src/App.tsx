@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useAuth, SignIn, UserButton } from '@clerk/react';
+import { useAuth, UserButton } from '@clerk/react';
 import ChatWindow from './components/ChatWindow';
 import InputBar from './components/InputBar';
 import ExhibitionLinkInput from './components/ExhibitionLinkInput';
 import Sidebar from './components/Sidebar';
+import SignInPage from './components/SignInPage';
 
 export interface Message {
   role: 'user' | 'assistant';
@@ -82,11 +83,7 @@ function App() {
   }
 
   if (!isSignedIn) {
-    return (
-      <div className="h-full flex items-center justify-center bg-slate-50 dark:bg-slate-900">
-        <SignIn />
-      </div>
-    );
+    return <SignInPage isDark={isDark} onToggleDark={() => setIsDark(!isDark)} />;
   }
 
   const sendToApi = async (
