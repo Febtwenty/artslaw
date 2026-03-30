@@ -20,25 +20,6 @@ export interface Conversation {
   updatedAt: number;
 }
 
-const STORAGE_KEY = 'artguide_conversations';
-
-function loadConversationsFromStorage(): Conversation[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as Conversation[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveConversationsToStorage(convs: Conversation[]): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(convs));
-  } catch {
-    // quota exceeded — silently fail
-  }
-}
-
 function titleFromUrl(url: string): string {
   try {
     const { hostname, pathname } = new URL(url);
@@ -58,9 +39,8 @@ function App() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasStarted, setHasStarted] = useState(false);
-  const [conversations, setConversations] = useState<Conversation[]>(
-    () => loadConversationsFromStorage()
-  );
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [convLoading, setConvLoading] = useState(true);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isDark, setIsDark] = useState(() => {
@@ -74,6 +54,32 @@ function App() {
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
   }, [isDark]);
 
+  // Load conversations from server whenever the user signs in.
+  useEffect(() => {
+    if (!isSignedIn) return;
+
+    let cancelled = false;
+    setConvLoading(true);
+
+    (async () => {
+      try {
+        const token = await getToken();
+        const res = await fetch('/api/conversations', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error(`Failed to load conversations (${res.status})`);
+        const data: Conversation[] = await res.json();
+        if (!cancelled) setConversations(data);
+      } catch (err) {
+        console.error('[conversations]', err);
+      } finally {
+        if (!cancelled) setConvLoading(false);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [isSignedIn]);
+
   if (!isLoaded) {
     return (
       <div className="h-full flex items-center justify-center bg-slate-50 dark:bg-slate-900">
@@ -85,6 +91,27 @@ function App() {
   if (!isSignedIn) {
     return <SignInPage isDark={isDark} onToggleDark={() => setIsDark(!isDark)} />;
   }
+
+  if (convLoading) {
+    return (
+      <div className="h-full flex items-center justify-center bg-slate-50 dark:bg-slate-900">
+        <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // Authenticated fetch helper that injects the Bearer token.
+  const conversationsFetch = async (path: string, options: RequestInit = {}) => {
+    const token = await getToken();
+    return fetch(path, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        ...((options.headers as Record<string, string>) ?? {}),
+      },
+    });
+  };
 
   const sendToApi = async (
     nextMessages: Message[],
@@ -162,17 +189,21 @@ function App() {
       const finalMessages: Message[] = [userMessage, { role: 'assistant', content: reply }];
       setMessages(finalMessages);
 
+      const now = Date.now();
       const newConv: Conversation = {
         id,
         title: titleFromUrl(url),
         exhibitionUrl: url,
         messages: finalMessages,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
+        createdAt: now,
+        updatedAt: now,
       };
-      const updated = [newConv, ...conversations];
-      setConversations(updated);
-      saveConversationsToStorage(updated);
+      setConversations((prev) => [newConv, ...prev]);
+
+      conversationsFetch('/api/conversations', {
+        method: 'POST',
+        body: JSON.stringify(newConv),
+      }).catch((err) => console.error('[conversations] create failed:', err));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
     } finally {
@@ -198,13 +229,16 @@ function App() {
       setMessages(finalMessages);
 
       if (activeConversationId) {
-        const updated = conversations.map((c) =>
-          c.id === activeConversationId
-            ? { ...c, messages: finalMessages, updatedAt: Date.now() }
-            : c
+        const now = Date.now();
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.id === activeConversationId ? { ...c, messages: finalMessages, updatedAt: now } : c
+          )
         );
-        setConversations(updated);
-        saveConversationsToStorage(updated);
+        conversationsFetch(`/api/conversations/${activeConversationId}`, {
+          method: 'PUT',
+          body: JSON.stringify({ messages: finalMessages, updatedAt: now }),
+        }).catch((err) => console.error('[conversations] update failed:', err));
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
@@ -235,12 +269,12 @@ function App() {
   };
 
   const deleteConversation = (id: string) => {
-    const updated = conversations.filter((c) => c.id !== id);
-    setConversations(updated);
-    saveConversationsToStorage(updated);
+    setConversations((prev) => prev.filter((c) => c.id !== id));
     if (activeConversationId === id) {
       startNewTour();
     }
+    conversationsFetch(`/api/conversations/${id}`, { method: 'DELETE' })
+      .catch((err) => console.error('[conversations] delete failed:', err));
   };
 
   return (

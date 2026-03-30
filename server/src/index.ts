@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { clerkMiddleware } from '@clerk/express';
 import chatRouter from './routes/chat';
+import conversationsRouter from './routes/conversations';
 
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
@@ -15,6 +16,7 @@ app.use(express.json());
 app.use(clerkMiddleware());
 
 app.use('/api/chat', chatRouter);
+app.use('/api/conversations', conversationsRouter);
 
 // Serve valid empty source maps for React DevTools extension files so Firefox
 // doesn't throw a JSON.parse error when the SPA catch-all returns index.html.

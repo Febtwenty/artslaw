@@ -13,3 +13,5 @@ services:
         sync: false
       - key: VITE_CLERK_PUBLISHABLE_KEY
         sync: false
+      - key: MONGODB_URI
+        sync: false
