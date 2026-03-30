@@ -46,7 +46,7 @@ const SYSTEM_PROMPT = `You are ArtSlaw, a friendly and knowledgeable art tour gu
 const MODEL = 'claude-haiku-4-5';
 // Initial research (with web search) can be longer; follow-ups are short Q&A
 const INITIAL_MAX_TOKENS = 1500;
-const FOLLOWUP_MAX_TOKENS = 800;
+const FOLLOWUP_MAX_TOKENS = 1200;
 // How many messages to send on follow-ups (prevents history ballooning)
 const MAX_HISTORY_MESSAGES = 6;
 
@@ -108,17 +108,19 @@ router.post('/', async (req: Request, res: Response) => {
       }
     }
 
-    // Only use web search on the initial request — it adds significant token
-    // overhead that follow-up Q&A doesn't need.
-    const tools: Anthropic.Messages.WebSearchTool20250305[] = isInitialRequest
-      ? [{ type: 'web_search_20250305', name: 'web_search' } as Anthropic.Messages.WebSearchTool20250305]
-      : [];
+    // Pass the search tool on all requests so Claude can look up artist
+    // comparisons, market info, or related shows when follow-up questions need it.
+    // Claude decides whether to actually invoke search — simple contextual
+    // questions ("explain that more") are answered directly without a search call.
+    const tools: Anthropic.Messages.WebSearchTool20250305[] = [
+      { type: 'web_search_20250305', name: 'web_search' } as Anthropic.Messages.WebSearchTool20250305,
+    ];
 
     const callParams = {
       model: MODEL,
       max_tokens: isInitialRequest ? INITIAL_MAX_TOKENS : FOLLOWUP_MAX_TOKENS,
       system: SYSTEM_PROMPT,
-      ...(tools.length > 0 ? { tools } : {}),
+      tools,
     };
 
     // Switch to streaming mode.
