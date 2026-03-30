@@ -21,7 +21,7 @@ router.get('/', h(async (req: Request, res: Response) => {
     .toArray();
 
   const conversations = docs.map((d) => ({
-    id:            d._id as string,
+    id:            d._id as unknown as string,
     title:         d.title,
     exhibitionUrl: d.exhibitionUrl,
     messages:      d.messages ?? [],
