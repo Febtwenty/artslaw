@@ -6,9 +6,15 @@ import ExhibitionLinkInput from './components/ExhibitionLinkInput';
 import Sidebar from './components/Sidebar';
 import SignInPage from './components/SignInPage';
 
+export interface Source {
+  title: string;
+  url: string;
+}
+
 export interface Message {
   role: 'user' | 'assistant';
   content: string;
+  sources?: Source[];
 }
 
 export interface Conversation {
@@ -117,7 +123,7 @@ function App() {
     nextMessages: Message[],
     url?: string,
     onChunk?: (accumulated: string) => void
-  ): Promise<string> => {
+  ): Promise<{ text: string; sources: Source[] }> => {
     const token = await getToken();
     const response = await fetch('/api/chat', {
       method: 'POST',
@@ -161,10 +167,14 @@ function App() {
         setIsLoading(false);
         setIsStreaming(true);
       }
-      onChunk?.(fullText);
+      // Strip sources footer before passing to live display
+      onChunk?.(fullText.split('\n<!--SOURCES:')[0]);
     }
 
-    return fullText || "I wasn't able to complete the research. Please try again.";
+    const srcMatch = fullText.match(/\n<!--SOURCES:(.*?)-->$/s);
+    const sources: Source[] = srcMatch ? (JSON.parse(srcMatch[1]) as Source[]) : [];
+    const text = fullText.split('\n<!--SOURCES:')[0] || "I wasn't able to complete the research. Please try again.";
+    return { text, sources };
   };
 
   const startConversation = async (url: string) => {
@@ -183,10 +193,10 @@ function App() {
     setError(null);
 
     try {
-      const reply = await sendToApi([userMessage], url, (accumulated) => {
+      const { text: reply, sources } = await sendToApi([userMessage], url, (accumulated) => {
         setMessages([userMessage, { role: 'assistant', content: accumulated }]);
       });
-      const finalMessages: Message[] = [userMessage, { role: 'assistant', content: reply }];
+      const finalMessages: Message[] = [userMessage, { role: 'assistant', content: reply, sources }];
       setMessages(finalMessages);
 
       const now = Date.now();
@@ -222,10 +232,10 @@ function App() {
     setError(null);
 
     try {
-      const reply = await sendToApi(nextMessages, undefined, (accumulated) => {
+      const { text: reply, sources } = await sendToApi(nextMessages, undefined, (accumulated) => {
         setMessages([...nextMessages, { role: 'assistant', content: accumulated }]);
       });
-      const finalMessages: Message[] = [...nextMessages, { role: 'assistant', content: reply }];
+      const finalMessages: Message[] = [...nextMessages, { role: 'assistant', content: reply, sources }];
       setMessages(finalMessages);
 
       if (activeConversationId) {

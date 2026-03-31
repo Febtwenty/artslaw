@@ -147,10 +147,31 @@ router.post('/', async (req: Request, res: Response) => {
 
     // web_search_20250305 is server-side — Anthropic handles searches internally.
     // pause_turn means the internal search loop hit its iteration cap; resume once.
-    const finalMessage = await runStream(apiMessages);
-    if (finalMessage.stop_reason === 'pause_turn') {
-      apiMessages.push({ role: 'assistant', content: finalMessage.content });
-      await runStream(apiMessages);
+    const allFinalMessages: Anthropic.Message[] = [];
+    const firstFinal = await runStream(apiMessages);
+    allFinalMessages.push(firstFinal);
+    if (firstFinal.stop_reason === 'pause_turn') {
+      apiMessages.push({ role: 'assistant', content: firstFinal.content });
+      allFinalMessages.push(await runStream(apiMessages));
+    }
+
+    // Extract source URLs from all web search result blocks across all final messages.
+    const seen = new Set<string>();
+    const allSources: { title: string; url: string }[] = [];
+    for (const fm of allFinalMessages) {
+      for (const block of fm.content) {
+        if (block.type === 'web_search_tool_result' && Array.isArray(block.content)) {
+          for (const result of block.content) {
+            if (result.type === 'web_search_result' && !seen.has(result.url)) {
+              seen.add(result.url);
+              allSources.push({ title: result.title, url: result.url });
+            }
+          }
+        }
+      }
+    }
+    if (allSources.length > 0) {
+      res.write(`\n<!--SOURCES:${JSON.stringify(allSources)}-->`);
     }
 
     res.end();

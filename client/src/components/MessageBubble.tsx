@@ -24,6 +24,22 @@ export default function MessageBubble({ message, isLoading }: Props) {
   const isUser = message.role === 'user';
   const [playState, setPlayState] = useState<'idle' | 'playing' | 'paused'>('idle');
   const [copied, setCopied] = useState(false);
+  const [sourcesOpen, setSourcesOpen] = useState(false);
+
+  const getDomain = (url: string) => {
+    try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return url; }
+  };
+
+  const uniqueSources = (() => {
+    if (!message.sources?.length) return [];
+    const seen = new Set<string>();
+    return message.sources.filter((s) => {
+      const d = getDomain(s.url);
+      if (seen.has(d)) return false;
+      seen.add(d);
+      return true;
+    });
+  })();
 
   // Stop playback whenever a new response starts loading
   useEffect(() => {
@@ -92,6 +108,67 @@ export default function MessageBubble({ message, isLoading }: Props) {
             {message.content}
           </ReactMarkdown>
         </div>
+
+        {/* Sources — collapsible pill, Claude.ai style */}
+        {uniqueSources.length > 0 && (
+          <div className="mt-3 inline-block">
+            <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 overflow-hidden">
+              {/* Header / collapsed pill */}
+              <button
+                onClick={() => setSourcesOpen((o) => !o)}
+                className="flex items-center gap-3 px-3 py-2 w-full hover:bg-slate-100 dark:hover:bg-slate-700/60 transition-colors"
+              >
+                <span className="text-xs font-medium text-slate-500 dark:text-slate-400 flex-shrink-0">Sources</span>
+                {/* Overlapping favicons — up to 3 */}
+                <div className="flex -space-x-2 flex-shrink-0">
+                  {uniqueSources.slice(0, 3).map((s, i) => (
+                    <img
+                      key={i}
+                      src={`https://www.google.com/s2/favicons?domain=${getDomain(s.url)}&sz=32`}
+                      alt=""
+                      className="w-5 h-5 rounded-full border-2 border-white dark:border-slate-800 bg-white"
+                    />
+                  ))}
+                </div>
+                {/* Chevron */}
+                <svg
+                  className={`w-3.5 h-3.5 text-slate-400 transition-transform ml-auto flex-shrink-0 ${sourcesOpen ? 'rotate-180' : ''}`}
+                  fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {/* Expanded list */}
+              {sourcesOpen && (
+                <div className="border-t border-slate-200 dark:border-slate-700">
+                  {uniqueSources.map((s, i) => (
+                    <a
+                      key={i}
+                      href={s.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={s.title || s.url}
+                      className="flex items-center gap-2.5 px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-700/60 transition-colors group"
+                    >
+                      <img
+                        src={`https://www.google.com/s2/favicons?domain=${getDomain(s.url)}&sz=32`}
+                        alt=""
+                        className="w-4 h-4 rounded flex-shrink-0 bg-white"
+                      />
+                      <span className="text-xs text-slate-600 dark:text-slate-300 truncate flex-1">
+                        {s.title || getDomain(s.url)}
+                      </span>
+                      <svg className="w-3 h-3 text-slate-400 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Action bar — below message, mirroring Claude.ai style */}
         <div className="flex items-center gap-1 mt-2">
