@@ -64,6 +64,7 @@ export default function MessageBubble({ message, isLoading }: Props) {
     } else {
       speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(stripMarkdown(message.content));
+      utterance.lang = 'en-US';
       utterance.onend = () => setPlayState('idle');
       utterance.onerror = () => setPlayState('idle');
       speechSynthesis.speak(utterance);
