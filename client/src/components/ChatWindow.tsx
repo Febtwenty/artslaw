@@ -23,7 +23,7 @@ export default function ChatWindow({ messages, isLoading }: Props) {
       )}
 
       {messages.map((msg, i) => (
-        <MessageBubble key={i} message={msg} />
+        <MessageBubble key={i} message={msg} isLoading={isLoading} />
       ))}
 
       {isLoading && (
