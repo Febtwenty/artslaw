@@ -128,9 +128,9 @@ router.post('/', async (req: Request, res: Response) => {
     // are forwarded to the client immediately instead of being held until
     // the full response is ready.
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-    res.setHeader('Transfer-Encoding', 'chunked');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('X-Accel-Buffering', 'no');
+    res.flushHeaders(); // send headers to proxy immediately so it disables buffering before body data arrives
     streamStarted = true;
 
     const runStream = async (msgs: Anthropic.MessageParam[]) => {

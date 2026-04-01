@@ -9,13 +9,29 @@ interface Props {
 
 export default function ChatWindow({ messages, isLoading }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const userScrolledUp = useRef(false);
+
+  const handleScroll = () => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    userScrolledUp.current = distanceFromBottom > 100;
+  };
+
+  // When a new request starts, reset the flag so we scroll to the bottom initially.
+  useEffect(() => {
+    if (isLoading) userScrolledUp.current = false;
+  }, [isLoading]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (!userScrolledUp.current) {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [messages, isLoading]);
 
   return (
-    <div className="flex-1 overflow-y-auto py-4 space-y-6 scrollbar-thin">
+    <div ref={scrollContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto py-4 space-y-6 scrollbar-thin">
       {messages.length === 0 && !isLoading && (
         <div className="flex items-center justify-center h-full text-slate-400 text-sm">
           Your tour will begin shortly...
