@@ -74,7 +74,7 @@ export default function Sidebar({ isOpen, onClose, conversations, activeId, onSe
             placeholder="Search tours..."
             value={query}
             onChange={e => setQuery(e.target.value)}
-            className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+            className="w-full px-2.5 py-1.5 text-base md:text-xs rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
           />
         </div>
       )}
