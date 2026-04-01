@@ -156,24 +156,32 @@ function App() {
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let fullText = '';
+    let sources: Source[] = [];
+    let buffer = '';
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-      const chunk = decoder.decode(value, { stream: true });
-      fullText += chunk;
-      // Switch from loading dots to streaming text on first chunk
-      if (fullText.length > 0) {
-        setIsLoading(false);
-        setIsStreaming(true);
+      buffer += decoder.decode(value, { stream: true });
+      // SSE events are delimited by double newlines
+      const events = buffer.split('\n\n');
+      buffer = events.pop() ?? '';
+      for (const event of events) {
+        const dataLine = event.split('\n').find(l => l.startsWith('data: '));
+        if (!dataLine) continue;
+        const json = JSON.parse(dataLine.slice(6));
+        if (json.t !== undefined) {
+          fullText += json.t as string;
+          // Switch from loading dots to streaming text on first chunk
+          if (fullText.length > 0) { setIsLoading(false); setIsStreaming(true); }
+          onChunk?.(fullText);
+        } else if (json.s !== undefined) {
+          sources = json.s as Source[];
+        }
       }
-      // Strip sources footer before passing to live display
-      onChunk?.(fullText.split('\n<!--SOURCES:')[0]);
     }
 
-    const srcMatch = fullText.match(/\n<!--SOURCES:(.*?)-->$/s);
-    const sources: Source[] = srcMatch ? (JSON.parse(srcMatch[1]) as Source[]) : [];
-    const text = fullText.split('\n<!--SOURCES:')[0] || "I wasn't able to complete the research. Please try again.";
+    const text = fullText || "I wasn't able to complete the research. Please try again.";
     return { text, sources };
   };
 

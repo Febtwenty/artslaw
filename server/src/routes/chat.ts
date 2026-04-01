@@ -123,23 +123,21 @@ router.post('/', async (req: Request, res: Response) => {
       tools,
     };
 
-    // Switch to streaming mode.
-    // X-Accel-Buffering: no disables nginx buffering on Render so chunks
-    // are forwarded to the client immediately instead of being held until
-    // the full response is ready.
-    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    // Use SSE (text/event-stream) so Render's load balancer passes chunks
+    // through immediately without buffering. Plain text/plain responses are
+    // buffered by the proxy regardless of X-Accel-Buffering.
+    res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
     res.setHeader('X-Accel-Buffering', 'no');
-    res.flushHeaders(); // send headers to proxy immediately so it disables buffering before body data arrives
+    res.flushHeaders();
     streamStarted = true;
 
     const runStream = async (msgs: Anthropic.MessageParam[]) => {
       const stream = getClient().messages.stream({ ...callParams, messages: msgs });
       for await (const event of stream) {
         if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-          res.write(event.delta.text);
-          // flush() pushes the chunk through any intermediate buffers immediately
-          (res as any).flush?.();
+          res.write(`data: ${JSON.stringify({ t: event.delta.text })}\n\n`);
         }
       }
       return stream.finalMessage();
@@ -151,7 +149,6 @@ router.post('/', async (req: Request, res: Response) => {
     const firstFinal = await runStream(apiMessages);
     allFinalMessages.push(firstFinal);
     if (firstFinal.stop_reason === 'pause_turn') {
-      res.write('\n\n');
       apiMessages.push({ role: 'assistant', content: firstFinal.content });
       allFinalMessages.push(await runStream(apiMessages));
     }
@@ -172,7 +169,7 @@ router.post('/', async (req: Request, res: Response) => {
       }
     }
     if (allSources.length > 0) {
-      res.write(`\n<!--SOURCES:${JSON.stringify(allSources)}-->`);
+      res.write(`data: ${JSON.stringify({ s: allSources })}\n\n`);
     }
 
     res.end();
