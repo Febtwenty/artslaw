@@ -151,6 +151,7 @@ router.post('/', async (req: Request, res: Response) => {
     const firstFinal = await runStream(apiMessages);
     allFinalMessages.push(firstFinal);
     if (firstFinal.stop_reason === 'pause_turn') {
+      res.write('\n\n');
       apiMessages.push({ role: 'assistant', content: firstFinal.content });
       allFinalMessages.push(await runStream(apiMessages));
     }
