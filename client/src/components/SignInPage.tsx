@@ -89,7 +89,7 @@ export default function SignInPage({ isDark, onToggleDark }: Props) {
           Get Started
         </button>
         <p className="text-slate-400 dark:text-slate-500 text-xs mt-3">
-          Sign in with Google or email — free to use
+          Sign up with your email — free to use
         </p>
       </main>
 
