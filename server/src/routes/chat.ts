@@ -45,7 +45,7 @@ const SYSTEM_PROMPT = `You are ArtSlaw, a friendly and knowledgeable art tour gu
 
 const MODEL = 'claude-haiku-4-5';
 // Initial research (with web search) can be longer; follow-ups are short Q&A
-const INITIAL_MAX_TOKENS = 1500;
+const INITIAL_MAX_TOKENS = 2500;
 const FOLLOWUP_MAX_TOKENS = 1200;
 // How many messages to send on follow-ups (prevents history ballooning)
 const MAX_HISTORY_MESSAGES = 6;
