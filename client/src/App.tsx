@@ -199,10 +199,19 @@ function App() {
       const finalMessages: Message[] = [userMessage, { role: 'assistant', content: reply, sources }];
       setMessages(finalMessages);
 
+      let title = titleFromUrl(url);
+      try {
+        const titleRes = await conversationsFetch('/api/generate-title', {
+          method: 'POST',
+          body: JSON.stringify({ text: reply.slice(0, 2000) }),
+        });
+        if (titleRes.ok) title = (await titleRes.json()).title;
+      } catch { /* keep fallback title */ }
+
       const now = Date.now();
       const newConv: Conversation = {
         id,
-        title: titleFromUrl(url),
+        title,
         exhibitionUrl: url,
         messages: finalMessages,
         createdAt: now,

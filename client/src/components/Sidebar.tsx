@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Conversation } from '../App';
 
 interface Props {
@@ -23,6 +24,11 @@ function formatDate(ts: number): string {
 }
 
 export default function Sidebar({ isOpen, onClose, conversations, activeId, onSelect, onNew, onDelete }: Props) {
+  const [query, setQuery] = useState('');
+  const filtered = conversations.filter(c =>
+    c.title.toLowerCase().includes(query.toLowerCase())
+  );
+
   return (
     <>
       {/* Mobile backdrop */}
@@ -60,6 +66,19 @@ export default function Sidebar({ isOpen, onClose, conversations, activeId, onSe
         </button>
       </div>
 
+      {/* Search */}
+      {conversations.length > 0 && (
+        <div className="flex-shrink-0 px-3 pb-2">
+          <input
+            type="search"
+            placeholder="Search tours..."
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+          />
+        </div>
+      )}
+
       {/* Label */}
       {conversations.length > 0 && (
         <div className="flex-shrink-0 px-4 pb-2">
@@ -76,9 +95,11 @@ export default function Sidebar({ isOpen, onClose, conversations, activeId, onSe
           <p className="px-4 py-3 text-slate-400 text-xs">
             No past tours yet.
           </p>
+        ) : filtered.length === 0 ? (
+          <p className="px-4 py-3 text-slate-400 text-xs">No results.</p>
         ) : (
           <ul>
-            {conversations.map((conv) => {
+            {filtered.map((conv) => {
               const isActive = conv.id === activeId;
               return (
                 <li key={conv.id} className="group relative">
