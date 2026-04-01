@@ -135,8 +135,13 @@ router.post('/', async (req: Request, res: Response) => {
 
     const runStream = async (msgs: Anthropic.MessageParam[]) => {
       const stream = getClient().messages.stream({ ...callParams, messages: msgs });
+      let textBlockCount = 0;
       for await (const event of stream) {
-        if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+        if (event.type === 'content_block_start' && event.content_block.type === 'text') {
+          // Separate consecutive text blocks (e.g. text → search → text) with a line break
+          if (textBlockCount > 0) res.write(`data: ${JSON.stringify({ t: '\n\n' })}\n\n`);
+          textBlockCount++;
+        } else if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
           res.write(`data: ${JSON.stringify({ t: event.delta.text })}\n\n`);
         }
       }
