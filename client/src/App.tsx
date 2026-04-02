@@ -319,10 +319,10 @@ function App() {
               <path fillRule="evenodd" d="M3 6.75A.75.75 0 0 1 3.75 6h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 6.75ZM3 12a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 12Zm0 5.25a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75a.75.75 0 0 1-.75-.75Z" clipRule="evenodd" />
             </svg>
           </button>
-          <div>
-            <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">ArtSlaw</h1>
+          <button onClick={startNewTour} className="text-left">
+            <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">ArtSlaw</h1>
             <p className="text-slate-400 text-xs mt-0.5">Your personal gallery companion</p>
-          </div>
+          </button>
         </div>
         <div className="flex items-center gap-2">
           {/* Dark mode toggle */}
