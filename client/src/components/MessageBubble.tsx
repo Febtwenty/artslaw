@@ -6,6 +6,7 @@ import type { Message } from '../App';
 interface Props {
   message: Message;
   isLoading?: boolean;
+  shareUrl?: string;
 }
 
 function stripMarkdown(text: string): string {
@@ -20,10 +21,11 @@ function stripMarkdown(text: string): string {
     .trim();
 }
 
-export default function MessageBubble({ message, isLoading }: Props) {
+export default function MessageBubble({ message, isLoading, shareUrl }: Props) {
   const isUser = message.role === 'user';
   const [playState, setPlayState] = useState<'idle' | 'playing' | 'paused'>('idle');
   const [copied, setCopied] = useState(false);
+  const [shared, setShared] = useState(false);
   const [sourcesOpen, setSourcesOpen] = useState(false);
 
   const getDomain = (url: string) => {
@@ -76,6 +78,14 @@ export default function MessageBubble({ message, isLoading }: Props) {
     navigator.clipboard.writeText(message.content).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
+    });
+  };
+
+  const handleShare = () => {
+    if (!shareUrl) return;
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      setShared(true);
+      setTimeout(() => setShared(false), 1500);
     });
   };
 
@@ -218,6 +228,25 @@ export default function MessageBubble({ message, isLoading }: Props) {
               </svg>
             )}
           </button>
+
+          {/* Share */}
+          {shareUrl && (
+            <button
+              onClick={handleShare}
+              aria-label="Copy share link"
+              className="w-7 h-7 flex items-center justify-center rounded-md transition-colors text-slate-400 hover:text-indigo-500"
+            >
+              {shared ? (
+                <svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                </svg>
+              )}
+            </button>
+          )}
 
         </div>
       </div>

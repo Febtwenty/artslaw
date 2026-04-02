@@ -5,9 +5,10 @@ import MessageBubble from './MessageBubble';
 interface Props {
   messages: Message[];
   isLoading: boolean;
+  shareUrl?: string;
 }
 
-export default function ChatWindow({ messages, isLoading }: Props) {
+export default function ChatWindow({ messages, isLoading, shareUrl }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const userScrolledUp = useRef(false);
@@ -38,9 +39,17 @@ export default function ChatWindow({ messages, isLoading }: Props) {
         </div>
       )}
 
-      {messages.map((msg, i) => (
-        <MessageBubble key={i} message={msg} isLoading={isLoading} />
-      ))}
+      {(() => {
+        const lastAssistantIdx = messages.reduce((last, m, i) => m.role === 'assistant' ? i : last, -1);
+        return messages.map((msg, i) => (
+          <MessageBubble
+            key={i}
+            message={msg}
+            isLoading={isLoading}
+            shareUrl={!isLoading && i === lastAssistantIdx ? shareUrl : undefined}
+          />
+        ));
+      })()}
 
       {isLoading && (
         <div className="flex gap-3 items-start">

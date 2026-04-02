@@ -374,7 +374,11 @@ function App() {
                   </div>
                 )}
 
-                <ChatWindow messages={messages} isLoading={isLoading} />
+                <ChatWindow
+                  messages={messages}
+                  isLoading={isLoading}
+                  shareUrl={activeConversationId ? `${window.location.origin}/tour/${activeConversationId}` : undefined}
+                />
 
                 {error && (
                   <div className="flex-shrink-0 mt-2 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm dark:bg-red-950 dark:border-red-800 dark:text-red-400">
