@@ -367,10 +367,10 @@ function App() {
                 {/* Exhibition URL badge */}
                 {exhibitionUrl && (
                   <div className="flex-shrink-0 mt-4 mb-2">
-                    <span className="inline-flex items-center gap-2 text-xs text-slate-400">
+                    <a href={exhibitionUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-xs text-slate-400 hover:text-indigo-500 transition-colors">
                       <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 flex-shrink-0" />
                       <span className="truncate max-w-xs">{exhibitionUrl}</span>
-                    </span>
+                    </a>
                   </div>
                 )}
 

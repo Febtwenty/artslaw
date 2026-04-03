@@ -68,10 +68,10 @@ export default function TourPage({ id }: Props) {
         <div className="flex-1 flex flex-col overflow-hidden max-w-3xl mx-auto w-full px-4 pb-4">
           {tour.exhibitionUrl && (
             <div className="flex-shrink-0 mt-4 mb-2">
-              <span className="inline-flex items-center gap-2 text-xs text-slate-400">
+              <a href={tour.exhibitionUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-xs text-slate-400 hover:text-indigo-500 transition-colors">
                 <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 flex-shrink-0" />
                 <span className="truncate max-w-xs">{tour.exhibitionUrl}</span>
-              </span>
+              </a>
             </div>
           )}
           <ChatWindow messages={tour.messages} isLoading={false} />
