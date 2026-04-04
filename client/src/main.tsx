@@ -5,6 +5,11 @@ import App from './App';
 import TourPage from './components/TourPage';
 import './index.css';
 
+const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string;
+if (!PUBLISHABLE_KEY) {
+  throw new Error('VITE_CLERK_PUBLISHABLE_KEY is not set');
+}
+
 const tourMatch = window.location.pathname.match(/^\/tour\/([^/]+)$/);
 
 if (tourMatch) {
@@ -14,11 +19,6 @@ if (tourMatch) {
     </React.StrictMode>
   );
 } else {
-  const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string;
-  if (!PUBLISHABLE_KEY) {
-    throw new Error('VITE_CLERK_PUBLISHABLE_KEY is not set');
-  }
-
   ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
       <ClerkProvider publishableKey={PUBLISHABLE_KEY}>

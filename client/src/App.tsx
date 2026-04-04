@@ -5,6 +5,7 @@ import InputBar from './components/InputBar';
 import ExhibitionLinkInput from './components/ExhibitionLinkInput';
 import Sidebar from './components/Sidebar';
 import SignInPage from './components/SignInPage';
+import DiscoverPage from './components/DiscoverPage';
 
 export interface Source {
   title: string;
@@ -39,6 +40,9 @@ function titleFromUrl(url: string): string {
 
 function App() {
   const { isLoaded, isSignedIn, getToken } = useAuth();
+  const [view, setView] = useState<'home' | 'discover'>(() =>
+    window.location.pathname === '/discover' ? 'discover' : 'home'
+  );
   const [exhibitionUrl, setExhibitionUrl] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -59,6 +63,22 @@ function App() {
     document.documentElement.classList.toggle('dark', isDark);
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
   }, [isDark]);
+
+  // Keep URL in sync with view state and handle browser back/forward
+  useEffect(() => {
+    const target = view === 'discover' ? '/discover' : '/';
+    if (window.location.pathname !== target) {
+      window.history.pushState({}, '', target);
+    }
+  }, [view]);
+
+  useEffect(() => {
+    const onPop = () => {
+      setView(window.location.pathname === '/discover' ? 'discover' : 'home');
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
 
   // Load conversations from server whenever the user signs in.
   useEffect(() => {
@@ -281,6 +301,7 @@ function App() {
     setMessages([]);
     setExhibitionUrl('');
     setError(null);
+    setView('home');
   };
 
   const loadConversation = (id: string) => {
@@ -293,6 +314,7 @@ function App() {
     setError(null);
     setIsLoading(false);
     setIsStreaming(false);
+    setView('home');
   };
 
   const deleteConversation = (id: string) => {
@@ -303,6 +325,13 @@ function App() {
     conversationsFetch(`/api/conversations/${id}`, { method: 'DELETE' })
       .catch((err) => console.error('[conversations] delete failed:', err));
   };
+
+  const handleStartTour = (url: string) => {
+    setView('home');
+    startConversation(url);
+  };
+
+  const isDiscover = view === 'discover';
 
   return (
     <div className="h-full flex flex-col bg-slate-50 dark:bg-slate-900">
@@ -321,10 +350,37 @@ function App() {
           </button>
           <button onClick={startNewTour} className="text-left">
             <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">ArtSlaw</h1>
-            <p className="text-slate-400 text-xs mt-0.5">Your personal gallery companion</p>
+            <p className="text-slate-400 text-xs mt-0.5">{isDiscover ? 'Discover exhibitions' : 'Your personal gallery companion'}</p>
           </button>
         </div>
         <div className="flex items-center gap-2">
+          {/* Discover / Back-to-chats toggle */}
+          <button
+            onClick={() => setView(isDiscover ? 'home' : 'discover')}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              isDiscover
+                ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300'
+                : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-slate-700'
+            }`}
+            aria-label={isDiscover ? 'Back to chats' : 'Discover exhibitions'}
+            title={isDiscover ? 'Chats' : 'Discover'}
+          >
+            {isDiscover ? (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                  <path fillRule="evenodd" d="M7.28 7.72a.75.75 0 0 1 0 1.06l-2.47 2.47H21a.75.75 0 0 1 0 1.5H4.81l2.47 2.47a.75.75 0 1 1-1.06 1.06l-3.75-3.75a.75.75 0 0 1 0-1.06l3.75-3.75a.75.75 0 0 1 1.06 0Z" clipRule="evenodd" />
+                </svg>
+                <span className="hidden sm:inline">Chats</span>
+              </>
+            ) : (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                  <path fillRule="evenodd" d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5ZM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5Z" clipRule="evenodd" />
+                </svg>
+                <span className="hidden sm:inline">Discover</span>
+              </>
+            )}
+          </button>
           {/* Dark mode toggle */}
           <button
             onClick={() => setIsDark(!isDark)}
@@ -351,7 +407,7 @@ function App() {
           isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
           conversations={conversations}
-          activeId={activeConversationId}
+          activeId={isDiscover ? null : activeConversationId}
           onSelect={(id) => { loadConversation(id); setSidebarOpen(false); }}
           onNew={() => { startNewTour(); setSidebarOpen(false); }}
           onDelete={deleteConversation}
@@ -359,37 +415,43 @@ function App() {
 
         {/* Main content */}
         <main className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 flex flex-col overflow-hidden max-w-3xl mx-auto w-full">
-            {!hasStarted ? (
-              <ExhibitionLinkInput onStart={startConversation} />
-            ) : (
-              <div className="flex-1 flex flex-col overflow-hidden px-4 pb-2">
-                {/* Exhibition URL badge */}
-                {exhibitionUrl && (
-                  <div className="flex-shrink-0 mt-4 mb-2">
-                    <a href={exhibitionUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-xs text-slate-400 hover:text-indigo-500 transition-colors">
-                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 flex-shrink-0" />
-                      <span className="truncate max-w-xs">{exhibitionUrl}</span>
-                    </a>
-                  </div>
-                )}
+          {isDiscover ? (
+            <div className="flex-1 overflow-y-auto">
+              <DiscoverPage onStartTour={handleStartTour} />
+            </div>
+          ) : (
+            <div className="flex-1 flex flex-col overflow-hidden max-w-3xl mx-auto w-full">
+              {!hasStarted ? (
+                <ExhibitionLinkInput onStart={startConversation} />
+              ) : (
+                <div className="flex-1 flex flex-col overflow-hidden px-4 pb-2">
+                  {/* Exhibition URL badge */}
+                  {exhibitionUrl && (
+                    <div className="flex-shrink-0 mt-4 mb-2">
+                      <a href={exhibitionUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-xs text-slate-400 hover:text-indigo-500 transition-colors">
+                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 flex-shrink-0" />
+                        <span className="truncate max-w-xs">{exhibitionUrl}</span>
+                      </a>
+                    </div>
+                  )}
 
-                <ChatWindow
-                  messages={messages}
-                  isLoading={isLoading}
-                  shareUrl={activeConversationId ? `${window.location.origin}/tour/${activeConversationId}` : undefined}
-                />
+                  <ChatWindow
+                    messages={messages}
+                    isLoading={isLoading}
+                    shareUrl={activeConversationId ? `${window.location.origin}/tour/${activeConversationId}` : undefined}
+                  />
 
-                {error && (
-                  <div className="flex-shrink-0 mt-2 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm dark:bg-red-950 dark:border-red-800 dark:text-red-400">
-                    {error}
-                  </div>
-                )}
+                  {error && (
+                    <div className="flex-shrink-0 mt-2 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm dark:bg-red-950 dark:border-red-800 dark:text-red-400">
+                      {error}
+                    </div>
+                  )}
 
-                <InputBar onSend={sendMessage} isLoading={isLoading || isStreaming} />
-              </div>
-            )}
-          </div>
+                  <InputBar onSend={sendMessage} isLoading={isLoading || isStreaming} />
+                </div>
+              )}
+            </div>
+          )}
         </main>
       </div>
     </div>

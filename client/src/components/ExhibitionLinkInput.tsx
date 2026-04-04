@@ -2,10 +2,11 @@ import { useState } from 'react';
 
 interface Props {
   onStart: (url: string) => void;
+  initialUrl?: string;
 }
 
-export default function ExhibitionLinkInput({ onStart }: Props) {
-  const [url, setUrl] = useState('');
+export default function ExhibitionLinkInput({ onStart, initialUrl }: Props) {
+  const [url, setUrl] = useState(initialUrl ?? '');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
