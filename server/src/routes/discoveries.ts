@@ -49,6 +49,13 @@ interface ExhibitionRaw {
   dates: string;
   url: string;
   sortableDate: string;
+  imageUrl: string | null;
+}
+
+function resolveImageUrl(attr: any): string | null {
+  const medium = attr?.image_versions?.medium;
+  if (typeof medium === 'string' && medium.startsWith('https://')) return medium;
+  return null;
 }
 
 function extractExhibitions(nextData: any, depth = 0): ExhibitionRaw[] {
@@ -72,6 +79,7 @@ function extractExhibitions(nextData: any, depth = 0): ExhibitionRaw[] {
         dates: attr.date ?? '',
         url: `${BASE_URL}/project/${attr.cal_slug}`,
         sortableDate: attr.sortable_date ?? '',
+        imageUrl: resolveImageUrl(attr),
       });
       return; // don't recurse into a matched node
     }

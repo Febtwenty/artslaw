@@ -10,6 +10,7 @@ interface Discovery {
   dates: string;
   url: string;
   scrapedAt: string;
+  imageUrl?: string | null;
 }
 
 interface Props {
@@ -110,37 +111,54 @@ export default function DiscoverPage({ onStartTour }: Props) {
         {visible.map((d, i) => (
           <div
             key={d._id ? String(d._id) : `${d.url}-${i}`}
-            className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 flex flex-col gap-3"
+            className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col"
           >
-            <div>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
-                {d.artistName}
-              </span>
-            </div>
-            <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-sm leading-snug line-clamp-2">
-              {d.exhibitionTitle || 'Untitled Exhibition'}
-            </h3>
-            <p className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed">
-              {[d.gallery, d.city].filter(Boolean).join(' · ')}
-            </p>
-            {d.dates && (
-              <p className="text-slate-400 dark:text-slate-500 text-xs">{d.dates}</p>
+            {d.imageUrl ? (
+              <img
+                src={d.imageUrl}
+                alt={d.exhibitionTitle || d.artistName}
+                className="w-full aspect-square object-cover"
+                loading="lazy"
+                decoding="async"
+              />
+            ) : (
+              <div className="w-full aspect-square bg-gradient-to-br from-indigo-100 to-slate-200 dark:from-indigo-900/30 dark:to-slate-700 flex items-center justify-center">
+                <svg className="w-10 h-10 text-slate-300 dark:text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                </svg>
+              </div>
             )}
-            <div className="mt-auto pt-2 flex items-center justify-between gap-2">
-              <a
-                href={d.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-slate-400 dark:text-slate-500 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors"
-              >
-                View on CAL &rarr;
-              </a>
-              <button
-                onClick={() => onStartTour(d.url)}
-                className="text-xs font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-3 py-1.5 transition-colors"
-              >
-                Start Tour
-              </button>
+            <div className="px-3 py-2.5 flex flex-col gap-1">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-medium text-indigo-600 dark:text-indigo-400 truncate">
+                  {d.artistName}
+                </span>
+                {d.dates && (
+                  <span className="text-xs text-slate-400 dark:text-slate-500 shrink-0">{d.dates}</span>
+                )}
+              </div>
+              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 leading-snug line-clamp-1">
+                {d.exhibitionTitle || 'Untitled Exhibition'}
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {[d.gallery, d.city].filter(Boolean).join(' · ')}
+              </p>
+              <div className="pt-1.5 flex items-center justify-between gap-2">
+                <a
+                  href={d.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-slate-400 dark:text-slate-500 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors"
+                >
+                  View on CAL &rarr;
+                </a>
+                <button
+                  onClick={() => onStartTour(d.url)}
+                  className="text-xs font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-3 py-1 transition-colors"
+                >
+                  Start Tour
+                </button>
+              </div>
             </div>
           </div>
         ))}
