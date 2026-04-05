@@ -93,7 +93,7 @@ export default function MessageBubble({ message, isLoading, shareUrl }: Props) {
     return (
       <div className="flex justify-end">
         <div className="max-w-[75%] bg-indigo-600 rounded-2xl rounded-tr-sm px-4 py-3">
-          <p className="text-white text-sm leading-relaxed">{message.content}</p>
+          <p className="text-white text-base leading-relaxed font-serif">{message.content}</p>
         </div>
       </div>
     );
@@ -114,7 +114,7 @@ export default function MessageBubble({ message, isLoading, shareUrl }: Props) {
         <span className="hidden md:block text-indigo-500 dark:text-indigo-400 text-xs font-medium mb-2">
           ArtSlaw
         </span>
-        <div className="prose-art text-slate-700 dark:text-slate-300 text-sm">
+        <div className="prose-art text-slate-700 dark:text-slate-300 text-base font-serif">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>
             {message.content}
           </ReactMarkdown>
