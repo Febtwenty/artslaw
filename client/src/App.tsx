@@ -334,9 +334,9 @@ function App() {
   const isDiscover = view === 'discover';
 
   return (
-    <div className="h-full flex flex-col bg-slate-50 dark:bg-slate-900">
+    <div className="flex flex-col flex-1 bg-slate-50 dark:bg-slate-900">
       {/* Header */}
-      <header className="flex-shrink-0 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-10 flex-shrink-0 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           {/* Hamburger — mobile only */}
           <button
@@ -402,7 +402,7 @@ function App() {
       </header>
 
       {/* Body row: sidebar + content */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex">
         <Sidebar
           isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
@@ -414,17 +414,15 @@ function App() {
         />
 
         {/* Main content */}
-        <main className="flex-1 flex flex-col overflow-hidden">
+        <main className="flex-1 flex flex-col">
           {isDiscover ? (
-            <div className="flex-1 overflow-y-auto">
-              <DiscoverPage onStartTour={handleStartTour} />
-            </div>
+            <DiscoverPage onStartTour={handleStartTour} />
           ) : (
-            <div className="flex-1 flex flex-col overflow-hidden max-w-3xl mx-auto w-full">
+            <div className="flex-1 flex flex-col max-w-3xl mx-auto w-full">
               {!hasStarted ? (
                 <ExhibitionLinkInput onStart={startConversation} />
               ) : (
-                <div className="flex-1 flex flex-col overflow-hidden px-4 pb-2">
+                <div className="flex-1 flex flex-col px-4 pb-2">
                   {/* Exhibition URL badge */}
                   {exhibitionUrl && (
                     <div className="flex-shrink-0 mt-4 mb-2">

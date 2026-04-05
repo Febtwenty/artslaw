@@ -34,7 +34,7 @@ export default function InputBar({ onSend, isLoading }: Props) {
   const canSend = input.trim().length > 0 && !isLoading;
 
   return (
-    <div className="flex-shrink-0 py-2">
+    <div className="sticky bottom-0 py-2 bg-slate-50 dark:bg-slate-900">
       <div className="relative rounded-2xl border border-slate-300 dark:border-slate-600 shadow-sm focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all bg-white dark:bg-slate-800">
         <textarea
           ref={textareaRef}

@@ -10,15 +10,17 @@ interface Props {
 
 export default function ChatWindow({ messages, isLoading, shareUrl }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const userScrolledUp = useRef(false);
 
   const handleScroll = () => {
-    const el = scrollContainerRef.current;
-    if (!el) return;
-    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    const distanceFromBottom = document.body.scrollHeight - window.scrollY - window.innerHeight;
     userScrolledUp.current = distanceFromBottom > 100;
   };
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // When a new request starts, reset the flag so we scroll to the bottom initially.
   useEffect(() => {
@@ -32,7 +34,7 @@ export default function ChatWindow({ messages, isLoading, shareUrl }: Props) {
   }, [messages, isLoading]);
 
   return (
-    <div ref={scrollContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto py-4 space-y-6 scrollbar-thin">
+    <div className="flex-1 py-4 space-y-6 scrollbar-thin">
       {messages.length === 0 && !isLoading && (
         <div className="flex items-center justify-center h-full text-slate-400 text-sm">
           Your tour will begin shortly...
