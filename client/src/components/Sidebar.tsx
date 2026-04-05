@@ -50,7 +50,7 @@ export default function Sidebar({ isOpen, onClose, conversations, activeId, onSe
         'fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col',
         'transform transition-transform duration-200 ease-in-out',
         isOpen ? 'translate-x-0' : '-translate-x-full',
-        'md:static md:inset-auto md:z-auto md:w-56 md:flex-shrink-0 md:translate-x-0 md:sticky md:top-0 md:h-screen',
+        'md:inset-auto md:z-auto md:w-56 md:flex-shrink-0 md:translate-x-0 md:sticky md:top-[var(--header-h)] md:h-[calc(100svh_-_var(--header-h))]',
       ].join(' ')}>
       {/* Mobile header row with close button */}
       <div className="flex-shrink-0 flex items-center justify-between p-3 md:block">
