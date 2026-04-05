@@ -2,7 +2,18 @@
 
 An AI-powered art tour guide. Paste a link to any museum or gallery exhibition and chat with ArtSlaw — your knowledgeable, friendly gallery companion.
 
-ArtSlaw uses Claude (`claude-sonnet-4-5`) with live web search to research exhibitions in real time, then explains the artist, the works, the movement, and related artists in an accessible, engaging way.
+ArtSlaw uses Claude (`claude-haiku-4-5`) with live web search to research exhibitions in real time, then explains the artist, the works, the movement, and related artists in an accessible, engaging way. Tours are saved per user and can be shared as public read-only links.
+
+---
+
+## Features
+
+- **Exhibition tours** — paste any gallery or museum URL and start a guided chat
+- **Discover** — surfaces upcoming exhibition recommendations based on artists you've already researched, scraped from contemporaryartlibrary.org with a 7-day cache
+- **Conversation history** — all past tours are saved to MongoDB and listed in the sidebar
+- **Shareable tours** — every tour gets a public `/tour/:id` link for read-only sharing
+- **Authentication** — user accounts via Clerk
+- **Dark mode**
 
 ---
 
@@ -10,6 +21,8 @@ ArtSlaw uses Claude (`claude-sonnet-4-5`) with live web search to research exhib
 
 - Node.js 18+
 - An [Anthropic API key](https://console.anthropic.com)
+- A [Clerk](https://clerk.com) application (for auth)
+- A [MongoDB Atlas](https://www.mongodb.com/atlas) cluster (for conversation persistence)
 
 ---
 
@@ -17,23 +30,23 @@ ArtSlaw uses Claude (`claude-sonnet-4-5`) with live web search to research exhib
 
 ### 1. Clone and configure environment
 
-```bash
-cp .env.example .env
-```
-
-Open `.env` and add your Anthropic API key:
-
+**Server** (`server/.env` or root `.env`):
 ```
 ANTHROPIC_API_KEY=sk-ant-...
+CLERK_SECRET_KEY=sk_...
+CLERK_PUBLISHABLE_KEY=pk_...
+MONGODB_URI=mongodb+srv://<user>:<password>@cluster0.xxxxx.mongodb.net/artslaw?retryWrites=true&w=majority
+```
+
+**Client** (`client/.env.local`):
+```
+VITE_CLERK_PUBLISHABLE_KEY=pk_...
 ```
 
 ### 2. Install dependencies
 
 ```bash
-# Install server dependencies
 cd server && npm install
-
-# Install client dependencies
 cd ../client && npm install
 ```
 
@@ -53,17 +66,19 @@ cd server && npm run dev
 cd client && npm run dev
 ```
 
-Then open [http://localhost:5173](http://localhost:5173) in your browser.
+Then open [http://localhost:5173](http://localhost:5173).
 
-The Vite dev server proxies `/api/*` requests to the Express backend automatically — no CORS issues during development.
+The Vite dev server proxies `/api/*` requests to the Express backend automatically.
 
 ---
 
 ## Usage
 
-1. Paste any exhibition URL into the input field (e.g. a MoMA, Tate, or gallery page)
-2. Click **Begin the Tour** — ArtSlaw will research the exhibition using live web search
-3. Ask follow-up questions in the chat: about the artist, the genre, related works, what to look for, and more
+1. Sign in with your Clerk account
+2. Paste any exhibition URL and click **Begin the Tour**
+3. ArtSlaw researches the exhibition via live web search and starts the conversation
+4. Ask follow-up questions — about the artist, genre, related works, what to look for
+5. Open **Discover** (search icon in the header) to browse recommended upcoming shows based on artists you've toured
 
 ---
 
@@ -71,24 +86,32 @@ The Vite dev server proxies `/api/*` requests to the Express backend automatical
 
 ```
 artslaw/
-├── client/                  # React + Vite + Tailwind frontend
+├── client/                   # React 18 + Vite + Tailwind frontend
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── ChatWindow.tsx
+│   │   │   ├── DiscoverPage.tsx
 │   │   │   ├── ExhibitionLinkInput.tsx
 │   │   │   ├── InputBar.tsx
-│   │   │   └── MessageBubble.tsx
+│   │   │   ├── MessageBubble.tsx
+│   │   │   ├── Sidebar.tsx
+│   │   │   ├── SignInPage.tsx
+│   │   │   └── TourPage.tsx
 │   │   ├── App.tsx
 │   │   └── main.tsx
 │   ├── index.html
-│   └── vite.config.ts       # Proxies /api → localhost:3001
-├── server/                  # Express + Anthropic SDK backend
+│   └── vite.config.ts        # Proxies /api → localhost:3001
+├── server/                   # Express + Anthropic SDK backend
 │   └── src/
+│       ├── db.ts             # MongoDB connection
 │       ├── index.ts
-│       └── routes/chat.ts   # POST /api/chat
-├── .env                     # Your secrets (not committed)
-├── .env.example             # Template
-└── README.md
+│       └── routes/
+│           ├── chat.ts       # POST /api/chat (streaming)
+│           ├── conversations.ts
+│           ├── discoveries.ts # GET /api/discoveries (CAL scraper)
+│           └── title.ts
+├── .env                      # Your secrets (not committed)
+└── render.yaml               # Render deployment config
 ```
 
 ---
@@ -99,8 +122,11 @@ artslaw/
 |---|---|
 | Frontend | React 18, Vite 5, TypeScript, Tailwind CSS |
 | Backend | Node.js, Express, TypeScript |
-| AI | Anthropic SDK (`@anthropic-ai/sdk`), `claude-sonnet-4-5` |
+| AI | Anthropic SDK (`@anthropic-ai/sdk`), `claude-haiku-4-5` |
 | Search | `web_search_20260209` built-in server-side tool |
+| Auth | Clerk |
+| Database | MongoDB (Atlas) |
+| Scraping | Cheerio (CAL exhibition data) |
 | Markdown | `react-markdown` + `remark-gfm` |
 
 ---
@@ -108,11 +134,8 @@ artslaw/
 ## Production build
 
 ```bash
-# Build the server
 cd server && npm run build
-
-# Build the client
 cd ../client && npm run build
 ```
 
-The client build outputs to `client/dist/`. You can serve it with any static host and point API requests to the running Express server.
+The client build outputs to `client/dist/`, served as static files by the Express server in production.
