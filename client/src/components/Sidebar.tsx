@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Conversation } from '../App';
 
 interface Props {
@@ -25,6 +25,12 @@ function formatDate(ts: number): string {
 
 export default function Sidebar({ isOpen, onClose, conversations, activeId, onSelect, onNew, onDelete }: Props) {
   const [query, setQuery] = useState('');
+
+  // Lock body scroll on mobile when drawer is open
+  useEffect(() => {
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [isOpen]);
   const filtered = conversations.filter(c =>
     c.title.toLowerCase().includes(query.toLowerCase())
   );
@@ -90,7 +96,7 @@ export default function Sidebar({ isOpen, onClose, conversations, activeId, onSe
       )}
 
       {/* Conversation list */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto overscroll-contain">
         {conversations.length === 0 ? (
           <p className="px-4 py-3 text-slate-400 text-xs">
             No past tours yet.
