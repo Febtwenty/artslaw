@@ -6,6 +6,7 @@ import ExhibitionLinkInput from './components/ExhibitionLinkInput';
 import Sidebar from './components/Sidebar';
 import SignInPage from './components/SignInPage';
 import DiscoverPage from './components/DiscoverPage';
+import LogoWordmark from './components/LogoWordmark';
 
 export interface Source {
   title: string;
@@ -352,7 +353,7 @@ function App({ navigate }: { navigate: (path: string) => void }) {
             </svg>
           </button>
           <button onClick={startNewTour} className="text-left">
-            <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">ArtSlaw</h1>
+            <LogoWordmark className="h-6 w-auto" />
             <p className="text-slate-400 text-xs mt-0.5">{isDiscover ? 'Discover exhibitions' : 'Your personal gallery companion'}</p>
           </button>
         </div>

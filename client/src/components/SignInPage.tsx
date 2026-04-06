@@ -1,5 +1,6 @@
 import { useClerk } from '@clerk/react';
 import { useState, useEffect, useRef } from 'react';
+import LogoWordmark from './LogoWordmark';
 
 // 0: user1 dots | 1: user1 msg + AI dots | 2: AI reply1 | 3: user2 dots | 4: user2 msg + AI dots | 5: AI reply2
 const DELAYS = [900, 2000, 1500, 700, 2200, 0];
@@ -120,15 +121,7 @@ export default function SignInPage({ isDark, onToggleDark, navigate }: Props) {
       {/* Minimal header */}
       <header className="flex-shrink-0 px-6 py-5 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          {/* Inline logo */}
-          <svg viewBox="0 0 32 32" className="w-7 h-7" xmlns="http://www.w3.org/2000/svg">
-            <rect x="2" y="2" width="28" height="28" rx="3" fill="#1e293b" />
-            <rect x="5" y="5" width="22" height="22" rx="1.5" fill="#f8fafc" />
-            <rect x="7" y="7" width="18" height="9" rx="1" fill="#818cf8" />
-            <rect x="7" y="16" width="18" height="9" rx="0" fill="#6366f1" />
-            <circle cx="16" cy="13" r="3.5" fill="#fde68a" />
-          </svg>
-          <span className="text-slate-900 dark:text-slate-100 font-semibold text-base">ArtSlaw</span>
+          <LogoWordmark className="h-6 w-auto" />
         </div>
         <button
           onClick={onToggleDark}
@@ -149,16 +142,9 @@ export default function SignInPage({ isDark, onToggleDark, navigate }: Props) {
 
       {/* Hero */}
       <main className="flex-1 flex flex-col items-center justify-center px-6 text-center pb-16">
-        {/* Large art icon */}
+        {/* Wordmark */}
         <div className="mb-10">
-          <svg viewBox="0 0 64 64" className="w-16 h-16 drop-shadow-md" xmlns="http://www.w3.org/2000/svg">
-            <rect x="2" y="2" width="60" height="60" rx="8" fill="#1e293b" />
-            <rect x="7" y="7" width="50" height="50" rx="4" fill="#f8fafc" />
-            <rect x="11" y="11" width="42" height="42" rx="2" fill="#e2e8f0" />
-            <rect x="11" y="11" width="42" height="21" rx="2" fill="#818cf8" />
-            <rect x="11" y="32" width="42" height="21" rx="0" fill="#6366f1" />
-            <circle cx="32" cy="26" r="8" fill="#fde68a" />
-          </svg>
+          <LogoWordmark className="h-16 w-auto" />
         </div>
 
         {/* Headline */}

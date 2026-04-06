@@ -1,14 +1,3 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <!-- Frame outer -->
-  <rect x="2" y="2" width="28" height="28" rx="3" fill="#1e293b"/>
-  <!-- Frame inner (mat) -->
-  <rect x="5" y="5" width="22" height="22" rx="1.5" fill="#f8fafc"/>
-  <!-- Canvas area -->
-  <rect x="7" y="7" width="18" height="18" rx="1" fill="#e2e8f0"/>
-  <!-- Abstract painting: sky gradient suggestion -->
-  <rect x="7" y="7" width="18" height="9" rx="1" fill="#818cf8"/>
-  <!-- Abstract painting: ground -->
-  <rect x="7" y="16" width="18" height="9" rx="0" fill="#6366f1"/>
-  <!-- Sun / focal point -->
-  <circle cx="16" cy="13" r="3.5" fill="#fde68a"/>
+  <text x="16" y="26" text-anchor="middle" font-family="'Playfair Display', Georgia, serif" font-weight="700" font-size="28" fill="#4F46E5">A</text>
 </svg>

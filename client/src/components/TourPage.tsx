@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { Conversation } from '../App';
+import LogoWordmark from './LogoWordmark';
 import ChatWindow from './ChatWindow';
 
 interface Props {
@@ -10,7 +11,7 @@ function Header() {
   return (
     <header className="flex-shrink-0 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-4 flex items-center justify-between">
       <a href="/" className="text-left">
-        <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">ArtSlaw</h1>
+        <LogoWordmark className="h-6 w-auto" />
         <p className="text-slate-400 text-xs mt-0.5">Your personal gallery companion</p>
       </a>
       <a
