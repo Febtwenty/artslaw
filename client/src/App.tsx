@@ -38,7 +38,7 @@ function titleFromUrl(url: string): string {
   }
 }
 
-function App() {
+function App({ navigate }: { navigate: (path: string) => void }) {
   const { isLoaded, isSignedIn, getToken } = useAuth();
   const [view, setView] = useState<'home' | 'discover'>(() =>
     window.location.pathname === '/discover' ? 'discover' : 'home'
@@ -116,7 +116,7 @@ function App() {
   }
 
   if (!isSignedIn) {
-    return <SignInPage isDark={isDark} onToggleDark={() => setIsDark(!isDark)} />;
+    return <SignInPage isDark={isDark} onToggleDark={() => setIsDark(!isDark)} navigate={navigate} />;
   }
 
   if (convLoading) {

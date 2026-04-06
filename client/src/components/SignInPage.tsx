@@ -3,9 +3,10 @@ import { useClerk } from '@clerk/react';
 interface Props {
   isDark: boolean;
   onToggleDark: () => void;
+  navigate: (path: string) => void;
 }
 
-export default function SignInPage({ isDark, onToggleDark }: Props) {
+export default function SignInPage({ isDark, onToggleDark, navigate }: Props) {
   const { openSignIn } = useClerk();
 
   return (
@@ -91,12 +92,52 @@ export default function SignInPage({ isDark, onToggleDark }: Props) {
         <p className="text-slate-400 dark:text-slate-500 text-xs mt-3">
           Sign up with your email — free to use
         </p>
+
+        {/* Product demo preview */}
+        <div className="mt-16 w-full max-w-2xl mx-auto">
+          <p className="text-xs font-medium tracking-widest uppercase text-slate-400 dark:text-slate-500 mb-4 text-center">
+            See it in action
+          </p>
+          {/* Browser frame */}
+          <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg overflow-hidden">
+            {/* Browser chrome */}
+            <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 dark:bg-slate-700/60 border-b border-slate-200 dark:border-slate-700">
+              <div className="flex gap-1.5">
+                <span className="w-3 h-3 rounded-full bg-red-400" />
+                <span className="w-3 h-3 rounded-full bg-yellow-400" />
+                <span className="w-3 h-3 rounded-full bg-green-400" />
+              </div>
+              <span className="flex-1 text-center text-xs text-slate-400 dark:text-slate-500 font-mono truncate">
+                artslaw.io/tour/marlene-dumas-tate-modern
+              </span>
+            </div>
+            {/* Chat messages */}
+            <div className="p-4 flex flex-col gap-3">
+              {/* User message */}
+              <div className="self-end bg-indigo-600 text-white rounded-xl rounded-br-sm px-4 py-2.5 text-sm max-w-xs">
+                Tell me about the main works in this show
+              </div>
+              {/* Assistant message 1 */}
+              <div className="self-start bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-xl rounded-tl-sm px-4 py-2.5 text-sm max-w-sm leading-relaxed">
+                The centrepiece is Marlene Dumas's <em>The Visitor</em> (2023) — a large-scale oil on canvas that confronts the viewer with an unflinching gaze. Dumas works primarily from photographs, and here the source image is deliberately withheld, leaving the subject's identity open. Her loose, gestural brushwork creates a tension between intimacy and unease that runs through the whole exhibition.
+              </div>
+              {/* Assistant message 2 */}
+              <div className="self-start bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-xl rounded-tl-sm px-4 py-2.5 text-sm max-w-sm leading-relaxed">
+                The show also includes <em>Names</em> (1997), a grid of 100 small portraits of children painted from newspaper images — each face rendered with just a few strokes but unmistakably present. It's one of Dumas's earliest explorations of how images circulate and what gets lost in that process.
+              </div>
+            </div>
+          </div>
+        </div>
       </main>
 
       {/* Footer */}
       <footer className="flex-shrink-0 px-6 py-4 text-center">
-        <p className="text-slate-400 dark:text-slate-600 text-xs">
-          &copy; {new Date().getFullYear()} ArtSlaw
+        <p className="text-slate-400 dark:text-slate-600 text-xs flex flex-wrap items-center justify-center gap-x-2">
+          <span>&copy; {new Date().getFullYear()} ArtSlaw</span>
+          <span className="text-slate-300 dark:text-slate-700">·</span>
+          <button onClick={() => navigate('/privacy')} className="hover:text-slate-600 dark:hover:text-slate-400 transition-colors">Privacy</button>
+          <span className="text-slate-300 dark:text-slate-700">·</span>
+          <button onClick={() => navigate('/terms')} className="hover:text-slate-600 dark:hover:text-slate-400 transition-colors">Terms</button>
         </p>
       </footer>
     </div>
