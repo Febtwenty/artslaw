@@ -28,8 +28,7 @@ function ChatDemo() {
   const [step, setStep] = useState(-1);
   const frameRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const el = frameRef.current;
@@ -55,7 +54,8 @@ function ChatDemo() {
   }, []);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
   }, [step]);
 
   const fadeIn = 'transition-all duration-500 opacity-100 translate-y-0';
@@ -100,7 +100,7 @@ function ChatDemo() {
             In an era dominated by the mass media and a proliferation of images, her work is a testament to the meaning and potency of painting. We live drowning in images—on screens, in feeds, everywhere. Dumas is asking: what does a handmade, carefully considered painting mean in this world of endless digital reproduction? Why does touching oil paint and canvas still matter?
           </div>
         )}
-        <div ref={bottomRef} />
+
       </div>
     </div>
   );
