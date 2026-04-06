@@ -3,9 +3,11 @@ import { useState } from 'react';
 interface Props {
   onStart: (url: string) => void;
   initialUrl?: string;
+  language: 'en' | 'de';
+  onLanguageChange: (lang: 'en' | 'de') => void;
 }
 
-export default function ExhibitionLinkInput({ onStart, initialUrl }: Props) {
+export default function ExhibitionLinkInput({ onStart, initialUrl, language, onLanguageChange }: Props) {
   const [url, setUrl] = useState(initialUrl ?? '');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -68,8 +70,24 @@ export default function ExhibitionLinkInput({ onStart, initialUrl }: Props) {
           </button>
         </div>
 
-        <p className="text-slate-400 text-xs mt-4">
-          Works with museum sites, gallery pages, or any exhibition URL
+        <p className="text-slate-400 dark:text-slate-500 text-xs mt-4 flex items-center justify-center gap-2">
+          <span>Works with museum sites, gallery pages, or any exhibition URL</span>
+          <span className="text-slate-300 dark:text-slate-600">·</span>
+          <button
+            type="button"
+            onClick={() => onLanguageChange('en')}
+            className={`transition-colors ${language === 'en' ? 'text-slate-600 dark:text-slate-300 font-medium' : 'hover:text-slate-600 dark:hover:text-slate-300'}`}
+          >
+            English
+          </button>
+          <span className="text-slate-300 dark:text-slate-600">/</span>
+          <button
+            type="button"
+            onClick={() => onLanguageChange('de')}
+            className={`transition-colors ${language === 'de' ? 'text-slate-600 dark:text-slate-300 font-medium' : 'hover:text-slate-600 dark:hover:text-slate-300'}`}
+          >
+            Deutsch
+          </button>
         </p>
       </form>
     </div>

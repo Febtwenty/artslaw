@@ -53,6 +53,7 @@ function App() {
   const [convLoading, setConvLoading] = useState(true);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [language, setLanguage] = useState<'en' | 'de'>('en');
   const [isDark, setIsDark] = useState(() => {
     const saved = localStorage.getItem('theme');
     if (saved) return saved === 'dark';
@@ -142,6 +143,7 @@ function App() {
   const sendToApi = async (
     nextMessages: Message[],
     url?: string,
+    lang: 'en' | 'de' = 'en',
     onChunk?: (accumulated: string) => void
   ): Promise<{ text: string; sources: Source[] }> => {
     const token = await getToken();
@@ -154,6 +156,7 @@ function App() {
       body: JSON.stringify({
         messages: nextMessages,
         ...(url ? { exhibitionUrl: url } : {}),
+        language: lang,
       }),
     });
 
@@ -221,7 +224,7 @@ function App() {
     setError(null);
 
     try {
-      const { text: reply, sources } = await sendToApi([userMessage], url, (accumulated) => {
+      const { text: reply, sources } = await sendToApi([userMessage], url, language, (accumulated) => {
         setMessages([userMessage, { role: 'assistant', content: accumulated }]);
       });
       const finalMessages: Message[] = [userMessage, { role: 'assistant', content: reply, sources }];
@@ -269,7 +272,7 @@ function App() {
     setError(null);
 
     try {
-      const { text: reply, sources } = await sendToApi(nextMessages, undefined, (accumulated) => {
+      const { text: reply, sources } = await sendToApi(nextMessages, undefined, language, (accumulated) => {
         setMessages([...nextMessages, { role: 'assistant', content: accumulated }]);
       });
       const finalMessages: Message[] = [...nextMessages, { role: 'assistant', content: reply, sources }];
@@ -420,7 +423,7 @@ function App() {
           ) : (
             <div className="flex-1 flex flex-col max-w-3xl mx-auto w-full">
               {!hasStarted ? (
-                <ExhibitionLinkInput onStart={startConversation} />
+                <ExhibitionLinkInput onStart={startConversation} language={language} onLanguageChange={setLanguage} />
               ) : (
                 <div className="flex-1 flex flex-col px-4 pb-2">
                   {/* Exhibition URL badge */}
