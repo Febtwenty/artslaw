@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import LogoWordmark from './LogoWordmark';
+import type { SuggestedTour } from '../App';
 
 interface Props {
   onStart: (url: string) => void;
   initialUrl?: string;
   language: 'en' | 'de';
   onLanguageChange: (lang: 'en' | 'de') => void;
+  suggestedTours?: SuggestedTour[];
 }
 
-export default function ExhibitionLinkInput({ onStart, initialUrl, language, onLanguageChange }: Props) {
+export default function ExhibitionLinkInput({ onStart, initialUrl, language, onLanguageChange, suggestedTours }: Props) {
   const [url, setUrl] = useState(initialUrl ?? '');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -19,7 +21,7 @@ export default function ExhibitionLinkInput({ onStart, initialUrl, language, onL
   };
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
+    <div className="flex-1 flex flex-col items-center justify-center px-6 text-center pb-10">
       {/* Wordmark */}
       <div className="mb-8">
         <LogoWordmark className="h-12 w-auto" />
@@ -89,6 +91,60 @@ export default function ExhibitionLinkInput({ onStart, initialUrl, language, onL
           </button>
         </p>
       </form>
+
+      {suggestedTours && suggestedTours.length > 0 && (
+        <div className="mt-10 w-full max-w-xl">
+          <p className="text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">
+            Or explore a featured exhibition
+          </p>
+          <div className="flex flex-col gap-2.5">
+            {suggestedTours.map((tour, i) => (
+              <div
+                key={tour.url ?? i}
+                className="flex items-center gap-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3"
+              >
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  {tour.imageUrl ? (
+                    <img
+                      src={tour.imageUrl}
+                      alt={tour.exhibitionTitle}
+                      className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-100 to-slate-200 dark:from-indigo-900/30 dark:to-slate-700 flex-shrink-0" />
+                  )}
+                  <div className="min-w-0">
+                    {tour.artistName && (
+                      <p className="text-xs font-medium text-indigo-600 dark:text-indigo-400 truncate text-left">
+                        {tour.artistName}
+                      </p>
+                    )}
+                    <a
+                      href={tour.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm font-semibold text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 line-clamp-2 leading-snug text-left transition-colors"
+                    >
+                      {tour.exhibitionTitle || 'Untitled Exhibition'}
+                    </a>
+                    {tour.gallery && (
+                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate text-left">{tour.gallery}</p>
+                    )}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onStart(tour.url)}
+                  className="text-xs font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-3 py-1.5 flex-shrink-0 transition-colors"
+                >
+                  Start Tour
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

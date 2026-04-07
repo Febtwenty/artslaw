@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import { getAuth } from '@clerk/express';
 import * as cheerio from 'cheerio';
 import { getDb } from '../db';
+import { FEATURED_EXHIBITIONS } from '../featuredExhibitions';
 
 const router = express.Router();
 const h = (fn: (req: Request, res: Response, next: NextFunction) => Promise<void>) =>
@@ -132,6 +133,12 @@ router.get(
           artistTourMap.set(artistName, String(conv._id));
         }
       }
+    }
+
+    // No artist history yet — return curated starter exhibitions
+    if (artistTourMap.size === 0) {
+      res.json(FEATURED_EXHIBITIONS.map((e) => ({ ...e, scrapedAt: new Date() })));
+      return;
     }
 
     const cutoff = new Date(Date.now() - CACHE_TTL_MS);

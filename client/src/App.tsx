@@ -19,6 +19,14 @@ export interface Message {
   sources?: Source[];
 }
 
+export interface SuggestedTour {
+  artistName: string;
+  exhibitionTitle: string;
+  gallery: string;
+  url: string;
+  imageUrl?: string | null;
+}
+
 export interface Conversation {
   id: string;
   title: string;
@@ -53,6 +61,7 @@ function App({ navigate }: { navigate: (path: string) => void }) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [convLoading, setConvLoading] = useState(true);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const [suggestedTours, setSuggestedTours] = useState<SuggestedTour[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [language, setLanguage] = useState<'en' | 'de'>('en');
   const [isDark, setIsDark] = useState(() => {
@@ -107,6 +116,24 @@ function App({ navigate }: { navigate: (path: string) => void }) {
 
     return () => { cancelled = true; };
   }, [isSignedIn]);
+
+  // Fetch curated starter exhibitions for new users with no past tours.
+  useEffect(() => {
+    if (convLoading || !isSignedIn || conversations.length !== 0) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const token = await getToken();
+        const res = await fetch('/api/discoveries', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled) setSuggestedTours((data as SuggestedTour[]).slice(0, 3));
+      } catch { /* non-critical */ }
+    })();
+    return () => { cancelled = true; };
+  }, [convLoading, isSignedIn, conversations.length]);
 
   if (!isLoaded) {
     return (
@@ -424,7 +451,7 @@ function App({ navigate }: { navigate: (path: string) => void }) {
           ) : (
             <div className="flex-1 flex flex-col max-w-3xl mx-auto w-full">
               {!hasStarted ? (
-                <ExhibitionLinkInput onStart={startConversation} language={language} onLanguageChange={setLanguage} />
+                <ExhibitionLinkInput onStart={startConversation} language={language} onLanguageChange={setLanguage} suggestedTours={suggestedTours} />
               ) : (
                 <div className="flex-1 flex flex-col px-4 pb-2">
                   {/* Exhibition URL badge */}
