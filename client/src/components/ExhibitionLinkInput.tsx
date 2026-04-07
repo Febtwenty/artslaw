@@ -87,7 +87,7 @@ export default function ExhibitionLinkInput({ onStart, initialUrl, language, onL
             onClick={() => onLanguageChange('de')}
             className={`transition-colors ${language === 'de' ? 'text-slate-600 dark:text-slate-300 font-medium' : 'hover:text-slate-600 dark:hover:text-slate-300'}`}
           >
-            Deutsch
+            German
           </button>
         </p>
       </form>

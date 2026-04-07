@@ -6,6 +6,8 @@ import ExhibitionLinkInput from './components/ExhibitionLinkInput';
 import Sidebar from './components/Sidebar';
 import SignInPage from './components/SignInPage';
 import DiscoverPage from './components/DiscoverPage';
+import PrivacyPage from './components/PrivacyPage';
+import TermsPage from './components/TermsPage';
 import LogoWordmark from './components/LogoWordmark';
 
 export interface Source {
@@ -49,7 +51,7 @@ function titleFromUrl(url: string): string {
 
 function App({ navigate }: { navigate: (path: string) => void }) {
   const { isLoaded, isSignedIn, getToken } = useAuth();
-  const [view, setView] = useState<'home' | 'discover'>(() =>
+  const [view, setView] = useState<'home' | 'discover' | 'privacy' | 'terms'>(() =>
     window.location.pathname === '/discover' ? 'discover' : 'home'
   );
   const [exhibitionUrl, setExhibitionUrl] = useState('');
@@ -137,7 +139,7 @@ function App({ navigate }: { navigate: (path: string) => void }) {
 
   if (!isLoaded) {
     return (
-      <div className="h-full flex items-center justify-center bg-slate-50 dark:bg-slate-900">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
         <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -149,7 +151,7 @@ function App({ navigate }: { navigate: (path: string) => void }) {
 
   if (convLoading) {
     return (
-      <div className="h-full flex items-center justify-center bg-slate-50 dark:bg-slate-900">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
         <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -442,11 +444,20 @@ function App({ navigate }: { navigate: (path: string) => void }) {
           onSelect={(id) => { loadConversation(id); setSidebarOpen(false); }}
           onNew={() => { startNewTour(); setSidebarOpen(false); }}
           onDelete={deleteConversation}
+          navigate={(path) => {
+            if (path === '/privacy') setView('privacy');
+            else if (path === '/terms') setView('terms');
+            else navigate(path);
+          }}
         />
 
         {/* Main content */}
-        <main className="flex-1 flex flex-col">
-          {isDiscover ? (
+        <main className="flex-1 flex flex-col overflow-y-auto">
+          {view === 'privacy' ? (
+            <PrivacyPage navigate={(path) => { if (path === '/privacy') setView('privacy'); else if (path === '/terms') setView('terms'); else { setView('home'); navigate('/'); } }} />
+          ) : view === 'terms' ? (
+            <TermsPage navigate={(path) => { if (path === '/privacy') setView('privacy'); else if (path === '/terms') setView('terms'); else { setView('home'); navigate('/'); } }} />
+          ) : isDiscover ? (
             <DiscoverPage onStartTour={handleStartTour} />
           ) : (
             <div className="flex-1 flex flex-col max-w-3xl mx-auto w-full">

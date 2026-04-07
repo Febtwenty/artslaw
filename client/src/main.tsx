@@ -35,8 +35,25 @@ if (tourMatch) {
       setPath(to);
     }
 
-    if (path === '/privacy') return <PrivacyPage navigate={navigate} />;
-    if (path === '/terms') return <TermsPage navigate={navigate} />;
+    function StandalonePage({ children }: { children: React.ReactNode }) {
+      return (
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+          <div className="max-w-2xl mx-auto px-6 pt-6">
+            <button
+              onClick={() => navigate('/')}
+              className="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
+            >
+              ← Back
+            </button>
+          </div>
+          {children}
+        </div>
+      );
+    }
+
+    if (path === '/privacy') return <StandalonePage><PrivacyPage navigate={navigate} /></StandalonePage>;
+    if (path === '/terms') return <StandalonePage><TermsPage navigate={navigate} /></StandalonePage>;
+
     return (
       <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
         <App navigate={navigate} />
