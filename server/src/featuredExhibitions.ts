@@ -21,7 +21,7 @@ export const FEATURED_EXHIBITIONS = [
     city: 'Salzburg',
     dates: 'Jul 26 – Aug 31, 2025',
     url: 'https://www.contemporaryartlibrary.org/project/philipp-timischl-at-layr-57968?from=%2Fartist%2Fphilipp-timischl-15934',
-    imageUrl: 'https://cdn.contemporaryartlibrary.org/store/image/906780/imagefile/caq_thumb-4e77927e402472fe2fe39a72402d94c2.jpg',
+    imageUrl: 'https://cdn.contemporaryartlibrary.org/store/image/906780/imagefile/medium-66c46c81ccdbe0b4a874a43e0f6a5716.jpg',
   },
   {
     artistName: 'Carolyn Lazard',
@@ -30,7 +30,7 @@ export const FEATURED_EXHIBITIONS = [
     city: 'Berlin',
     dates: 'Sep 12 – Oct 18, 2025',
     url: 'https://www.contemporaryartlibrary.org/project/carolyn-lazard-at-trautwein-herleth-berlin-59613?from=%2Fvenue%2Ftrautwein-herleth-7532',
-    imageUrl: 'https://cdn.contemporaryartlibrary.org/store/image/924725/imagefile/caq_thumb-aca5d462833244b0fa1d7286befffc14.jpg',
+    imageUrl: 'https://cdn.contemporaryartlibrary.org/store/image/924725/imagefile/medium-0552ef6dd9728807f927a57bb4dbd19d.jpg',
   },
   {
     artistName: 'Hanna Hur',
@@ -39,7 +39,7 @@ export const FEATURED_EXHIBITIONS = [
     city: 'Berlin',
     dates: 'Sep 10 – Oct 18, 2025',
     url: 'https://www.contemporaryartlibrary.org/project/hanna-hur-at-sweetwater-berlin-59435?from=%2Fvenue%2Fsweetwater-9354',
-    imageUrl: 'https://cdn.contemporaryartlibrary.org/store/image/914239/imagefile/caq_thumb-3abe1f874a1260a964e81e4f3cadfb0d.jpg',
+    imageUrl: 'https://cdn.contemporaryartlibrary.org/store/image/914239/imagefile/medium-d621bcec9b2c9ad70ef4072c6b8aa091.jpg',
   },
   {
     artistName: 'Wolfgang Tillmans',
