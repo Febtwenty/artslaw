@@ -414,7 +414,7 @@ function App({ navigate }: { navigate: (path: string) => void }) {
               </>
             )}
           </button>
-          <div className="w-px h-4 bg-slate-200 dark:bg-slate-700" />
+          <div className="hidden sm:block w-px h-4 bg-slate-200 dark:bg-slate-700" />
           {/* Dark mode toggle */}
           <button
             onClick={() => setIsDark(!isDark)}
