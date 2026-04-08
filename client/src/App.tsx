@@ -386,7 +386,7 @@ function App({ navigate }: { navigate: (path: string) => void }) {
             <p className="text-slate-400 text-xs mt-0.5">{isDiscover ? 'Discover exhibitions' : 'Your personal gallery companion'}</p>
           </button>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {/* Discover / Back-to-chats toggle */}
           <button
             onClick={() => setView(isDiscover ? 'home' : 'discover')}
@@ -414,6 +414,7 @@ function App({ navigate }: { navigate: (path: string) => void }) {
               </>
             )}
           </button>
+          <div className="w-px h-4 bg-slate-200 dark:bg-slate-700" />
           {/* Dark mode toggle */}
           <button
             onClick={() => setIsDark(!isDark)}
@@ -430,7 +431,9 @@ function App({ navigate }: { navigate: (path: string) => void }) {
               </svg>
             )}
           </button>
-          <UserButton />
+          <div className="flex items-center">
+            <UserButton />
+          </div>
         </div>
       </header>
 
