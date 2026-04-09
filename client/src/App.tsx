@@ -137,6 +137,12 @@ function App({ navigate }: { navigate: (path: string) => void }) {
     return () => { cancelled = true; };
   }, [convLoading, isSignedIn, conversations.length]);
 
+  useEffect(() => {
+    if (view === 'privacy' || view === 'terms') {
+      window.scrollTo(0, 0);
+    }
+  }, [view]);
+
   if (!isLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
