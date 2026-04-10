@@ -143,30 +143,36 @@ router.get(
 
     const cutoff = new Date(Date.now() - CACHE_TTL_MS);
     const allResults: any[] = [];
+    const artistNames = [...artistTourMap.keys()];
 
-    for (const [artistName, tourId] of artistTourMap.entries()) {
-      // Check cache
-      const cached = await db
-        .collection('discoveries')
-        .find({ artistName, scrapedAt: { $gte: cutoff } })
-        .toArray();
+    // Batch-fetch all cached entries in one query
+    const allCached = await db
+      .collection('discoveries')
+      .find({ artistName: { $in: artistNames }, scrapedAt: { $gte: cutoff } })
+      .toArray();
 
-      if (cached.length > 0) {
-        allResults.push(...cached);
-        continue;
-      }
+    const freshArtists = new Set(allCached.map((d: any) => d.artistName as string));
+    allResults.push(...allCached);
 
-      // Stale or missing — delete old entries and re-scrape
-      await db.collection('discoveries').deleteMany({ artistName });
+    // Determine which artists need re-scraping
+    const staleArtists = artistNames.filter((name) => !freshArtists.has(name));
 
-      let exhibitions: ExhibitionRaw[] = [];
-      try {
-        exhibitions = await scrapeArtistExhibitions(artistName);
-      } catch {
-        // silently skip failed artists
-      }
+    if (staleArtists.length > 0) {
+      // Delete all stale entries in one batch
+      await db.collection('discoveries').deleteMany({ artistName: { $in: staleArtists } });
 
-      if (exhibitions.length > 0) {
+      // Scrape stale artists in parallel
+      const scrapeResults = await Promise.allSettled(
+        staleArtists.map((artistName) =>
+          scrapeArtistExhibitions(artistName).then((exhibitions) => ({ artistName, exhibitions }))
+        )
+      );
+
+      for (const result of scrapeResults) {
+        if (result.status !== 'fulfilled') continue;
+        const { artistName, exhibitions } = result.value;
+        if (exhibitions.length === 0) continue;
+        const tourId = artistTourMap.get(artistName)!;
         const docs = exhibitions.map(({ sortableDate: _sd, ...ex }) => ({
           ...ex,
           artistName,

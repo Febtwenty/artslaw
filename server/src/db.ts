@@ -1,13 +1,11 @@
 import { MongoClient, Db } from 'mongodb';
 
-let client: MongoClient | null = null;
-let db: Db | null = null;
+let connectingPromise: Promise<Db> | null = null;
 
-export async function getDb(): Promise<Db> {
-  if (!db) {
-    client = new MongoClient(process.env.MONGODB_URI!);
-    await client.connect();
-    db = client.db();
+export function getDb(): Promise<Db> {
+  if (!connectingPromise) {
+    const client = new MongoClient(process.env.MONGODB_URI!);
+    connectingPromise = client.connect().then(() => client.db());
   }
-  return db;
+  return connectingPromise;
 }

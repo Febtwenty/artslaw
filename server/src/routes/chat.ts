@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import { getAuth } from '@clerk/express';
 import Anthropic from '@anthropic-ai/sdk';
 
 const router = Router();
@@ -67,8 +68,8 @@ interface ChatRequestBody {
 router.post('/', async (req: Request, res: Response) => {
   let streamStarted = false;
   try {
-    const authObject = (req as any).auth?.();
-    if (!authObject?.userId) {
+    const { userId } = getAuth(req);
+    if (!userId) {
       res.status(401).json({ error: 'Authentication required.' });
       return;
     }

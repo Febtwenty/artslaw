@@ -228,7 +228,12 @@ function App({ navigate }: { navigate: (path: string) => void }) {
       for (const event of events) {
         const dataLine = event.split('\n').find(l => l.startsWith('data: '));
         if (!dataLine) continue;
-        const json = JSON.parse(dataLine.slice(6));
+        let json: { t?: string; s?: Source[] };
+        try {
+          json = JSON.parse(dataLine.slice(6));
+        } catch {
+          continue;
+        }
         if (json.t !== undefined) {
           fullText += json.t as string;
           // Switch from loading dots to streaming text on first chunk
@@ -289,7 +294,11 @@ function App({ navigate }: { navigate: (path: string) => void }) {
       conversationsFetch('/api/conversations', {
         method: 'POST',
         body: JSON.stringify(newConv),
-      }).catch((err) => console.error('[conversations] create failed:', err));
+      }).catch((err) => {
+        console.error('[conversations] create failed:', err);
+        setConversations((prev) => prev.filter((c) => c.id !== id));
+        setError('Could not save conversation. Please try again.');
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
     } finally {

@@ -1,4 +1,5 @@
 import { Router, Request, Response, NextFunction, RequestHandler } from 'express';
+import { getAuth } from '@clerk/express';
 import { getDb } from '../db';
 
 const router = Router();
@@ -10,7 +11,7 @@ function h(fn: RequestHandler): RequestHandler {
 
 // GET /api/conversations
 router.get('/', h(async (req: Request, res: Response) => {
-  const { userId } = (req as any).auth?.() ?? {};
+  const { userId } = getAuth(req);
   if (!userId) { res.status(401).json({ error: 'Authentication required.' }); return; }
 
   const db = await getDb();
@@ -34,7 +35,7 @@ router.get('/', h(async (req: Request, res: Response) => {
 
 // POST /api/conversations
 router.post('/', h(async (req: Request, res: Response) => {
-  const { userId } = (req as any).auth?.() ?? {};
+  const { userId } = getAuth(req);
   if (!userId) { res.status(401).json({ error: 'Authentication required.' }); return; }
 
   const { id, title, exhibitionUrl, messages, createdAt, updatedAt } = req.body;
@@ -58,7 +59,7 @@ router.post('/', h(async (req: Request, res: Response) => {
 
 // PUT /api/conversations/:id
 router.put('/:id', h(async (req: Request, res: Response) => {
-  const { userId } = (req as any).auth?.() ?? {};
+  const { userId } = getAuth(req);
   if (!userId) { res.status(401).json({ error: 'Authentication required.' }); return; }
 
   const { messages, updatedAt } = req.body;
@@ -81,7 +82,7 @@ router.put('/:id', h(async (req: Request, res: Response) => {
 
 // DELETE /api/conversations/:id
 router.delete('/:id', h(async (req: Request, res: Response) => {
-  const { userId } = (req as any).auth?.() ?? {};
+  const { userId } = getAuth(req);
   if (!userId) { res.status(401).json({ error: 'Authentication required.' }); return; }
 
   const db = await getDb();
