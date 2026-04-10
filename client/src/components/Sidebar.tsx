@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Conversation } from '../App';
+import type { Conversation } from '../types';
 
 interface Props {
   isOpen: boolean;

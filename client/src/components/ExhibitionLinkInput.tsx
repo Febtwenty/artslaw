@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import LogoWordmark from './LogoWordmark';
-import type { SuggestedTour } from '../App';
+import type { SuggestedTour } from '../types';
 
 interface Props {
   onStart: (url: string) => void;

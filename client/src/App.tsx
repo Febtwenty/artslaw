@@ -9,73 +9,45 @@ import DiscoverPage from './components/DiscoverPage';
 import PrivacyPage from './components/PrivacyPage';
 import TermsPage from './components/TermsPage';
 import LogoWordmark from './components/LogoWordmark';
+import { useDarkMode } from './hooks/useDarkMode';
+import { useConversationHistory } from './hooks/useConversationHistory';
+import { useChatTour } from './hooks/useChatTour';
+import { authedFetch } from './utils';
 
-export interface Source {
-  title: string;
-  url: string;
-}
-
-export interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-  sources?: Source[];
-}
-
-export interface SuggestedTour {
-  artistName: string;
-  exhibitionTitle: string;
-  gallery: string;
-  url: string;
-  imageUrl?: string | null;
-}
-
-export interface Conversation {
-  id: string;
-  title: string;
-  exhibitionUrl: string;
-  messages: Message[];
-  createdAt: number;
-  updatedAt: number;
-}
-
-function titleFromUrl(url: string): string {
-  try {
-    const { hostname, pathname } = new URL(url);
-    const slug = pathname.split('/').filter(Boolean).pop() ?? hostname;
-    const readable = slug.replace(/[-_]/g, ' ');
-    return readable.length > 40 ? readable.slice(0, 37) + '...' : readable;
-  } catch {
-    return url.slice(0, 40);
-  }
-}
+export type { Source, Message, SuggestedTour, Conversation } from './types';
 
 function App({ navigate }: { navigate: (path: string) => void }) {
   const { isLoaded, isSignedIn, getToken } = useAuth();
   const [view, setView] = useState<'home' | 'discover' | 'privacy' | 'terms'>(() =>
     window.location.pathname === '/discover' ? 'discover' : 'home'
   );
-  const [exhibitionUrl, setExhibitionUrl] = useState('');
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isStreaming, setIsStreaming] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [hasStarted, setHasStarted] = useState(false);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [convLoading, setConvLoading] = useState(true);
-  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
-  const [suggestedTours, setSuggestedTours] = useState<SuggestedTour[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [language, setLanguage] = useState<'en' | 'de'>('en');
-  const [isDark, setIsDark] = useState(() => {
-    const saved = localStorage.getItem('theme');
-    if (saved) return saved === 'dark';
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const { isDark, setIsDark } = useDarkMode();
+  const { conversations, setConversations, convLoading, suggestedTours } =
+    useConversationHistory({ isSignedIn, getToken });
+  const {
+    exhibitionUrl,
+    messages,
+    activeConversationId,
+    hasStarted,
+    isLoading,
+    isStreaming,
+    error,
+    startConversation,
+    sendMessage,
+    resetChatState,
+    loadConversationState,
+  } = useChatTour({
+    language,
+    getToken,
+    onConversationCreated: (conv) => setConversations((prev) => [conv, ...prev]),
+    onConversationCreationFailed: (id) => setConversations((prev) => prev.filter((c) => c.id !== id)),
+    onConversationUpdated: (id, msgs, updatedAt) =>
+      setConversations((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, messages: msgs, updatedAt } : c))
+      ),
   });
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', isDark);
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
-  }, [isDark]);
 
   // Keep URL in sync with view state and handle browser back/forward
   useEffect(() => {
@@ -92,50 +64,6 @@ function App({ navigate }: { navigate: (path: string) => void }) {
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
   }, []);
-
-  // Load conversations from server whenever the user signs in.
-  useEffect(() => {
-    if (!isSignedIn) return;
-
-    let cancelled = false;
-    setConvLoading(true);
-
-    (async () => {
-      try {
-        const token = await getToken();
-        const res = await fetch('/api/conversations', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) throw new Error(`Failed to load conversations (${res.status})`);
-        const data: Conversation[] = await res.json();
-        if (!cancelled) setConversations(data);
-      } catch (err) {
-        console.error('[conversations]', err);
-      } finally {
-        if (!cancelled) setConvLoading(false);
-      }
-    })();
-
-    return () => { cancelled = true; };
-  }, [isSignedIn]);
-
-  // Fetch curated starter exhibitions for new users with no past tours.
-  useEffect(() => {
-    if (convLoading || !isSignedIn || conversations.length !== 0) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const token = await getToken();
-        const res = await fetch('/api/discoveries', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) return;
-        const data = await res.json();
-        if (!cancelled) setSuggestedTours((data as SuggestedTour[]).slice(0, 3));
-      } catch { /* non-critical */ }
-    })();
-    return () => { cancelled = true; };
-  }, [convLoading, isSignedIn, conversations.length]);
 
   useEffect(() => {
     if (view === 'privacy' || view === 'terms') {
@@ -163,205 +91,15 @@ function App({ navigate }: { navigate: (path: string) => void }) {
     );
   }
 
-  // Authenticated fetch helper that injects the Bearer token.
-  const conversationsFetch = async (path: string, options: RequestInit = {}) => {
-    const token = await getToken();
-    return fetch(path, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-        ...((options.headers as Record<string, string>) ?? {}),
-      },
-    });
-  };
-
-  const sendToApi = async (
-    nextMessages: Message[],
-    url?: string,
-    lang: 'en' | 'de' = 'en',
-    onChunk?: (accumulated: string) => void
-  ): Promise<{ text: string; sources: Source[] }> => {
-    const token = await getToken();
-    const response = await fetch('/api/chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        messages: nextMessages,
-        ...(url ? { exhibitionUrl: url } : {}),
-        language: lang,
-      }),
-    });
-
-    if (!response.ok) {
-      let errorMessage = `Server error (${response.status}). Please try again.`;
-      try {
-        const data = await response.json();
-        if (data.error) errorMessage = data.error;
-      } catch {}
-      if (response.status === 401) {
-        throw new Error('Authentication failed. Please sign out and sign in again.');
-      }
-      throw new Error(errorMessage);
-    }
-
-    if (!response.body) {
-      throw new Error('No response body received.');
-    }
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let fullText = '';
-    let sources: Source[] = [];
-    let buffer = '';
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      // SSE events are delimited by double newlines
-      const events = buffer.split('\n\n');
-      buffer = events.pop() ?? '';
-      for (const event of events) {
-        const dataLine = event.split('\n').find(l => l.startsWith('data: '));
-        if (!dataLine) continue;
-        let json: { t?: string; s?: Source[] };
-        try {
-          json = JSON.parse(dataLine.slice(6));
-        } catch {
-          continue;
-        }
-        if (json.t !== undefined) {
-          fullText += json.t as string;
-          // Switch from loading dots to streaming text on first chunk
-          if (fullText.length > 0) { setIsLoading(false); setIsStreaming(true); }
-          onChunk?.(fullText);
-        } else if (json.s !== undefined) {
-          sources = json.s as Source[];
-        }
-      }
-    }
-
-    const text = fullText || "I wasn't able to complete the research. Please try again.";
-    return { text, sources };
-  };
-
-  const startConversation = async (url: string) => {
-    const id = crypto.randomUUID();
-    const userMessage: Message = {
-      role: 'user',
-      content: 'Please guide me through this exhibition.',
-    };
-
-    setActiveConversationId(id);
-    setExhibitionUrl(url);
-    setHasStarted(true);
-    setMessages([userMessage]);
-    setIsLoading(true);
-    setIsStreaming(false);
-    setError(null);
-
-    try {
-      const { text: reply, sources } = await sendToApi([userMessage], url, language, (accumulated) => {
-        setMessages([userMessage, { role: 'assistant', content: accumulated }]);
-      });
-      const finalMessages: Message[] = [userMessage, { role: 'assistant', content: reply, sources }];
-      setMessages(finalMessages);
-
-      let title = titleFromUrl(url);
-      try {
-        const titleRes = await conversationsFetch('/api/generate-title', {
-          method: 'POST',
-          body: JSON.stringify({ text: reply.slice(0, 2000) }),
-        });
-        if (titleRes.ok) title = (await titleRes.json()).title;
-      } catch { /* keep fallback title */ }
-
-      const now = Date.now();
-      const newConv: Conversation = {
-        id,
-        title,
-        exhibitionUrl: url,
-        messages: finalMessages,
-        createdAt: now,
-        updatedAt: now,
-      };
-      setConversations((prev) => [newConv, ...prev]);
-
-      conversationsFetch('/api/conversations', {
-        method: 'POST',
-        body: JSON.stringify(newConv),
-      }).catch((err) => {
-        console.error('[conversations] create failed:', err);
-        setConversations((prev) => prev.filter((c) => c.id !== id));
-        setError('Could not save conversation. Please try again.');
-      });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
-    } finally {
-      setIsLoading(false);
-      setIsStreaming(false);
-    }
-  };
-
-  const sendMessage = async (content: string) => {
-    const userMessage: Message = { role: 'user', content };
-    const nextMessages = [...messages, userMessage];
-
-    setMessages(nextMessages);
-    setIsLoading(true);
-    setIsStreaming(false);
-    setError(null);
-
-    try {
-      const { text: reply, sources } = await sendToApi(nextMessages, undefined, language, (accumulated) => {
-        setMessages([...nextMessages, { role: 'assistant', content: accumulated }]);
-      });
-      const finalMessages: Message[] = [...nextMessages, { role: 'assistant', content: reply, sources }];
-      setMessages(finalMessages);
-
-      if (activeConversationId) {
-        const now = Date.now();
-        setConversations((prev) =>
-          prev.map((c) =>
-            c.id === activeConversationId ? { ...c, messages: finalMessages, updatedAt: now } : c
-          )
-        );
-        conversationsFetch(`/api/conversations/${activeConversationId}`, {
-          method: 'PUT',
-          body: JSON.stringify({ messages: finalMessages, updatedAt: now }),
-        }).catch((err) => console.error('[conversations] update failed:', err));
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
-    } finally {
-      setIsLoading(false);
-      setIsStreaming(false);
-    }
-  };
-
   const startNewTour = () => {
-    setActiveConversationId(null);
-    setHasStarted(false);
-    setMessages([]);
-    setExhibitionUrl('');
-    setError(null);
+    resetChatState();
     setView('home');
   };
 
   const loadConversation = (id: string) => {
     const conv = conversations.find((c) => c.id === id);
     if (!conv) return;
-    setActiveConversationId(id);
-    setExhibitionUrl(conv.exhibitionUrl);
-    setMessages(conv.messages);
-    setHasStarted(true);
-    setError(null);
-    setIsLoading(false);
-    setIsStreaming(false);
+    loadConversationState(conv);
     setView('home');
   };
 
@@ -370,7 +108,7 @@ function App({ navigate }: { navigate: (path: string) => void }) {
     if (activeConversationId === id) {
       startNewTour();
     }
-    conversationsFetch(`/api/conversations/${id}`, { method: 'DELETE' })
+    authedFetch(getToken, `/api/conversations/${id}`, { method: 'DELETE' })
       .catch((err) => console.error('[conversations] delete failed:', err));
   };
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { Conversation } from '../App';
+import type { Conversation } from '../types';
 import LogoWordmark from './LogoWordmark';
 import ChatWindow from './ChatWindow';
 
