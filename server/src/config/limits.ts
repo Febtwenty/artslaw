@@ -4,7 +4,7 @@ export interface UsageLimits {
 }
 
 export const DEFAULT_LIMITS: UsageLimits = {
-  dailyTokens:   100_000,
+  dailyTokens:   200_000,
   monthlyTokens: 2_000_000,
 };
 
