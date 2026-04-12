@@ -12,7 +12,9 @@ import LogoWordmark from './components/LogoWordmark';
 import { useDarkMode } from './hooks/useDarkMode';
 import { useConversationHistory } from './hooks/useConversationHistory';
 import { useChatTour } from './hooks/useChatTour';
+import { useUsage } from './hooks/useUsage';
 import { authedFetch } from './utils';
+import UsageIndicator from './components/UsageIndicator';
 
 export type { Source, Message, SuggestedTour, Conversation } from './types';
 
@@ -24,8 +26,10 @@ function App({ navigate }: { navigate: (path: string) => void }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [language, setLanguage] = useState<'en' | 'de'>('en');
   const { isDark, setIsDark } = useDarkMode();
+  const [usageRefreshKey, setUsageRefreshKey] = useState(0);
   const { conversations, setConversations, convLoading, suggestedTours } =
     useConversationHistory({ isSignedIn, getToken });
+  const { usage } = useUsage({ getToken, isSignedIn: isSignedIn ?? false, refreshKey: usageRefreshKey });
   const {
     exhibitionUrl,
     messages,
@@ -41,12 +45,17 @@ function App({ navigate }: { navigate: (path: string) => void }) {
   } = useChatTour({
     language,
     getToken,
-    onConversationCreated: (conv) => setConversations((prev) => [conv, ...prev]),
+    onConversationCreated: (conv) => {
+      setConversations((prev) => [conv, ...prev]);
+      setUsageRefreshKey(k => k + 1);
+    },
     onConversationCreationFailed: (id) => setConversations((prev) => prev.filter((c) => c.id !== id)),
-    onConversationUpdated: (id, msgs, updatedAt) =>
+    onConversationUpdated: (id, msgs, updatedAt) => {
       setConversations((prev) =>
         prev.map((c) => (c.id === id ? { ...c, messages: msgs, updatedAt } : c))
-      ),
+      );
+      setUsageRefreshKey(k => k + 1);
+    },
   });
 
   // Keep URL in sync with view state and handle browser back/forward
@@ -168,6 +177,7 @@ function App({ navigate }: { navigate: (path: string) => void }) {
             )}
           </button>
           <div className="hidden sm:block w-px h-4 bg-slate-200 dark:bg-slate-700" />
+          <UsageIndicator usage={usage} />
           {/* Dark mode toggle */}
           <button
             onClick={() => setIsDark(!isDark)}
@@ -200,6 +210,7 @@ function App({ navigate }: { navigate: (path: string) => void }) {
           onSelect={(id) => { loadConversation(id); setSidebarOpen(false); }}
           onNew={() => { startNewTour(); setSidebarOpen(false); }}
           onDelete={deleteConversation}
+          usage={usage}
           navigate={(path) => {
             if (path === '/privacy') setView('privacy');
             else if (path === '/terms') setView('terms');

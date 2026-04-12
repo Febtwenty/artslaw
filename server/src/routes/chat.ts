@@ -1,6 +1,8 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, RequestHandler } from 'express';
 import { getAuth } from '@clerk/express';
 import Anthropic from '@anthropic-ai/sdk';
+import { checkLimits, recordUsage } from '../db/usage';
+import { getLimitsForUser } from '../config/limits';
 
 const router = Router();
 
@@ -65,7 +67,28 @@ interface ChatRequestBody {
   language?: 'en' | 'de';
 }
 
-router.post('/', async (req: Request, res: Response) => {
+const checkUsageLimits: RequestHandler = async (req, res, next) => {
+  const { userId } = getAuth(req);
+  if (!userId) { next(); return; } // main handler re-checks auth
+  try {
+    const result = await checkLimits(userId, getLimitsForUser(userId));
+    if (!result.allowed) {
+      res.status(429).json({
+        error: 'limit_exceeded',
+        reason: result.reason,
+        usage: { daily: result.daily, monthly: result.monthly },
+        resetsAt: result.resetsAt?.toISOString(),
+      });
+      return;
+    }
+    next();
+  } catch (err) {
+    console.error('[usage] limit check failed:', err);
+    next(); // fail-open: don't block chat if usage DB is temporarily down
+  }
+};
+
+router.post('/', checkUsageLimits, async (req: Request, res: Response) => {
   let streamStarted = false;
   try {
     const { userId } = getAuth(req);
@@ -187,6 +210,11 @@ router.post('/', async (req: Request, res: Response) => {
     }
 
     res.end();
+    // Fire-and-forget — response is already sent
+    const totalInput  = allFinalMessages.reduce((s, m) => s + (m.usage?.input_tokens  ?? 0), 0);
+    const totalOutput = allFinalMessages.reduce((s, m) => s + (m.usage?.output_tokens ?? 0), 0);
+    recordUsage(userId, totalInput, totalOutput)
+      .catch(err => console.error('[usage] record failed:', err));
   } catch (error) {
     console.error('Chat error:', error);
 

@@ -8,8 +8,12 @@ import conversationsRouter from './routes/conversations';
 import titleRouter from './routes/title';
 import tourRouter from './routes/tour';
 import discoveriesRouter from './routes/discoveries';
+import usageRouter from './routes/usage';
+import { ensureUsageIndexes } from './db/usage';
 
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+
+ensureUsageIndexes().catch(err => console.error('[usage] index setup failed:', err));
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -23,6 +27,7 @@ app.use('/api/conversations', conversationsRouter);
 app.use('/api/generate-title', titleRouter);
 app.use('/api/tour', tourRouter);
 app.use('/api/discoveries', discoveriesRouter);
+app.use('/api/usage', usageRouter);
 
 // Serve valid empty source maps for React DevTools extension files so Firefox
 // doesn't throw a JSON.parse error when the SPA catch-all returns index.html.

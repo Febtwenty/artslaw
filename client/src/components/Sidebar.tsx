@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { Conversation } from '../types';
+import UsageIndicator from './UsageIndicator';
+import type { UsageData } from '../hooks/useUsage';
 
 interface Props {
   isOpen: boolean;
@@ -10,6 +12,7 @@ interface Props {
   onNew: () => void;
   onDelete: (id: string) => void;
   navigate: (path: string) => void;
+  usage: UsageData | null;
 }
 
 function formatDate(ts: number): string {
@@ -24,7 +27,7 @@ function formatDate(ts: number): string {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-export default function Sidebar({ isOpen, onClose, conversations, activeId, onSelect, onNew, onDelete, navigate }: Props) {
+export default function Sidebar({ isOpen, onClose, conversations, activeId, onSelect, onNew, onDelete, navigate, usage }: Props) {
   const [query, setQuery] = useState('');
 
   // Lock body scroll on mobile when drawer is open
@@ -142,8 +145,13 @@ export default function Sidebar({ isOpen, onClose, conversations, activeId, onSe
         )}
       </div>
 
+      {/* Usage indicator — mobile only (hidden on md+, shown in header instead) */}
+      <div className="md:hidden flex-shrink-0 px-4 pt-3 border-t border-slate-100 dark:border-slate-700">
+        <UsageIndicator usage={usage} className="flex flex-col gap-1 w-full" />
+      </div>
+
       {/* Legal links */}
-      <div className="flex-shrink-0 px-4 py-3 border-t border-slate-100 dark:border-slate-700 flex gap-3">
+      <div className="flex-shrink-0 px-4 py-3 border-t border-slate-100 dark:border-slate-700 md:border-t flex gap-3">
         <button onClick={() => navigate('/privacy')} className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">Privacy</button>
         <span className="text-slate-300 dark:text-slate-700">·</span>
         <button onClick={() => navigate('/terms')} className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">Terms</button>

@@ -64,7 +64,19 @@ export function useChatTour({
       let errorMessage = `Server error (${response.status}). Please try again.`;
       try {
         const data = await response.json();
-        if (data.error) errorMessage = data.error;
+        if (response.status === 429 && data.error === 'limit_exceeded') {
+          const resetsAt: string | undefined = data.resetsAt;
+          let resetStr = '';
+          if (resetsAt) {
+            const d = new Date(resetsAt);
+            resetStr = ` Resets ${d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} at ${d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}.`;
+          }
+          errorMessage = data.reason === 'daily_limit'
+            ? `You've reached your daily usage limit.${resetStr}`
+            : `You've reached your monthly usage limit.${resetStr}`;
+        } else if (data.error) {
+          errorMessage = data.error;
+        }
       } catch {}
       if (response.status === 401) {
         throw new Error('Authentication failed. Please sign out and sign in again.');
