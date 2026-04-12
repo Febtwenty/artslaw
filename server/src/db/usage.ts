@@ -65,12 +65,20 @@ export interface UsageCheckResult {
 
 export async function checkLimits(
   userId: string,
-  limits: UsageLimits
+  limits: UsageLimits | null
 ): Promise<UsageCheckResult> {
   const [dailyUsed, monthlyUsed] = await Promise.all([
     getDailyUsage(userId),
     getMonthlyUsage(userId),
   ]);
+
+  if (!limits) {
+    return {
+      allowed: true,
+      daily:   { used: dailyUsed,   limit: Infinity },
+      monthly: { used: monthlyUsed, limit: Infinity },
+    };
+  }
 
   const daily   = { used: dailyUsed,   limit: limits.dailyTokens };
   const monthly = { used: monthlyUsed, limit: limits.monthlyTokens };
