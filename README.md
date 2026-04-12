@@ -13,6 +13,7 @@ ArtSlaw uses Claude (`claude-haiku-4-5`) with live web search to research exhibi
 - **Conversation history** — all past tours are saved to MongoDB and listed in the sidebar
 - **Shareable tours** — every tour gets a public `/tour/:id` link for read-only sharing
 - **Authentication** — user accounts via Clerk
+- **Per-user token usage caps** — daily and monthly limits enforced server-side, with a live usage indicator in the header (desktop) and sidebar (mobile)
 - **Dark mode**
 
 ---
@@ -36,6 +37,9 @@ ANTHROPIC_API_KEY=sk-ant-...
 CLERK_SECRET_KEY=sk_...
 CLERK_PUBLISHABLE_KEY=pk_...
 MONGODB_URI=mongodb+srv://<user>:<password>@cluster0.xxxxx.mongodb.net/artslaw?retryWrites=true&w=majority
+
+# Optional: comma-separated Clerk user IDs that bypass all token limits
+UNLIMITED_USER_IDS=user_abc123,user_xyz456
 ```
 
 **Client** (`client/.env.local`):
@@ -82,6 +86,21 @@ The Vite dev server proxies `/api/*` requests to the Express backend automatical
 
 ---
 
+## Token usage limits
+
+Default caps (defined in `server/src/config/limits.ts`):
+
+| Period  | Token limit |
+|---------|-------------|
+| Daily   | 100,000     |
+| Monthly | 2,000,000   |
+
+To change the limits, edit `DEFAULT_LIMITS` in `server/src/config/limits.ts` and redeploy.
+
+To exempt specific users from all limits, add their Clerk user IDs (comma-separated) to the `UNLIMITED_USER_IDS` environment variable. Find a user's ID in the Clerk dashboard.
+
+---
+
 ## Project structure
 
 ```
@@ -96,20 +115,32 @@ artslaw/
 │   │   │   ├── MessageBubble.tsx
 │   │   │   ├── Sidebar.tsx
 │   │   │   ├── SignInPage.tsx
-│   │   │   └── TourPage.tsx
+│   │   │   ├── TourPage.tsx
+│   │   │   └── UsageIndicator.tsx
+│   │   ├── hooks/
+│   │   │   ├── useChatTour.ts
+│   │   │   ├── useConversationHistory.ts
+│   │   │   ├── useDarkMode.ts
+│   │   │   └── useUsage.ts
 │   │   ├── App.tsx
 │   │   └── main.tsx
 │   ├── index.html
 │   └── vite.config.ts        # Proxies /api → localhost:3001
 ├── server/                   # Express + Anthropic SDK backend
 │   └── src/
+│       ├── config/
+│       │   └── limits.ts     # Daily/monthly token caps
+│       ├── db/
+│       │   └── usage.ts      # token_usage collection helpers
 │       ├── db.ts             # MongoDB connection
 │       ├── index.ts
 │       └── routes/
 │           ├── chat.ts       # POST /api/chat (streaming)
 │           ├── conversations.ts
 │           ├── discoveries.ts # GET /api/discoveries (CAL scraper)
-│           └── title.ts
+│           ├── title.ts
+│           ├── tour.ts       # GET /api/tour/:id (public share)
+│           └── usage.ts      # GET /api/usage
 ├── .env                      # Your secrets (not committed)
 └── render.yaml               # Render deployment config
 ```
@@ -123,7 +154,7 @@ artslaw/
 | Frontend | React 18, Vite 5, TypeScript, Tailwind CSS |
 | Backend | Node.js, Express, TypeScript |
 | AI | Anthropic SDK (`@anthropic-ai/sdk`), `claude-haiku-4-5` |
-| Search | `web_search_20260209` built-in server-side tool |
+| Search | `web_search_20250305` built-in server-side tool |
 | Auth | Clerk |
 | Database | MongoDB (Atlas) |
 | Scraping | Cheerio (CAL exhibition data) |
