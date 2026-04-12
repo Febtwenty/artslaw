@@ -24,8 +24,8 @@ router.get('/', h(async (req: Request, res: Response) => {
   ]);
 
   res.json({
-    daily:   { used: dailyUsed,   limit: limits.dailyTokens },
-    monthly: { used: monthlyUsed, limit: limits.monthlyTokens },
+    daily:   { used: dailyUsed,   limit: limits?.dailyTokens   ?? Infinity },
+    monthly: { used: monthlyUsed, limit: limits?.monthlyTokens ?? Infinity },
   });
 }));
 
