@@ -29,6 +29,8 @@ function Bar({ used, limit, label }: { used: number; limit: number; label: strin
 
 export default function UsageIndicator({ usage, className = 'hidden sm:flex flex-col gap-1 w-24' }: Props) {
   if (!usage) return null;
+  // Unlimited users get Infinity serialized as null over JSON — hide the indicator
+  if (!usage.daily.limit || !usage.monthly.limit) return null;
 
   const title =
     `Daily: ${usage.daily.used.toLocaleString()} / ${usage.daily.limit.toLocaleString()} tokens\n` +
