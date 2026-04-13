@@ -1,8 +1,10 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import fs from 'node:fs';
 import path from 'path';
 import { clerkMiddleware } from '@clerk/express';
+import { injectLandingContent } from './landingHtml';
 import chatRouter from './routes/chat';
 import conversationsRouter from './routes/conversations';
 import titleRouter from './routes/title';
@@ -39,9 +41,30 @@ app.get(/\/(installHook|react_devtools_backend_compact)\.js\.map$/, (_req, res) 
 
 // Serve the built React app in production
 const clientDist = path.resolve(__dirname, '../../client/dist');
+const clientIndexPath = path.join(clientDist, 'index.html');
+
+// Pre-render the landing page at startup for SEO (Google sees real HTML, not empty #root)
+let prerenderedLanding: string | null = null;
+if (fs.existsSync(clientIndexPath)) {
+  try {
+    prerenderedLanding = injectLandingContent(fs.readFileSync(clientIndexPath, 'utf-8'));
+  } catch {
+    // fall through — catch-all will serve plain index.html
+  }
+}
+
+// Serve pre-rendered landing for GET / before static middleware intercepts it
+app.get('/', (_req, res) => {
+  if (prerenderedLanding) {
+    res.setHeader('Content-Type', 'text/html');
+    return res.send(prerenderedLanding);
+  }
+  res.sendFile(clientIndexPath);
+});
+
 app.use(express.static(clientDist));
 app.get('*', (_req, res) => {
-  res.sendFile(path.join(clientDist, 'index.html'));
+  res.sendFile(clientIndexPath);
 });
 
 app.listen(PORT, () => {
