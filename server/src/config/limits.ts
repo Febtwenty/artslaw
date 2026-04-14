@@ -13,11 +13,9 @@ export const PLAN_LIMITS: Record<string, UsageLimits> = {
   // pro: { dailyTokens: 500_000, monthlyTokens: 10_000_000 },
 };
 
-const UNLIMITED_USERS = new Set(
-  (process.env.UNLIMITED_USER_IDS ?? '').split(',').filter(Boolean)
-);
-
 export function getLimitsForUser(userId: string): UsageLimits | null {
-  if (UNLIMITED_USERS.has(userId)) return null;
+  // Read at call time so dotenv has already run (module-level reads execute before dotenv.config())
+  const unlimited = new Set((process.env.UNLIMITED_USER_IDS ?? '').split(',').filter(Boolean));
+  if (unlimited.has(userId)) return null;
   return DEFAULT_LIMITS;
 }

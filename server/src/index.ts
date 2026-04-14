@@ -11,11 +11,14 @@ import titleRouter from './routes/title';
 import tourRouter from './routes/tour';
 import discoveriesRouter from './routes/discoveries';
 import usageRouter from './routes/usage';
+import { blogApiRouter, blogPageRouter } from './routes/blog';
 import { ensureUsageIndexes } from './db/usage';
+import { ensureBlogIndexes, getPublishedPosts } from './db/blog';
 
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 ensureUsageIndexes().catch(err => console.error('[usage] index setup failed:', err));
+ensureBlogIndexes().catch(err => console.error('[blog] index setup failed:', err));
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -30,6 +33,35 @@ app.use('/api/generate-title', titleRouter);
 app.use('/api/tour', tourRouter);
 app.use('/api/discoveries', discoveriesRouter);
 app.use('/api/usage', usageRouter);
+app.use('/api/blog', blogApiRouter);
+
+app.get('/robots.txt', (_req, res) => {
+  res.type('text/plain').send(
+    'User-agent: *\nAllow: /\nAllow: /blog\nDisallow: /admin\nDisallow: /api\nSitemap: https://www.artslaw.io/sitemap.xml'
+  );
+});
+
+app.get('/sitemap.xml', async (_req, res) => {
+  try {
+    const posts = await getPublishedPosts();
+    const urls = [
+      '<url><loc>https://www.artslaw.io/</loc></url>',
+      '<url><loc>https://www.artslaw.io/blog</loc></url>',
+      ...posts.map((p) => {
+        const lastmod = p.updatedAt ? new Date(p.updatedAt).toISOString().split('T')[0] : '';
+        return `<url><loc>https://www.artslaw.io/blog/${encodeURIComponent(p.slug)}</loc>${lastmod ? `<lastmod>${lastmod}</lastmod>` : ''}</url>`;
+      }),
+    ].join('\n  ');
+    res.type('application/xml').send(
+      `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  ${urls}\n</urlset>`
+    );
+  } catch (err) {
+    console.error('[sitemap] error:', err);
+    res.status(500).send('Failed to generate sitemap');
+  }
+});
+
+app.use('/blog', blogPageRouter);
 
 // Serve valid empty source maps for React DevTools extension files so Firefox
 // doesn't throw a JSON.parse error when the SPA catch-all returns index.html.
