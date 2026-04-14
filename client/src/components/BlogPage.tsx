@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useClerk } from '@clerk/react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -86,7 +87,8 @@ function PostList({ onSelect }: { onSelect: (slug: string) => void }) {
   );
 }
 
-function PostDetail({ slug, onBack }: { slug: string; onBack: () => void }) {
+function PostDetail({ slug, onBack, onStartTour }: { slug: string; onBack: () => void; onStartTour?: (url: string) => void }) {
+  const { openSignUp } = useClerk();
   const [post, setPost] = useState<FullPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -132,7 +134,7 @@ function PostDetail({ slug, onBack }: { slug: string; onBack: () => void }) {
         {post.title}
       </h1>
 
-      <div className="flex items-center gap-2 flex-wrap mb-8">
+      <div className="flex items-center gap-2 flex-wrap mb-4">
         <span className="text-xs text-slate-400">{formatDate(post.publishedAt)}</span>
         {post.tags.map(tag => (
           <span
@@ -144,6 +146,20 @@ function PostDetail({ slug, onBack }: { slug: string; onBack: () => void }) {
         ))}
       </div>
 
+      {post.exhibitionUrl && (
+        <a
+          href={post.exhibitionUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors mb-8 truncate max-w-full"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5 shrink-0">
+            <path fillRule="evenodd" d="M15.75 2.25H21a.75.75 0 0 1 .75.75v5.25a.75.75 0 0 1-1.5 0V4.81L8.03 17.03a.75.75 0 0 1-1.06-1.06L19.19 3.75h-3.44a.75.75 0 0 1 0-1.5Zm-10.5 4.5a1.5 1.5 0 0 0-1.5 1.5v10.5a1.5 1.5 0 0 0 1.5 1.5h10.5a1.5 1.5 0 0 0 1.5-1.5V10.5a.75.75 0 0 1 1.5 0v8.25a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3V8.25a3 3 0 0 1 3-3h8.25a.75.75 0 0 1 0 1.5H5.25Z" clipRule="evenodd" />
+          </svg>
+          {post.exhibitionUrl}
+        </a>
+      )}
+
       <div className="prose-art">
         <ReactMarkdown remarkPlugins={[remarkGfm]}>{post.body}</ReactMarkdown>
       </div>
@@ -153,14 +169,21 @@ function PostDetail({ slug, onBack }: { slug: string; onBack: () => void }) {
           <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
             Want to explore this exhibition with an expert guide?
           </p>
-          <a
-            href={post.exhibitionUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors"
-          >
-            View exhibition &rarr;
-          </a>
+          {onStartTour ? (
+            <button
+              onClick={() => onStartTour(post.exhibitionUrl)}
+              className="inline-block px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              Start Tour →
+            </button>
+          ) : (
+            <button
+              onClick={() => openSignUp()}
+              className="inline-block px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              Sign up to start a tour →
+            </button>
+          )}
         </div>
       )}
     </div>
@@ -170,12 +193,14 @@ function PostDetail({ slug, onBack }: { slug: string; onBack: () => void }) {
 export default function BlogPage({
   initialSlug,
   onNavigatePost,
+  onStartTour,
 }: {
   initialSlug: string | null;
   onNavigatePost: (slug: string | null) => void;
+  onStartTour?: (url: string) => void;
 }) {
   if (initialSlug) {
-    return <PostDetail slug={initialSlug} onBack={() => onNavigatePost(null)} />;
+    return <PostDetail slug={initialSlug} onBack={() => onNavigatePost(null)} onStartTour={onStartTour} />;
   }
   return <PostList onSelect={(slug) => onNavigatePost(slug)} />;
 }

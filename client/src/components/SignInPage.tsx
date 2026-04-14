@@ -114,7 +114,7 @@ interface Props {
 }
 
 export default function SignInPage({ isDark, onToggleDark, navigate }: Props) {
-  const { openSignIn } = useClerk();
+  const { openSignIn, openSignUp } = useClerk();
 
   return (
     <div className="h-full flex flex-col bg-slate-50 dark:bg-slate-900">
@@ -201,7 +201,7 @@ export default function SignInPage({ isDark, onToggleDark, navigate }: Props) {
 
         {/* CTA */}
         <button
-          onClick={() => openSignIn()}
+          onClick={() => openSignUp()}
           className="px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium text-base shadow-sm transition-colors"
         >
           Get Started
