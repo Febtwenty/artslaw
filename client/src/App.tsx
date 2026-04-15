@@ -127,7 +127,7 @@ function App({ navigate }: { navigate: (path: string) => void }) {
     if (view === 'blog') {
       return (
         <div className="h-full flex flex-col bg-slate-50 dark:bg-slate-900">
-          <header className="flex-shrink-0 px-6 py-5 flex items-center justify-between border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+          <header className="sticky top-0 z-10 flex-shrink-0 px-6 py-5 flex items-center justify-between border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
             <button onClick={() => setView('home')} className="text-left">
               <LogoWordmark className="h-6 w-auto" />
             </button>
