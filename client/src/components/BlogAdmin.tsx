@@ -155,7 +155,7 @@ export default function BlogAdmin({ getToken }: { getToken: () => Promise<string
     });
   }
 
-  const inputClass = 'w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 transition-colors';
+  const inputClass = 'w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 transition-colors';
   const labelClass = 'block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1';
   const btnBase = 'px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-40';
 
@@ -166,7 +166,7 @@ export default function BlogAdmin({ getToken }: { getToken: () => Promise<string
       {/* Generator */}
       <section className="mb-8 p-5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
         <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 uppercase tracking-wide">Generate Review</h2>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <input
             type="url"
             placeholder="https://www.tate.org.uk/whats-on/tate-modern/..."
@@ -178,7 +178,7 @@ export default function BlogAdmin({ getToken }: { getToken: () => Promise<string
           <button
             onClick={generate}
             disabled={generating || !exhibitionUrl.trim()}
-            className={`${btnBase} bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-2`}
+            className={`${btnBase} bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center gap-2 sm:w-auto`}
           >
             {generating ? (
               <>
@@ -283,7 +283,7 @@ export default function BlogAdmin({ getToken }: { getToken: () => Promise<string
                 value={draft.body ?? ''}
                 onChange={e => updateDraftField('body', e.target.value)}
                 rows={16}
-                className={inputClass + ' font-mono text-xs resize-y'}
+                className={inputClass + ' font-mono text-base sm:text-xs resize-y'}
               />
             </div>
 
@@ -295,7 +295,7 @@ export default function BlogAdmin({ getToken }: { getToken: () => Promise<string
             )}
 
             {/* Actions */}
-            <div className="flex items-center gap-3 pt-2">
+            <div className="flex flex-wrap items-center gap-2 pt-2">
               <button
                 onClick={() => save('draft')}
                 disabled={saving}
@@ -347,7 +347,7 @@ export default function BlogAdmin({ getToken }: { getToken: () => Promise<string
         {posts.length === 0 ? (
           <p className="text-sm text-slate-400">No posts yet.</p>
         ) : (
-          <div className="rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+          <div className="rounded-xl border border-slate-200 dark:border-slate-700 overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
