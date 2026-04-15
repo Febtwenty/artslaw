@@ -160,7 +160,7 @@ export default function BlogAdmin({ getToken }: { getToken: () => Promise<string
   const btnBase = 'px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-40';
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
+    <div className="max-w-3xl mx-auto px-4 py-8 overflow-x-hidden w-full min-w-0">
       <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-6">Blog Admin</h1>
 
       {/* Generator */}
@@ -203,7 +203,7 @@ export default function BlogAdmin({ getToken }: { getToken: () => Promise<string
       {/* Editor */}
       {draft !== null && (
         <section className="mb-8 p-5 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-white dark:bg-slate-800">
-          <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4 uppercase tracking-wide">
+          <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4 uppercase tracking-wide truncate">
             {draft.isNew ? 'New Post' : `Editing: ${draft.slug}`}
           </h2>
 
@@ -348,7 +348,7 @@ export default function BlogAdmin({ getToken }: { getToken: () => Promise<string
           <p className="text-sm text-slate-400">No posts yet.</p>
         ) : (
           <div className="rounded-xl border border-slate-200 dark:border-slate-700 overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm min-w-[400px]">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
                   <th className="text-left px-4 py-2.5 font-medium text-slate-600 dark:text-slate-400">Title</th>

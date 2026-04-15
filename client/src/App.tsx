@@ -342,7 +342,7 @@ function App({ navigate }: { navigate: (path: string) => void }) {
         />
 
         {/* Main content */}
-        <main className="flex-1 flex flex-col overflow-y-auto">
+        <main className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden min-w-0">
           {view === 'blog' ? (
             <BlogPage initialSlug={blogSlug} onNavigatePost={navigateToBlog} onStartTour={handleStartTour} />
           ) : view === 'admin' ? (
