@@ -156,7 +156,7 @@ export default function SignInPage({ isDark, onToggleDark, navigate }: Props) {
       </header>
 
       {/* Hero */}
-      <main className="flex-1 flex flex-col items-center justify-center px-6 text-center pb-16">
+      <main className="flex-1 flex flex-col items-center justify-center px-6 text-center pb-16 pt-14">
         {/* Wordmark */}
         <div className="mb-10">
           <LogoWordmark className="h-16 w-auto" />
