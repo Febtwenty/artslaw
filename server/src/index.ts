@@ -85,9 +85,12 @@ if (fs.existsSync(clientIndexPath)) {
   }
 }
 
-// Serve pre-rendered landing for GET / before static middleware intercepts it
-app.get('/', (_req, res) => {
-  if (prerenderedLanding) {
+const CRAWLER_RE = /googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|sogou|exabot|facebot|ia_archiver/i;
+
+// Crawlers get pre-rendered landing HTML for SEO; browsers get the plain SPA shell to avoid a flash
+app.get('/', (req, res) => {
+  const ua = req.headers['user-agent'] ?? '';
+  if (prerenderedLanding && CRAWLER_RE.test(ua)) {
     res.setHeader('Content-Type', 'text/html');
     return res.send(prerenderedLanding);
   }
