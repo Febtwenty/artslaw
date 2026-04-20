@@ -217,6 +217,32 @@ export default function SignInPage({ isDark, onToggleDark, navigate }: Props) {
           </p>
           <ChatDemo />
         </div>
+
+        {/* About */}
+        <div className="mt-16 w-full mx-auto px-4 pb-12 text-center" style={{ maxWidth: '520px' }}>
+          <p className="text-xs font-medium tracking-widest uppercase text-slate-400 dark:text-slate-500 mb-4">
+            About
+          </p>
+          <p className="text-slate-500 dark:text-slate-400" style={{ fontSize: '17px', lineHeight: '1.75' }}>
+            ArtSlaw was built by{' '}
+            <span className="text-slate-700 dark:text-slate-300 font-medium">Clemens Leopold</span>{' '}
+            as a way to make gallery visits more meaningful. I wanted a companion that could
+            explain what you're seeing without making you feel like you needed an art degree.
+            It uses Claude and live web search to research exhibitions in real time.
+          </p>
+          <div className="my-5 mx-auto border-t border-slate-200 dark:border-slate-700" style={{ width: '32px' }} />
+          <p className="text-xs text-slate-400 dark:text-slate-500">
+            Got feedback?{' '}
+            <a
+              href="mailto:hello@artslaw.io"
+              className="group inline-flex items-center gap-1 border border-slate-300 dark:border-slate-600 rounded-full px-4 py-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-slate-400 dark:hover:border-slate-500 transition-colors ml-1"
+              style={{ borderWidth: '0.5px' }}
+            >
+              Say hi{' '}
+              <span className="inline-block transition-transform group-hover:translate-x-0.5">→</span>
+            </a>
+          </p>
+        </div>
       </main>
 
       {/* Footer */}
