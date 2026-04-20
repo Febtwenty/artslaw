@@ -156,7 +156,7 @@ export default function SignInPage({ isDark, onToggleDark, navigate }: Props) {
       </header>
 
       {/* Hero */}
-      <main className="flex-1 flex flex-col items-center justify-center px-6 text-center pb-16 pt-14">
+      <main className="flex-1 flex flex-col items-center justify-center px-6 text-center pt-14">
         {/* Wordmark */}
         <div className="mb-10">
           <LogoWordmark className="h-16 w-auto" />
@@ -219,7 +219,7 @@ export default function SignInPage({ isDark, onToggleDark, navigate }: Props) {
         </div>
 
         {/* About */}
-        <div className="mt-16 w-full mx-auto px-4 pb-12 text-center" style={{ maxWidth: '520px' }}>
+        <div className="mt-16 w-full mx-auto px-4 text-center" style={{ maxWidth: '520px' }}>
           <p className="text-xs font-medium tracking-widest uppercase text-slate-400 dark:text-slate-500 mb-4">
             About
           </p>
@@ -230,20 +230,22 @@ export default function SignInPage({ isDark, onToggleDark, navigate }: Props) {
             explain what you're seeing without making you feel like you needed an art degree.
             It uses Claude and live web search to research exhibitions in real time.
           </p>
-          <div className="my-5 mx-auto border-t border-slate-200 dark:border-slate-700" style={{ width: '32px' }} />
-          <p className="text-xs text-slate-400 dark:text-slate-500">
-            Got feedback?{' '}
-            <a
-              href="mailto:hello@artslaw.io"
-              className="group inline-flex items-center gap-1 border border-slate-300 dark:border-slate-600 rounded-full px-4 py-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-slate-400 dark:hover:border-slate-500 transition-colors ml-1"
-              style={{ borderWidth: '0.5px' }}
-            >
-              Say hi{' '}
-              <span className="inline-block transition-transform group-hover:translate-x-0.5">→</span>
-            </a>
-          </p>
         </div>
+
       </main>
+
+      {/* Feedback */}
+      <div className="flex-shrink-0 py-6 text-center text-xs text-slate-400 dark:text-slate-500">
+        Got feedback?{' '}
+        <a
+          href="mailto:hello@artslaw.io"
+          className="group inline-flex items-center gap-1 border border-slate-300 dark:border-slate-600 rounded-full px-4 py-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-slate-400 dark:hover:border-slate-500 transition-colors ml-1"
+          style={{ borderWidth: '0.5px' }}
+        >
+          Say hi{' '}
+          <span className="inline-block transition-transform group-hover:translate-x-0.5">→</span>
+        </a>
+      </div>
 
       {/* Footer */}
       <footer className="flex-shrink-0 px-6 py-4 text-center">

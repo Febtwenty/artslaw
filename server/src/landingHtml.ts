@@ -71,20 +71,21 @@ const LANDING_BODY = `<div class="h-full flex flex-col bg-slate-50">
       <p class="text-xs font-medium tracking-widest uppercase text-slate-400 mb-4 text-center">See it in action</p>
     </div>
 
-    <div class="mt-16 w-full mx-auto px-4 pb-12 text-center" style="max-width:520px">
+    <div class="mt-16 w-full mx-auto px-4 text-center" style="max-width:520px">
       <p class="text-xs font-medium tracking-widest uppercase text-slate-400 mb-4">About</p>
       <p class="text-slate-500" style="font-size:17px;line-height:1.75">
         ArtSlaw was built by <span class="text-slate-700 font-medium">Clemens Leopold</span> as a way to make gallery visits more meaningful. I wanted a companion that could explain what you're seeing without making you feel like you needed an art degree. It uses Claude and live web search to research exhibitions in real time.
       </p>
-      <div class="my-5 mx-auto border-t border-slate-200" style="width:32px"></div>
-      <p class="text-xs text-slate-400">
-        Got feedback?
-        <a href="mailto:hello@artslaw.io" class="inline-flex items-center gap-1 border border-slate-300 rounded-full px-4 py-1.5 text-slate-500 hover:bg-slate-100 hover:border-slate-400 transition-colors ml-1" style="border-width:0.5px">
-          Say hi →
-        </a>
-      </p>
     </div>
+
   </main>
+
+  <div class="flex-shrink-0 py-6 text-center text-xs text-slate-400">
+    Got feedback?
+    <a href="mailto:hello@artslaw.io" class="inline-flex items-center gap-1 border border-slate-300 rounded-full px-4 py-1.5 text-slate-500 hover:bg-slate-100 hover:border-slate-400 transition-colors ml-1" style="border-width:0.5px">
+      Say hi →
+    </a>
+  </div>
 
   <footer class="flex-shrink-0 px-6 py-4 text-center">
     <p class="text-slate-400 text-xs flex flex-wrap items-center justify-center gap-x-2">
