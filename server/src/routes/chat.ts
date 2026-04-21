@@ -68,7 +68,7 @@ const MODEL = 'claude-haiku-4-5';
 const INITIAL_MAX_TOKENS = 2000;
 const FOLLOWUP_MAX_TOKENS = 1200;
 // How many messages to send on follow-ups (prevents history ballooning)
-const MAX_HISTORY_MESSAGES = 6;
+const MAX_HISTORY_MESSAGES = 10;
 
 interface ChatMessage {
   role: 'user' | 'assistant';
