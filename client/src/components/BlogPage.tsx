@@ -173,11 +173,13 @@ function PostDetail({ slug, onBack, onStartTour }: { slug: string; onBack: () =>
 
       {post.coverImage && (
         <figure className="mb-8">
-          <img
-            src={post.coverImage.url}
-            alt={post.coverImage.alt ?? ''}
-            className="w-full aspect-square object-cover rounded-xl"
-          />
+          <div className="aspect-square w-full overflow-hidden rounded-xl">
+            <img
+              src={post.coverImage.url}
+              alt={post.coverImage.alt ?? ''}
+              className="w-full h-full object-cover"
+            />
+          </div>
           {post.coverImage.type === 'external' && post.coverImage.source && (
             <figcaption className="text-right text-xs text-slate-400 mt-1.5">
               {post.coverImage.source}
@@ -191,12 +193,12 @@ function PostDetail({ slug, onBack, onStartTour }: { slug: string; onBack: () =>
           href={post.exhibitionUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors mb-8 truncate max-w-full"
+          className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors mb-8 max-w-full overflow-hidden"
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5 shrink-0">
             <path fillRule="evenodd" d="M15.75 2.25H21a.75.75 0 0 1 .75.75v5.25a.75.75 0 0 1-1.5 0V4.81L8.03 17.03a.75.75 0 0 1-1.06-1.06L19.19 3.75h-3.44a.75.75 0 0 1 0-1.5Zm-10.5 4.5a1.5 1.5 0 0 0-1.5 1.5v10.5a1.5 1.5 0 0 0 1.5 1.5h10.5a1.5 1.5 0 0 0 1.5-1.5V10.5a.75.75 0 0 1 1.5 0v8.25a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3V8.25a3 3 0 0 1 3-3h8.25a.75.75 0 0 1 0 1.5H5.25Z" clipRule="evenodd" />
           </svg>
-          {post.exhibitionUrl}
+          <span className="truncate">{post.exhibitionUrl}</span>
         </a>
       )}
 
