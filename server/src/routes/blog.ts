@@ -95,12 +95,15 @@ async function processAndSaveImage(buffer: Buffer, slug: string): Promise<{ url:
   const fullName = `${slug}-${ts}.webp`;
   const thumbName = `${slug}-${ts}-thumb.webp`;
 
+  // .rotate() with no args auto-corrects EXIF orientation (essential for phone photos)
   await sharp(buffer)
-    .resize(1200, 1200, { fit: 'inside', withoutEnlargement: true })
+    .rotate()
+    .resize(1200, 1200, { fit: 'cover', position: 'centre' })
     .webp({ quality: 85 })
     .toFile(path.join(UPLOADS_DIR, fullName));
 
   await sharp(buffer)
+    .rotate()
     .resize(160, 160, { fit: 'cover', position: 'centre' })
     .webp({ quality: 85 })
     .toFile(path.join(UPLOADS_DIR, thumbName));
