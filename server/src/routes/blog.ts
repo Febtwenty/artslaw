@@ -427,7 +427,7 @@ blogPageRouter.get('/:slug', async (req: Request, res: Response) => {
 
   const heroHtml = post.coverImage
     ? `<figure style="margin:0 0 2rem;">
-        <img src="${escapeHtml(post.coverImage.url)}" alt="${escapeHtml(post.coverImage.alt ?? '')}" style="width:100%;max-height:420px;object-fit:cover;border-radius:0.75rem;display:block;">
+        <img src="${escapeHtml(post.coverImage.url)}" alt="${escapeHtml(post.coverImage.alt ?? '')}" style="width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:0.75rem;display:block;">
         ${post.coverImage.type === 'external' && post.coverImage.source ? `<figcaption style="text-align:right;font-size:0.75rem;color:#94a3b8;margin-top:0.375rem;">${escapeHtml(post.coverImage.source)}</figcaption>` : ''}
       </figure>`
     : '';

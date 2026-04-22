@@ -175,7 +175,7 @@ function PostDetail({ slug, onBack, onStartTour }: { slug: string; onBack: () =>
           <img
             src={post.coverImage.url}
             alt={post.coverImage.alt ?? ''}
-            className="w-full max-h-96 object-cover rounded-xl"
+            className="w-full aspect-square object-cover rounded-xl"
           />
           {post.coverImage.type === 'external' && post.coverImage.source && (
             <figcaption className="text-right text-xs text-slate-400 mt-1.5">
