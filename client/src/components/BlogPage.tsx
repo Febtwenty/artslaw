@@ -6,6 +6,7 @@ import remarkGfm from 'remark-gfm';
 interface CoverImage {
   type: 'uploaded' | 'external';
   url: string;
+  thumbnailUrl?: string;
   alt?: string;
   source?: string;
 }
@@ -90,9 +91,9 @@ function PostList({ onSelect }: { onSelect: (slug: string) => void }) {
                 </div>
               </div>
               {post.coverImage && (
-                <div className="shrink-0">
+                <div className="shrink-0 self-start">
                   <img
-                    src={post.coverImage.url}
+                    src={post.coverImage.thumbnailUrl ?? post.coverImage.url}
                     alt={post.coverImage.alt ?? ''}
                     className="w-20 h-20 object-cover rounded-lg"
                   />

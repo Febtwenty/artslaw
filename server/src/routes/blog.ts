@@ -3,6 +3,7 @@ import { getAuth } from '@clerk/express';
 import Anthropic from '@anthropic-ai/sdk';
 import { marked } from 'marked';
 import multer from 'multer';
+import sharp from 'sharp';
 import path from 'path';
 import fs from 'fs';
 import {
@@ -71,16 +72,8 @@ async function fetchPageContent(url: string): Promise<string | null> {
 
 const UPLOADS_DIR = path.resolve(__dirname, '../../uploads/blog');
 
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, UPLOADS_DIR),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
-    cb(null, `${req.params.slug}-${Date.now()}${ext}`);
-  },
-});
-
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     cb(null, ['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype));
@@ -89,8 +82,33 @@ const upload = multer({
 
 function deleteUploadedFile(url: string): void {
   if (!url.startsWith('/uploads/blog/')) return;
-  const filename = path.basename(url);
-  fs.unlink(path.join(UPLOADS_DIR, filename), () => {});
+  fs.unlink(path.join(UPLOADS_DIR, path.basename(url)), () => {});
+}
+
+function deleteCoverFiles(coverImage: { url: string; thumbnailUrl?: string }): void {
+  deleteUploadedFile(coverImage.url);
+  if (coverImage.thumbnailUrl) deleteUploadedFile(coverImage.thumbnailUrl);
+}
+
+async function processAndSaveImage(buffer: Buffer, slug: string): Promise<{ url: string; thumbnailUrl: string }> {
+  const ts = Date.now();
+  const fullName = `${slug}-${ts}.webp`;
+  const thumbName = `${slug}-${ts}-thumb.webp`;
+
+  await sharp(buffer)
+    .resize(1200, 1200, { fit: 'inside', withoutEnlargement: true })
+    .webp({ quality: 85 })
+    .toFile(path.join(UPLOADS_DIR, fullName));
+
+  await sharp(buffer)
+    .resize(160, 160, { fit: 'cover', position: 'centre' })
+    .webp({ quality: 85 })
+    .toFile(path.join(UPLOADS_DIR, thumbName));
+
+  return {
+    url: `/uploads/blog/${fullName}`,
+    thumbnailUrl: `/uploads/blog/${thumbName}`,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -255,20 +273,13 @@ blogApiRouter.post(
     const file = req.file;
     if (!file) { res.status(400).json({ error: 'No image file provided' }); return; }
 
-    // Delete old uploaded file if one exists
     const existing = await getPost(slug);
-    if (!existing) {
-      fs.unlink(file.path, () => {});
-      res.status(404).json({ error: 'Post not found' });
-      return;
-    }
-    if (existing.coverImage?.type === 'uploaded') {
-      deleteUploadedFile(existing.coverImage.url);
-    }
+    if (!existing) { res.status(404).json({ error: 'Post not found' }); return; }
+    if (existing.coverImage?.type === 'uploaded') deleteCoverFiles(existing.coverImage);
 
-    const url = `/uploads/blog/${file.filename}`;
+    const { url, thumbnailUrl } = await processAndSaveImage(file.buffer, slug);
     const alt = typeof req.body.alt === 'string' ? req.body.alt : '';
-    const post = await updatePost(slug, { coverImage: { type: 'uploaded', url, alt } });
+    const post = await updatePost(slug, { coverImage: { type: 'uploaded', url, thumbnailUrl, alt } });
     res.json(post);
   },
 );
@@ -277,9 +288,7 @@ blogApiRouter.post(
 blogApiRouter.delete('/posts/:slug/cover-image', requireAdmin, async (req: Request, res: Response) => {
   const existing = await getPost(req.params.slug);
   if (!existing) { res.status(404).json({ error: 'Post not found' }); return; }
-  if (existing.coverImage?.type === 'uploaded') {
-    deleteUploadedFile(existing.coverImage.url);
-  }
+  if (existing.coverImage?.type === 'uploaded') deleteCoverFiles(existing.coverImage);
   const post = await updatePost(req.params.slug, { coverImage: null });
   res.json(post);
 });
@@ -287,9 +296,7 @@ blogApiRouter.delete('/posts/:slug/cover-image', requireAdmin, async (req: Reque
 // DELETE /api/blog/posts/:slug — delete a post (admin)
 blogApiRouter.delete('/posts/:slug', requireAdmin, async (req: Request, res: Response) => {
   const existing = await getPost(req.params.slug);
-  if (existing?.coverImage?.type === 'uploaded') {
-    deleteUploadedFile(existing.coverImage.url);
-  }
+  if (existing?.coverImage?.type === 'uploaded') deleteCoverFiles(existing.coverImage);
   await deletePost(req.params.slug);
   res.status(204).end();
 });
@@ -349,8 +356,8 @@ blogPageRouter.get('/', async (_req: Request, res: Response) => {
     ? '<p style="color:#64748b;">No posts published yet.</p>'
     : posts.map((p) => {
         const thumb = p.coverImage
-          ? `<div style="flex-shrink:0;">
-              <img src="${escapeHtml(p.coverImage.url)}" alt="${escapeHtml(p.coverImage.alt ?? '')}" style="width:80px;height:80px;object-fit:cover;border-radius:0.5rem;display:block;">
+          ? `<div style="flex-shrink:0;align-self:flex-start;">
+              <img src="${escapeHtml(p.coverImage.thumbnailUrl ?? p.coverImage.url)}" alt="${escapeHtml(p.coverImage.alt ?? '')}" style="width:80px;height:80px;object-fit:cover;border-radius:0.5rem;display:block;">
               ${p.coverImage.type === 'external' && p.coverImage.source ? `<p style="font-size:0.65rem;color:#94a3b8;margin-top:0.25rem;text-align:right;">${escapeHtml(p.coverImage.source)}</p>` : ''}
             </div>`
           : '';

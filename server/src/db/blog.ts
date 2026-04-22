@@ -3,6 +3,7 @@ import { getDb } from '../db';
 export interface CoverImage {
   type: 'uploaded' | 'external';
   url: string;
+  thumbnailUrl?: string;
   alt?: string;
   source?: string;
 }

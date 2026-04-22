@@ -6,6 +6,7 @@ import { authedFetch, authedUpload } from '../utils';
 interface CoverImage {
   type: 'uploaded' | 'external';
   url: string;
+  thumbnailUrl?: string;
   alt?: string;
   source?: string;
 }
@@ -578,7 +579,7 @@ export default function BlogAdmin({ getToken }: { getToken: () => Promise<string
                       <div className="flex items-center gap-2 min-w-0">
                         {post.coverImage && (
                           <img
-                            src={post.coverImage.url}
+                            src={post.coverImage.thumbnailUrl ?? post.coverImage.url}
                             alt=""
                             className="w-8 h-8 rounded object-cover shrink-0"
                           />
