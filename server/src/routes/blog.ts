@@ -2,8 +2,11 @@ import { Router, Request, Response, NextFunction, RequestHandler } from 'express
 import { getAuth } from '@clerk/express';
 import Anthropic from '@anthropic-ai/sdk';
 import { marked } from 'marked';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 import {
-  createPost, updatePost, deletePost, getAllPosts,
+  createPost, updatePost, deletePost, getPost, getAllPosts,
   getPublishedPosts, getPublishedPost,
 } from '../db/blog';
 
@@ -60,6 +63,34 @@ async function fetchPageContent(url: string): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+// ---------------------------------------------------------------------------
+// File upload (multer)
+// ---------------------------------------------------------------------------
+
+const UPLOADS_DIR = path.resolve(__dirname, '../../uploads/blog');
+
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, UPLOADS_DIR),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
+    cb(null, `${req.params.slug}-${Date.now()}${ext}`);
+  },
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    cb(null, ['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype));
+  },
+});
+
+function deleteUploadedFile(url: string): void {
+  if (!url.startsWith('/uploads/blog/')) return;
+  const filename = path.basename(url);
+  fs.unlink(path.join(UPLOADS_DIR, filename), () => {});
 }
 
 // ---------------------------------------------------------------------------
@@ -178,7 +209,7 @@ blogApiRouter.get('/posts', requireAdmin, async (_req: Request, res: Response) =
 
 // POST /api/blog/posts — create a post (admin)
 blogApiRouter.post('/posts', requireAdmin, async (req: Request, res: Response) => {
-  const { slug, title, metaDescription, body, exhibitionUrl, tags, status } = req.body;
+  const { slug, title, metaDescription, body, exhibitionUrl, tags, status, coverImage } = req.body;
   if (!slug || !title || !body) {
     res.status(400).json({ error: 'slug, title, and body are required' });
     return;
@@ -188,6 +219,7 @@ blogApiRouter.post('/posts', requireAdmin, async (req: Request, res: Response) =
     const post = await createPost({
       slug, title, metaDescription, body, exhibitionUrl,
       tags: tags ?? [], status: status ?? 'draft', publishedAt,
+      ...(coverImage ? { coverImage } : {}),
     });
     res.status(201).json(post);
   } catch (err: unknown) {
@@ -213,8 +245,51 @@ blogApiRouter.put('/posts/:slug', requireAdmin, async (req: Request, res: Respon
   }
 });
 
+// POST /api/blog/posts/:slug/cover-image — upload a cover photo (admin)
+blogApiRouter.post(
+  '/posts/:slug/cover-image',
+  requireAdmin,
+  upload.single('image'),
+  async (req: Request, res: Response) => {
+    const { slug } = req.params;
+    const file = req.file;
+    if (!file) { res.status(400).json({ error: 'No image file provided' }); return; }
+
+    // Delete old uploaded file if one exists
+    const existing = await getPost(slug);
+    if (!existing) {
+      fs.unlink(file.path, () => {});
+      res.status(404).json({ error: 'Post not found' });
+      return;
+    }
+    if (existing.coverImage?.type === 'uploaded') {
+      deleteUploadedFile(existing.coverImage.url);
+    }
+
+    const url = `/uploads/blog/${file.filename}`;
+    const alt = typeof req.body.alt === 'string' ? req.body.alt : '';
+    const post = await updatePost(slug, { coverImage: { type: 'uploaded', url, alt } });
+    res.json(post);
+  },
+);
+
+// DELETE /api/blog/posts/:slug/cover-image — remove cover image (admin)
+blogApiRouter.delete('/posts/:slug/cover-image', requireAdmin, async (req: Request, res: Response) => {
+  const existing = await getPost(req.params.slug);
+  if (!existing) { res.status(404).json({ error: 'Post not found' }); return; }
+  if (existing.coverImage?.type === 'uploaded') {
+    deleteUploadedFile(existing.coverImage.url);
+  }
+  const post = await updatePost(req.params.slug, { coverImage: null });
+  res.json(post);
+});
+
 // DELETE /api/blog/posts/:slug — delete a post (admin)
 blogApiRouter.delete('/posts/:slug', requireAdmin, async (req: Request, res: Response) => {
+  const existing = await getPost(req.params.slug);
+  if (existing?.coverImage?.type === 'uploaded') {
+    deleteUploadedFile(existing.coverImage.url);
+  }
   await deletePost(req.params.slug);
   res.status(204).end();
 });
@@ -272,15 +347,26 @@ blogPageRouter.get('/', async (_req: Request, res: Response) => {
 
   const postItems = posts.length === 0
     ? '<p style="color:#64748b;">No posts published yet.</p>'
-    : posts.map((p) => `
-      <article style="padding:1.5rem 0;border-bottom:1px solid #e2e8f0;">
-        <a href="/blog/${escapeHtml(p.slug)}" style="font-family:'Playfair Display',Georgia,serif;font-size:1.375rem;font-weight:600;color:#0f172a;line-height:1.3;">${escapeHtml(p.title)}</a>
-        <p style="margin:0.5rem 0 0.75rem;color:#64748b;font-size:0.9rem;">${escapeHtml(p.metaDescription ?? '')}</p>
-        <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
-          <span style="font-size:0.75rem;color:#94a3b8;">${formatDate(p.publishedAt)}</span>
-          ${(p.tags ?? []).slice(0, 4).map((t: string) => `<span style="font-size:0.7rem;padding:0.2rem 0.6rem;background:#eef2ff;color:#4f46e5;border-radius:9999px;">${escapeHtml(t)}</span>`).join('')}
+    : posts.map((p) => {
+        const thumb = p.coverImage
+          ? `<div style="flex-shrink:0;">
+              <img src="${escapeHtml(p.coverImage.url)}" alt="${escapeHtml(p.coverImage.alt ?? '')}" style="width:80px;height:80px;object-fit:cover;border-radius:0.5rem;display:block;">
+              ${p.coverImage.type === 'external' && p.coverImage.source ? `<p style="font-size:0.65rem;color:#94a3b8;margin-top:0.25rem;text-align:right;">${escapeHtml(p.coverImage.source)}</p>` : ''}
+            </div>`
+          : '';
+        return `
+      <article style="padding:1.5rem 0;border-bottom:1px solid #e2e8f0;display:flex;gap:1.25rem;align-items:flex-start;">
+        <div style="flex:1;min-width:0;">
+          <a href="/blog/${escapeHtml(p.slug)}" style="font-family:'Playfair Display',Georgia,serif;font-size:1.375rem;font-weight:600;color:#0f172a;line-height:1.3;">${escapeHtml(p.title)}</a>
+          <p style="margin:0.5rem 0 0.75rem;color:#64748b;font-size:0.9rem;">${escapeHtml(p.metaDescription ?? '')}</p>
+          <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+            <span style="font-size:0.75rem;color:#94a3b8;">${formatDate(p.publishedAt)}</span>
+            ${(p.tags ?? []).slice(0, 4).map((t: string) => `<span style="font-size:0.7rem;padding:0.2rem 0.6rem;background:#eef2ff;color:#4f46e5;border-radius:9999px;">${escapeHtml(t)}</span>`).join('')}
+          </div>
         </div>
-      </article>`).join('');
+        ${thumb}
+      </article>`;
+      }).join('');
 
   const jsonLd = JSON.stringify({
     '@context': 'https://schema.org',
@@ -339,11 +425,23 @@ blogPageRouter.get('/:slug', async (req: Request, res: Response) => {
   const publishedIso = post.publishedAt ? new Date(post.publishedAt).toISOString() : new Date(post.createdAt).toISOString();
   const modifiedIso = new Date(post.updatedAt).toISOString();
 
+  const heroHtml = post.coverImage
+    ? `<figure style="margin:0 0 2rem;">
+        <img src="${escapeHtml(post.coverImage.url)}" alt="${escapeHtml(post.coverImage.alt ?? '')}" style="width:100%;max-height:420px;object-fit:cover;border-radius:0.75rem;display:block;">
+        ${post.coverImage.type === 'external' && post.coverImage.source ? `<figcaption style="text-align:right;font-size:0.75rem;color:#94a3b8;margin-top:0.375rem;">${escapeHtml(post.coverImage.source)}</figcaption>` : ''}
+      </figure>`
+    : '';
+
+  const ogImage = post.coverImage
+    ? `<meta property="og:image" content="${post.coverImage.url.startsWith('/') ? `https://www.artslaw.io${post.coverImage.url}` : escapeHtml(post.coverImage.url)}">`
+    : '';
+
   const jsonLd = JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'Article',
     headline: post.title,
     description: post.metaDescription,
+    ...(post.coverImage ? { image: post.coverImage.url.startsWith('/') ? `https://www.artslaw.io${post.coverImage.url}` : post.coverImage.url } : {}),
     author: { '@type': 'Organization', name: 'ArtSlaw', url: 'https://www.artslaw.io' },
     publisher: { '@type': 'Organization', name: 'ArtSlaw', url: 'https://www.artslaw.io' },
     datePublished: publishedIso,
@@ -364,6 +462,7 @@ blogPageRouter.get('/:slug', async (req: Request, res: Response) => {
   <meta property="og:description" content="${escapeHtml(post.metaDescription)}">
   <meta property="og:url" content="${canonicalUrl}">
   <meta property="og:site_name" content="ArtSlaw">
+  ${ogImage}
   <meta property="article:published_time" content="${publishedIso}">
   <meta property="article:modified_time" content="${modifiedIso}">
   <link rel="canonical" href="${canonicalUrl}">
@@ -403,6 +502,7 @@ blogPageRouter.get('/:slug', async (req: Request, res: Response) => {
       <span class="post-date">${formatDate(post.publishedAt)}</span>
       ${(post.tags ?? []).map((t: string) => `<span class="post-tag">${escapeHtml(t)}</span>`).join('')}
     </div>
+    ${heroHtml}
     <div class="post-body">${bodyHtml}</div>
     <hr class="divider">
     <div class="cta-box">

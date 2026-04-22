@@ -20,10 +20,15 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 ensureUsageIndexes().catch(err => console.error('[usage] index setup failed:', err));
 ensureBlogIndexes().catch(err => console.error('[blog] index setup failed:', err));
 
+// Ensure uploads directory exists
+const uploadsDir = path.resolve(__dirname, '../uploads');
+fs.mkdirSync(path.join(uploadsDir, 'blog'), { recursive: true });
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(cors());
+app.use('/uploads', express.static(uploadsDir));
 app.use(express.json());
 app.use(clerkMiddleware());
 

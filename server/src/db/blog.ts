@@ -1,5 +1,12 @@
 import { getDb } from '../db';
 
+export interface CoverImage {
+  type: 'uploaded' | 'external';
+  url: string;
+  alt?: string;
+  source?: string;
+}
+
 export interface BlogPost {
   slug: string;
   title: string;
@@ -11,6 +18,7 @@ export interface BlogPost {
   createdAt: Date;
   updatedAt: Date;
   publishedAt: Date | null;
+  coverImage?: CoverImage;
 }
 
 export interface BlogPostUpdate {
@@ -20,6 +28,7 @@ export interface BlogPostUpdate {
   exhibitionUrl?: string;
   tags?: string[];
   status?: 'draft' | 'published';
+  coverImage?: CoverImage | null;
 }
 
 const COLLECTION = 'blog_posts';
@@ -37,6 +46,11 @@ export async function createPost(data: Omit<BlogPost, 'createdAt' | 'updatedAt'>
   return doc;
 }
 
+export async function getPost(slug: string): Promise<BlogPost | null> {
+  const db = await getDb();
+  return db.collection<BlogPost>(COLLECTION).findOne({ slug }) ?? null;
+}
+
 export async function updatePost(slug: string, update: BlogPostUpdate): Promise<BlogPost | null> {
   const db = await getDb();
   // Explicitly pick only the fields that are allowed to change.
@@ -50,6 +64,7 @@ export async function updatePost(slug: string, update: BlogPostUpdate): Promise<
   if (exhibitionUrl !== undefined) set.exhibitionUrl = exhibitionUrl;
   if (tags !== undefined) set.tags = tags;
   if (status !== undefined) set.status = status;
+  if ('coverImage' in update) set.coverImage = update.coverImage ?? null;
   if (update.status === 'published') {
     const existing = await db.collection<BlogPost>(COLLECTION).findOne({ slug });
     if (existing && existing.status !== 'published') {

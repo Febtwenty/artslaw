@@ -1,7 +1,14 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { authedFetch } from '../utils';
+import { authedFetch, authedUpload } from '../utils';
+
+interface CoverImage {
+  type: 'uploaded' | 'external';
+  url: string;
+  alt?: string;
+  source?: string;
+}
 
 interface BlogPost {
   slug: string;
@@ -14,6 +21,7 @@ interface BlogPost {
   createdAt: string;
   updatedAt: string;
   publishedAt: string | null;
+  coverImage?: CoverImage;
 }
 
 type DraftPost = Partial<BlogPost> & { isNew?: boolean };
@@ -38,6 +46,12 @@ export default function BlogAdmin({ getToken }: { getToken: () => Promise<string
   const [error, setError] = useState<string | null>(null);
   const [titleEdited, setTitleEdited] = useState(false);
 
+  // Cover image state
+  const [imageMode, setImageMode] = useState<'upload' | 'external' | null>(null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [pendingPreviewUrl, setPendingPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const loadPosts = useCallback(async () => {
     try {
       const res = await authedFetch(getToken, '/api/blog/posts');
@@ -57,7 +71,16 @@ export default function BlogAdmin({ getToken }: { getToken: () => Promise<string
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tagsInput]);
 
+  function resetImageState() {
+    if (pendingPreviewUrl) URL.revokeObjectURL(pendingPreviewUrl);
+    setPendingFile(null);
+    setPendingPreviewUrl(null);
+    setImageMode(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }
+
   function openNewDraft(initial: Partial<BlogPost> = {}) {
+    resetImageState();
     const slug = initial.slug ?? (initial.title ? slugify(initial.title) : '');
     setDraft({ ...initial, slug, isNew: true });
     setTagsInput((initial.tags ?? []).join(', '));
@@ -68,11 +91,13 @@ export default function BlogAdmin({ getToken }: { getToken: () => Promise<string
   }
 
   function openEdit(post: BlogPost) {
+    resetImageState();
     setDraft({ ...post, isNew: false });
     setTagsInput((post.tags ?? []).join(', '));
     setTitleEdited(true);
     setShowPreview(false);
     setError(null);
+    if (post.coverImage) setImageMode(post.coverImage.type === 'uploaded' ? 'upload' : 'external');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -110,7 +135,15 @@ export default function BlogAdmin({ getToken }: { getToken: () => Promise<string
     }
     setSaving(true);
     setError(null);
-    const payload = { ...draft, status };
+
+    // Build payload — omit coverImage when a file upload is pending (upload endpoint sets it)
+    const { coverImage: _ci, ...rest } = draft;
+    const payload: Record<string, unknown> = { ...rest, status };
+    if (!pendingFile) {
+      // For external images or explicit clear (no image mode), include current value
+      payload.coverImage = imageMode === null ? null : (_ci ?? null);
+    }
+
     try {
       let res: Response;
       if (draft.isNew) {
@@ -128,6 +161,25 @@ export default function BlogAdmin({ getToken }: { getToken: () => Promise<string
         const body = await res.json().catch(() => ({ error: 'Unknown error' }));
         throw new Error(body.error ?? 'Save failed');
       }
+      const savedPost: BlogPost = await res.json();
+
+      if (pendingFile) {
+        const fd = new FormData();
+        fd.append('image', pendingFile);
+        fd.append('alt', draft.coverImage?.alt ?? '');
+        const uploadRes = await authedUpload(
+          getToken,
+          `/api/blog/posts/${savedPost.slug}/cover-image`,
+          fd,
+        );
+        if (!uploadRes.ok) {
+          setError('Post saved but image upload failed. Try saving again.');
+          await loadPosts();
+          return;
+        }
+      }
+
+      resetImageState();
       setDraft(null);
       await loadPosts();
     } catch (e) {
@@ -141,7 +193,28 @@ export default function BlogAdmin({ getToken }: { getToken: () => Promise<string
     if (!window.confirm(`Delete "${slug}"? This cannot be undone.`)) return;
     await authedFetch(getToken, `/api/blog/posts/${slug}`, { method: 'DELETE' });
     setPosts(prev => prev.filter(p => p.slug !== slug));
-    if (draft?.slug === slug) setDraft(null);
+    if (draft?.slug === slug) { resetImageState(); setDraft(null); }
+  }
+
+  async function removeCoverImage() {
+    // If there's a saved uploaded image on the server, delete it
+    if (draft && !draft.isNew && draft.coverImage) {
+      await authedFetch(getToken, `/api/blog/posts/${draft.slug}/cover-image`, { method: 'DELETE' });
+    }
+    setDraft(prev => prev ? { ...prev, coverImage: undefined } : prev);
+    resetImageState();
+  }
+
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (pendingPreviewUrl) URL.revokeObjectURL(pendingPreviewUrl);
+    setPendingFile(file);
+    setPendingPreviewUrl(URL.createObjectURL(file));
+    setDraft(prev => prev ? {
+      ...prev,
+      coverImage: { type: 'uploaded', url: prev.coverImage?.url ?? '', alt: prev.coverImage?.alt ?? '' },
+    } : prev);
   }
 
   function updateDraftField<K extends keyof BlogPost>(key: K, value: BlogPost[K]) {
@@ -155,9 +228,21 @@ export default function BlogAdmin({ getToken }: { getToken: () => Promise<string
     });
   }
 
+  function updateCoverImageField(field: keyof CoverImage, value: string) {
+    setDraft(prev => {
+      if (!prev) return prev;
+      const base = prev.coverImage ?? { type: imageMode === 'external' ? 'external' : 'uploaded', url: '' };
+      return { ...prev, coverImage: { ...base, [field]: value } as CoverImage };
+    });
+  }
+
   const inputClass = 'w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 transition-colors';
   const labelClass = 'block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1';
   const btnBase = 'px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-40';
+
+  const previewSrc = imageMode === 'upload'
+    ? (pendingPreviewUrl ?? draft?.coverImage?.url ?? null)
+    : (draft?.coverImage?.url ?? null);
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8 overflow-x-hidden w-full min-w-0">
@@ -294,6 +379,132 @@ export default function BlogAdmin({ getToken }: { getToken: () => Promise<string
               </div>
             )}
 
+            {/* Cover Image */}
+            <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">Cover Image</span>
+                {imageMode !== null && (
+                  <button
+                    type="button"
+                    onClick={removeCoverImage}
+                    className="text-xs text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:underline"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+
+              {imageMode === null && (
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setImageMode('upload')}
+                    className={`${btnBase} bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 text-xs`}
+                  >
+                    Upload my photo
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImageMode('external');
+                      setDraft(prev => prev ? {
+                        ...prev,
+                        coverImage: { type: 'external', url: prev.coverImage?.url ?? '', alt: prev.coverImage?.alt ?? '', source: prev.coverImage?.source ?? '' },
+                      } : prev);
+                    }}
+                    className={`${btnBase} bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 text-xs`}
+                  >
+                    Link external image
+                  </button>
+                </div>
+              )}
+
+              {imageMode === 'upload' && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <label className="cursor-pointer px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                      Choose file…
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={handleFileSelect}
+                        className="sr-only"
+                      />
+                    </label>
+                    {pendingFile && (
+                      <span className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[180px]">
+                        {pendingFile.name}
+                      </span>
+                    )}
+                    {!pendingFile && draft.coverImage?.url && (
+                      <span className="text-xs text-green-600 dark:text-green-400">Saved</span>
+                    )}
+                  </div>
+                  <div>
+                    <label className={labelClass}>Alt text</label>
+                    <input
+                      type="text"
+                      value={draft.coverImage?.alt ?? ''}
+                      onChange={e => updateCoverImageField('alt', e.target.value)}
+                      placeholder="Describe the image for accessibility"
+                      className={inputClass}
+                    />
+                  </div>
+                  {previewSrc && (
+                    <img
+                      src={previewSrc}
+                      alt="Preview"
+                      className="w-full max-h-48 object-cover rounded-lg border border-slate-200 dark:border-slate-700"
+                    />
+                  )}
+                </div>
+              )}
+
+              {imageMode === 'external' && (
+                <div className="space-y-3">
+                  <div>
+                    <label className={labelClass}>Image URL</label>
+                    <input
+                      type="url"
+                      value={draft.coverImage?.url ?? ''}
+                      onChange={e => updateCoverImageField('url', e.target.value)}
+                      placeholder="https://example.com/image.jpg"
+                      className={inputClass}
+                    />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Source / Attribution</label>
+                    <input
+                      type="text"
+                      value={draft.coverImage?.source ?? ''}
+                      onChange={e => updateCoverImageField('source', e.target.value)}
+                      placeholder="© Museum name / photographer"
+                      className={inputClass}
+                    />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Alt text</label>
+                    <input
+                      type="text"
+                      value={draft.coverImage?.alt ?? ''}
+                      onChange={e => updateCoverImageField('alt', e.target.value)}
+                      placeholder="Describe the image for accessibility"
+                      className={inputClass}
+                    />
+                  </div>
+                  {previewSrc && (
+                    <img
+                      src={previewSrc}
+                      alt="Preview"
+                      className="w-full max-h-48 object-cover rounded-lg border border-slate-200 dark:border-slate-700"
+                      onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                    />
+                  )}
+                </div>
+              )}
+            </div>
+
             {/* Actions */}
             <div className="flex flex-wrap items-center gap-2 pt-2">
               <button
@@ -321,7 +532,7 @@ export default function BlogAdmin({ getToken }: { getToken: () => Promise<string
                 </a>
               )}
               <button
-                onClick={() => { setDraft(null); setError(null); }}
+                onClick={() => { resetImageState(); setDraft(null); setError(null); }}
                 className={`${btnBase} text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 ml-auto`}
               >
                 Cancel
@@ -364,8 +575,19 @@ export default function BlogAdmin({ getToken }: { getToken: () => Promise<string
                     className={`border-b last:border-b-0 border-slate-200 dark:border-slate-700 ${i % 2 === 0 ? 'bg-white dark:bg-slate-800' : 'bg-slate-50/50 dark:bg-slate-800/30'}`}
                   >
                     <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-200 max-w-xs truncate">
-                      {post.title}
-                      <span className="block text-xs font-normal text-slate-400 truncate">{post.slug}</span>
+                      <div className="flex items-center gap-2 min-w-0">
+                        {post.coverImage && (
+                          <img
+                            src={post.coverImage.url}
+                            alt=""
+                            className="w-8 h-8 rounded object-cover shrink-0"
+                          />
+                        )}
+                        <div className="min-w-0">
+                          <span className="truncate block">{post.title}</span>
+                          <span className="block text-xs font-normal text-slate-400 truncate">{post.slug}</span>
+                        </div>
+                      </div>
                     </td>
                     <td className="px-4 py-3 hidden sm:table-cell">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${

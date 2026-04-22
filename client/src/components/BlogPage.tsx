@@ -3,12 +3,20 @@ import { useClerk } from '@clerk/react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
+interface CoverImage {
+  type: 'uploaded' | 'external';
+  url: string;
+  alt?: string;
+  source?: string;
+}
+
 interface PostSummary {
   slug: string;
   title: string;
   metaDescription: string;
   tags: string[];
   publishedAt: string | null;
+  coverImage?: CoverImage;
 }
 
 interface FullPost extends PostSummary {
@@ -55,30 +63,46 @@ function PostList({ onSelect }: { onSelect: (slug: string) => void }) {
           {posts.map(post => (
             <article
               key={post.slug}
-              className="py-5 border-b border-slate-200 dark:border-slate-700 last:border-b-0"
+              className="py-5 border-b border-slate-200 dark:border-slate-700 last:border-b-0 flex gap-4 items-start"
             >
-              <button
-                onClick={() => onSelect(post.slug)}
-                className="text-left group w-full"
-              >
-                <h2 className="font-serif text-xl font-semibold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors leading-snug mb-1.5">
-                  {post.title}
-                </h2>
-              </button>
-              <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-3">
-                {post.metaDescription}
-              </p>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs text-slate-400">{formatDate(post.publishedAt)}</span>
-                {post.tags.slice(0, 4).map(tag => (
-                  <span
-                    key={tag}
-                    className="text-xs px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
-                  >
-                    {tag}
-                  </span>
-                ))}
+              <div className="flex-1 min-w-0">
+                <button
+                  onClick={() => onSelect(post.slug)}
+                  className="text-left group w-full"
+                >
+                  <h2 className="font-serif text-xl font-semibold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors leading-snug mb-1.5">
+                    {post.title}
+                  </h2>
+                </button>
+                <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-3">
+                  {post.metaDescription}
+                </p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs text-slate-400">{formatDate(post.publishedAt)}</span>
+                  {post.tags.slice(0, 4).map(tag => (
+                    <span
+                      key={tag}
+                      className="text-xs px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
               </div>
+              {post.coverImage && (
+                <div className="shrink-0">
+                  <img
+                    src={post.coverImage.url}
+                    alt={post.coverImage.alt ?? ''}
+                    className="w-20 h-20 object-cover rounded-lg"
+                  />
+                  {post.coverImage.type === 'external' && post.coverImage.source && (
+                    <p className="text-right text-[10px] text-slate-400 mt-0.5 max-w-[80px] truncate">
+                      {post.coverImage.source}
+                    </p>
+                  )}
+                </div>
+              )}
             </article>
           ))}
         </div>
@@ -145,6 +169,21 @@ function PostDetail({ slug, onBack, onStartTour }: { slug: string; onBack: () =>
           </span>
         ))}
       </div>
+
+      {post.coverImage && (
+        <figure className="mb-8">
+          <img
+            src={post.coverImage.url}
+            alt={post.coverImage.alt ?? ''}
+            className="w-full max-h-96 object-cover rounded-xl"
+          />
+          {post.coverImage.type === 'external' && post.coverImage.source && (
+            <figcaption className="text-right text-xs text-slate-400 mt-1.5">
+              {post.coverImage.source}
+            </figcaption>
+          )}
+        </figure>
+      )}
 
       {post.exhibitionUrl && (
         <a

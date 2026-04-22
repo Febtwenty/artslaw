@@ -24,3 +24,17 @@ export async function authedFetch(
     },
   });
 }
+
+export async function authedUpload(
+  getToken: () => Promise<string | null>,
+  path: string,
+  formData: FormData
+): Promise<Response> {
+  const token = await getToken();
+  // No Content-Type header — browser sets multipart/form-data with correct boundary
+  return fetch(path, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  });
+}
