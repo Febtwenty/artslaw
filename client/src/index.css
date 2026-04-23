@@ -96,6 +96,11 @@
   margin: 1rem 0;
 }
 
+.prose-art img {
+  max-width: 100%;
+  height: auto;
+}
+
 /* Dark mode overrides for prose content */
 .dark .prose-art h1,
 .dark .prose-art h2,

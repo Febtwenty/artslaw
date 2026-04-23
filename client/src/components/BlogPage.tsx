@@ -49,7 +49,7 @@ function PostList({ onSelect }: { onSelect: (slug: string) => void }) {
   );
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
+    <div className="max-w-2xl mx-auto w-full px-4 py-8">
       <h1 className="font-serif text-3xl font-semibold text-slate-900 dark:text-slate-100 mb-1">
         Exhibition Reviews
       </h1>
@@ -147,7 +147,7 @@ function PostDetail({ slug, onBack, onStartTour }: { slug: string; onBack: () =>
   );
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8 overflow-x-hidden">
+    <div className="max-w-2xl mx-auto w-full px-4 py-8 overflow-x-hidden">
       <button
         onClick={onBack}
         className="text-sm text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors mb-6 flex items-center gap-1.5"
