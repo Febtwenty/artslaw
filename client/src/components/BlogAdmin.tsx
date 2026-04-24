@@ -36,6 +36,11 @@ function formatDate(d: string | null | undefined): string {
   return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
+function toDateInputValue(isoString: string | null | undefined): string {
+  if (!isoString) return '';
+  return isoString.slice(0, 10);
+}
+
 export default function BlogAdmin({ getToken }: { getToken: () => Promise<string | null> }) {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [draft, setDraft] = useState<DraftPost | null>(null);
@@ -352,6 +357,19 @@ export default function BlogAdmin({ getToken }: { getToken: () => Promise<string
                 </div>
               )}
             </div>
+
+            {/* Publish Date */}
+            {draft.status === 'published' && (
+              <div>
+                <label className={labelClass}>Publish Date</label>
+                <input
+                  type="date"
+                  value={toDateInputValue(draft.publishedAt)}
+                  onChange={e => updateDraftField('publishedAt', e.target.value ? new Date(e.target.value).toISOString() : null)}
+                  className={inputClass}
+                />
+              </div>
+            )}
 
             {/* Body */}
             <div>

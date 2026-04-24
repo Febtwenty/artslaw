@@ -230,13 +230,15 @@ blogApiRouter.get('/posts', requireAdmin, async (_req: Request, res: Response) =
 
 // POST /api/blog/posts — create a post (admin)
 blogApiRouter.post('/posts', requireAdmin, async (req: Request, res: Response) => {
-  const { slug, title, metaDescription, body, exhibitionUrl, tags, status, coverImage } = req.body;
+  const { slug, title, metaDescription, body, exhibitionUrl, tags, status, coverImage, publishedAt: publishedAtRaw } = req.body;
   if (!slug || !title || !body) {
     res.status(400).json({ error: 'slug, title, and body are required' });
     return;
   }
   try {
-    const publishedAt = status === 'published' ? new Date() : null;
+    const publishedAt = publishedAtRaw
+      ? new Date(publishedAtRaw)
+      : (status === 'published' ? new Date() : null);
     const post = await createPost({
       slug, title, metaDescription, body, exhibitionUrl,
       tags: tags ?? [], status: status ?? 'draft', publishedAt,
@@ -257,7 +259,12 @@ blogApiRouter.post('/posts', requireAdmin, async (req: Request, res: Response) =
 // PUT /api/blog/posts/:slug — update a post (admin)
 blogApiRouter.put('/posts/:slug', requireAdmin, async (req: Request, res: Response) => {
   try {
-    const post = await updatePost(req.params.slug, req.body);
+    const { publishedAt: publishedAtRaw, ...rest } = req.body;
+    const update = { ...rest } as import('../db/blog').BlogPostUpdate;
+    if ('publishedAt' in req.body) {
+      update.publishedAt = publishedAtRaw ? new Date(publishedAtRaw) : null;
+    }
+    const post = await updatePost(req.params.slug, update);
     if (!post) { res.status(404).json({ error: 'Post not found' }); return; }
     res.json(post);
   } catch (err) {

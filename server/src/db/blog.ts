@@ -30,6 +30,7 @@ export interface BlogPostUpdate {
   tags?: string[];
   status?: 'draft' | 'published';
   coverImage?: CoverImage | null;
+  publishedAt?: Date | null;
 }
 
 const COLLECTION = 'blog_posts';
@@ -66,7 +67,9 @@ export async function updatePost(slug: string, update: BlogPostUpdate): Promise<
   if (tags !== undefined) set.tags = tags;
   if (status !== undefined) set.status = status;
   if ('coverImage' in update) set.coverImage = update.coverImage ?? null;
-  if (update.status === 'published') {
+  if ('publishedAt' in update && update.publishedAt !== undefined) {
+    set.publishedAt = update.publishedAt;
+  } else if (update.status === 'published') {
     const existing = await db.collection<BlogPost>(COLLECTION).findOne({ slug });
     if (existing && existing.status !== 'published') {
       set.publishedAt = new Date();
