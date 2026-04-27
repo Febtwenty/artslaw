@@ -135,7 +135,7 @@ export default function MessageBubble({ message, isLoading, shareUrl }: Props) {
                   {uniqueSources.slice(0, 3).map((s, i) => (
                     <img
                       key={i}
-                      src={`https://www.google.com/s2/favicons?domain=${getDomain(s.url)}&sz=32`}
+                      src={`/api/favicon?domain=${getDomain(s.url)}`}
                       alt=""
                       className="w-5 h-5 rounded-full border-2 border-white dark:border-slate-800 bg-white"
                     />
@@ -163,7 +163,7 @@ export default function MessageBubble({ message, isLoading, shareUrl }: Props) {
                       className="flex items-center gap-2.5 px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-700/60 transition-colors group min-w-0"
                     >
                       <img
-                        src={`https://www.google.com/s2/favicons?domain=${getDomain(s.url)}&sz=32`}
+                        src={`/api/favicon?domain=${getDomain(s.url)}`}
                         alt=""
                         className="w-4 h-4 rounded flex-shrink-0 bg-white"
                       />

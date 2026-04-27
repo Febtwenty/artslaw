@@ -12,6 +12,7 @@ import tourRouter from './routes/tour';
 import discoveriesRouter from './routes/discoveries';
 import usageRouter from './routes/usage';
 import { blogApiRouter, blogPageRouter } from './routes/blog';
+import faviconRouter from './routes/favicon';
 import { ensureUsageIndexes } from './db/usage';
 import { ensureBlogIndexes, getPublishedPosts } from './db/blog';
 
@@ -32,6 +33,7 @@ app.use('/uploads', express.static(uploadsDir));
 app.use(express.json());
 app.use(clerkMiddleware());
 
+app.use('/api/favicon', faviconRouter);
 app.use('/api/chat', chatRouter);
 app.use('/api/conversations', conversationsRouter);
 app.use('/api/generate-title', titleRouter);
