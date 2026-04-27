@@ -1,3 +1,6 @@
+import '@fontsource/inter/300.css';
+import '@fontsource/inter/400.css';
+import '@fontsource/inter/500.css';
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { ClerkProvider } from '@clerk/react';
