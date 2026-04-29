@@ -8,33 +8,82 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="theme-color" content="#4F46E5" />
     <!-- SEO -->
-    <meta name="description" content="Paste a link to any museum or gallery exhibition and ArtSlaw walks you through the artist, the works, and the ideas. Your AI-powered gallery companion." />
+    <meta name="description" content="ArtSlaw is an AI museum tour guide. Paste any exhibition link from MoMA, Tate, Guggenheim, or thousands of galleries worldwide and chat with an expert guide about the artist, works, and ideas — powered by Claude and real-time web search." />
+    <meta name="keywords" content="AI art guide, museum tour guide, gallery exhibition AI, art history AI, ArtSlaw, museum companion, exhibition guide" />
     <link rel="canonical" href="https://www.artslaw.io" />
     <!-- Open Graph -->
     <meta property="og:title" content="ArtSlaw — AI-Powered Art Tour Guide" />
-    <meta property="og:description" content="Paste a link to any exhibition. ArtSlaw researches it and walks you through the artist, the works, and the ideas." />
+    <meta property="og:description" content="Paste a link to any museum or gallery exhibition. ArtSlaw researches it with live web search and walks you through the artist, the works, and the ideas." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://www.artslaw.io" />
-    <!-- og:image — place a 1200×630px image at client/public/og-image.png before launch, then uncomment:
     <meta property="og:image" content="https://www.artslaw.io/og-image.png" />
-    -->
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="ArtSlaw — AI-Powered Art Tour Guide" />
-    <meta name="twitter:description" content="Paste a link to any exhibition. ArtSlaw researches it and walks you through the artist, the works, and the ideas." />
-    <!-- twitter:image — uncomment once og-image.png is created:
+    <meta name="twitter:description" content="Paste a link to any museum or gallery exhibition. ArtSlaw researches it with live web search and walks you through the artist, the works, and the ideas." />
     <meta name="twitter:image" content="https://www.artslaw.io/og-image.png" />
-    -->
     <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "ArtSlaw",
-      "url": "https://www.artslaw.io",
-      "description": "Paste any museum or gallery exhibition link and chat with ArtSlaw, your knowledgeable gallery guide. Discover the story behind the art.",
-      "applicationCategory": "EducationApplication",
-      "offers": { "@type": "Offer", "price": "0" }
-    }
+    [
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "ArtSlaw",
+        "url": "https://www.artslaw.io",
+        "description": "AI-powered museum and gallery tour guide. Paste any exhibition link and chat with an expert AI guide about the artist, works, and ideas behind the show.",
+        "applicationCategory": "EducationApplication",
+        "operatingSystem": "Web",
+        "inLanguage": ["en", "de"],
+        "keywords": "AI art guide, museum tour, gallery guide, exhibition companion, art history AI",
+        "featureList": "Real-time web research, Conversational AI tours, Works with any museum or gallery, English and German language support",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Which museums and galleries does ArtSlaw support?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Any publicly listed exhibition worldwide — MoMA, Tate Modern, Guggenheim, the Louvre, small independent galleries, and thousands more. If the exhibition has a public web page, ArtSlaw can research it."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Is ArtSlaw free?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes, ArtSlaw is free to use."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Do I need to be at the museum to use ArtSlaw?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. You can explore any exhibition from home before you visit, or use ArtSlaw on your phone while you're standing in front of the works."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What languages does ArtSlaw support?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Tours are available in English and German."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How does ArtSlaw research exhibitions?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "ArtSlaw uses Claude (Anthropic's AI) and real-time web search, so every tour reflects current, accurate information specific to the actual exhibition — not generic art history."
+            }
+          }
+        ]
+      }
+    ]
     </script>
   </head>
   <body>

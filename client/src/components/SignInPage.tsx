@@ -107,6 +107,34 @@ const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   );
 }
 
+const FAQS = [
+  {
+    q: 'Which museums and galleries does it support?',
+    a: 'Any publicly listed exhibition worldwide — MoMA, Tate Modern, Guggenheim, the Louvre, small independent galleries, and thousands more. If the exhibition has a public web page, ArtSlaw can research it.',
+  },
+  {
+    q: 'Is ArtSlaw free?',
+    a: 'Yes, ArtSlaw is free to use.',
+  },
+  {
+    q: 'Do I need to be at the museum?',
+    a: "No. You can explore any exhibition from home before you visit, or use ArtSlaw on your phone while you're standing in front of the works.",
+  },
+  {
+    q: 'What languages are supported?',
+    a: 'Tours are available in English and German.',
+  },
+  {
+    q: 'How does the research work?',
+    a: "ArtSlaw uses Claude (Anthropic's AI) and real-time web search, so every tour reflects current, accurate information specific to the actual exhibition — not generic art history.",
+  },
+];
+
+const MUSEUMS = [
+  'MoMA', 'Tate', 'Guggenheim', 'Whitney', 'Louvre', 'Uffizi',
+  'Pompidou', 'Serpentine', 'Hauser & Wirth', 'David Zwirner', 'V&A', 'Rijksmuseum',
+];
+
 interface Props {
   isDark: boolean;
   onToggleDark: () => void;
@@ -115,6 +143,7 @@ interface Props {
 
 export default function SignInPage({ isDark, onToggleDark, navigate }: Props) {
   const { openSignIn, openSignUp } = useClerk();
+  const [faqOpen, setFaqOpen] = useState<number | null>(null);
 
   return (
     <div className="h-full flex flex-col bg-slate-50 dark:bg-slate-900">
@@ -212,17 +241,95 @@ export default function SignInPage({ isDark, onToggleDark, navigate }: Props) {
 
         {/* Product demo preview */}
         <div className="mt-16 w-full max-w-2xl mx-auto">
-          <p className="text-xs font-medium tracking-widest uppercase text-slate-400 dark:text-slate-500 mb-4 text-center">
+          <h2 className="text-xs font-medium tracking-widest uppercase text-slate-400 dark:text-slate-500 mb-4 text-center">
             See it in action
-          </p>
+          </h2>
           <ChatDemo />
         </div>
 
-        {/* About */}
-        <div className="mt-16 w-full mx-auto px-4 text-center" style={{ maxWidth: '520px' }}>
-          <p className="text-xs font-medium tracking-widest uppercase text-slate-400 dark:text-slate-500 mb-4">
-            About
+        {/* How it works */}
+        <div className="mt-20 w-full max-w-2xl mx-auto px-4">
+          <h2 className="text-xs font-medium tracking-widest uppercase text-slate-400 dark:text-slate-500 mb-10 text-center">
+            How it works
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+            {[
+              { n: '1', title: 'Find an exhibition', body: 'Go to any museum or gallery website and copy the exhibition page URL.' },
+              { n: '2', title: 'ArtSlaw researches it', body: 'Live web search pulls together context on the artist, the works, and the ideas behind the show.' },
+              { n: '3', title: 'Ask anything', body: 'Have a real conversation. Dive into technique, biography, influences, or historical context.' },
+            ].map(({ n, title, body }) => (
+              <div key={n} className="flex flex-col items-center text-center gap-3 p-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
+                <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-semibold text-sm shrink-0">
+                  {n}
+                </div>
+                <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{title}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Works with any museum */}
+        <div className="mt-20 w-full max-w-2xl mx-auto px-4 text-center">
+          <h2 className="text-xs font-medium tracking-widest uppercase text-slate-400 dark:text-slate-500 mb-4">
+            Works with any museum or gallery
+          </h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
+            Paste any publicly listed exhibition URL worldwide. Here are some places our users frequently explore:
           </p>
+          <div className="flex flex-wrap gap-2 justify-center">
+            {MUSEUMS.map(name => (
+              <span
+                key={name}
+                className="px-3 py-1 text-sm text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full"
+              >
+                {name}
+              </span>
+            ))}
+            <span className="px-3 py-1 text-sm text-slate-400 dark:text-slate-500 rounded-full italic">
+              and thousands more
+            </span>
+          </div>
+        </div>
+
+        {/* FAQ */}
+        <div className="mt-20 w-full max-w-xl mx-auto px-4">
+          <h2 className="text-xs font-medium tracking-widest uppercase text-slate-400 dark:text-slate-500 mb-6 text-center">
+            Questions
+          </h2>
+          <div className="divide-y divide-slate-200 dark:divide-slate-700">
+            {FAQS.map((faq, i) => (
+              <div key={i}>
+                <button
+                  className="w-full py-4 flex items-center justify-between text-left gap-4"
+                  onClick={() => setFaqOpen(faqOpen === i ? null : i)}
+                  aria-expanded={faqOpen === i}
+                >
+                  <span className="text-sm font-medium text-slate-800 dark:text-slate-100">{faq.q}</span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${faqOpen === i ? 'rotate-180' : ''}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {faqOpen === i && (
+                  <p className="pb-4 text-sm text-slate-500 dark:text-slate-400 leading-relaxed text-left">{faq.a}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* About */}
+        <div className="mt-20 w-full mx-auto px-4 text-center" style={{ maxWidth: '520px' }}>
+          <h2 className="text-xs font-medium tracking-widest uppercase text-slate-400 dark:text-slate-500 mb-4">
+            About
+          </h2>
           <p className="text-slate-500 dark:text-slate-400" style={{ fontSize: '17px', lineHeight: '1.75' }}>
             ArtSlaw was built by{' '}
             <span className="text-slate-700 dark:text-slate-300 font-medium">Clemens Leopold</span>{' '}

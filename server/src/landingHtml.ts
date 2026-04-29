@@ -68,11 +68,78 @@ const LANDING_BODY = `<div class="h-full flex flex-col bg-slate-50">
     <p class="text-slate-400 text-xs mt-3">Sign up with your email — free to use</p>
 
     <div class="mt-16 w-full max-w-2xl mx-auto">
-      <p class="text-xs font-medium tracking-widest uppercase text-slate-400 mb-4 text-center">See it in action</p>
+      <h2 class="text-xs font-medium tracking-widest uppercase text-slate-400 mb-4 text-center">See it in action</h2>
     </div>
 
-    <div class="mt-16 w-full mx-auto px-4 text-center" style="max-width:520px">
-      <p class="text-xs font-medium tracking-widest uppercase text-slate-400 mb-4">About</p>
+    <div class="mt-20 w-full max-w-2xl mx-auto px-4">
+      <h2 class="text-xs font-medium tracking-widest uppercase text-slate-400 mb-10 text-center">How it works</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
+        <div class="flex flex-col items-center text-center gap-3 p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
+          <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-semibold text-sm shrink-0">1</div>
+          <p class="text-sm font-semibold text-slate-800">Find an exhibition</p>
+          <p class="text-xs text-slate-500 leading-relaxed">Go to any museum or gallery website and copy the exhibition page URL.</p>
+        </div>
+        <div class="flex flex-col items-center text-center gap-3 p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
+          <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-semibold text-sm shrink-0">2</div>
+          <p class="text-sm font-semibold text-slate-800">ArtSlaw researches it</p>
+          <p class="text-xs text-slate-500 leading-relaxed">Live web search pulls together context on the artist, the works, and the ideas behind the show.</p>
+        </div>
+        <div class="flex flex-col items-center text-center gap-3 p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
+          <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-semibold text-sm shrink-0">3</div>
+          <p class="text-sm font-semibold text-slate-800">Ask anything</p>
+          <p class="text-xs text-slate-500 leading-relaxed">Have a real conversation. Dive into technique, biography, influences, or historical context.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-20 w-full max-w-2xl mx-auto px-4 text-center">
+      <h2 class="text-xs font-medium tracking-widest uppercase text-slate-400 mb-4">Works with any museum or gallery</h2>
+      <p class="text-sm text-slate-500 mb-6 leading-relaxed">Paste any publicly listed exhibition URL worldwide. Here are some places our users frequently explore:</p>
+      <div class="flex flex-wrap gap-2 justify-center">
+        <span class="px-3 py-1 text-sm text-slate-600 bg-white border border-slate-200 rounded-full">MoMA</span>
+        <span class="px-3 py-1 text-sm text-slate-600 bg-white border border-slate-200 rounded-full">Tate</span>
+        <span class="px-3 py-1 text-sm text-slate-600 bg-white border border-slate-200 rounded-full">Guggenheim</span>
+        <span class="px-3 py-1 text-sm text-slate-600 bg-white border border-slate-200 rounded-full">Whitney</span>
+        <span class="px-3 py-1 text-sm text-slate-600 bg-white border border-slate-200 rounded-full">Louvre</span>
+        <span class="px-3 py-1 text-sm text-slate-600 bg-white border border-slate-200 rounded-full">Uffizi</span>
+        <span class="px-3 py-1 text-sm text-slate-600 bg-white border border-slate-200 rounded-full">Pompidou</span>
+        <span class="px-3 py-1 text-sm text-slate-600 bg-white border border-slate-200 rounded-full">Serpentine</span>
+        <span class="px-3 py-1 text-sm text-slate-600 bg-white border border-slate-200 rounded-full">Hauser &amp; Wirth</span>
+        <span class="px-3 py-1 text-sm text-slate-600 bg-white border border-slate-200 rounded-full">David Zwirner</span>
+        <span class="px-3 py-1 text-sm text-slate-600 bg-white border border-slate-200 rounded-full">V&amp;A</span>
+        <span class="px-3 py-1 text-sm text-slate-600 bg-white border border-slate-200 rounded-full">Rijksmuseum</span>
+        <span class="px-3 py-1 text-sm text-slate-400 rounded-full italic">and thousands more</span>
+      </div>
+    </div>
+
+    <div class="mt-20 w-full max-w-xl mx-auto px-4">
+      <h2 class="text-xs font-medium tracking-widest uppercase text-slate-400 mb-6 text-center">Questions</h2>
+      <div class="divide-y divide-slate-200">
+        <div class="py-4 text-left">
+          <p class="text-sm font-medium text-slate-800 mb-2">Which museums and galleries does it support?</p>
+          <p class="text-sm text-slate-500 leading-relaxed">Any publicly listed exhibition worldwide — MoMA, Tate Modern, Guggenheim, the Louvre, small independent galleries, and thousands more. If the exhibition has a public web page, ArtSlaw can research it.</p>
+        </div>
+        <div class="py-4 text-left">
+          <p class="text-sm font-medium text-slate-800 mb-2">Is ArtSlaw free?</p>
+          <p class="text-sm text-slate-500 leading-relaxed">Yes, ArtSlaw is free to use.</p>
+        </div>
+        <div class="py-4 text-left">
+          <p class="text-sm font-medium text-slate-800 mb-2">Do I need to be at the museum?</p>
+          <p class="text-sm text-slate-500 leading-relaxed">No. You can explore any exhibition from home before you visit, or use ArtSlaw on your phone while you're standing in front of the works.</p>
+        </div>
+        <div class="py-4 text-left">
+          <p class="text-sm font-medium text-slate-800 mb-2">What languages are supported?</p>
+          <p class="text-sm text-slate-500 leading-relaxed">Tours are available in English and German.</p>
+        </div>
+        <div class="py-4 text-left">
+          <p class="text-sm font-medium text-slate-800 mb-2">How does the research work?</p>
+          <p class="text-sm text-slate-500 leading-relaxed">ArtSlaw uses Claude (Anthropic's AI) and real-time web search, so every tour reflects current, accurate information specific to the actual exhibition — not generic art history.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-20 w-full mx-auto px-4 text-center" style="max-width:520px">
+      <h2 class="text-xs font-medium tracking-widest uppercase text-slate-400 mb-4">About</h2>
       <p class="text-slate-500" style="font-size:17px;line-height:1.75">
         ArtSlaw was built by <span class="text-slate-700 font-medium">Clemens Leopold</span> as a way to make gallery visits more meaningful. I wanted a companion that could explain what you're seeing without making you feel like you needed an art degree. It uses Claude and live web search to research exhibitions in real time.
       </p>
