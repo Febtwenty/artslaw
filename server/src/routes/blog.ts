@@ -151,12 +151,13 @@ Summarise everything you find in plain prose.`;
   const formatSystem = `You are ArtSlaw, an expert art critic. Based on the research in the conversation, write a blog review.
 Return ONLY a raw JSON object with these exact fields — no markdown fences, no prose before or after:
 {
-  "title": "compelling headline",
+  "title": "clear, informative headline",
   "metaDescription": "max 160 chars SEO summary",
-  "body": "full review in markdown with H2 sections: Overview, The Artist, Key Works to Look For, Why It Matters, Visitor Info",
+  "body": "full review in markdown with H2 sections: Overview, The Artist, Key Works to Look For, In Perspective, Visitor Info",
   "tags": ["artist name", "gallery", "city", "movement"],
   "suggestedSlug": "url-friendly-slug"
-}`;
+}
+Write with critical honesty — not every exhibition is groundbreaking. The review should reflect the actual quality and significance of the work.`;
 
   const tools: Anthropic.Messages.WebSearchTool20250305[] = [
     { type: 'web_search_20250305', name: 'web_search' } as Anthropic.Messages.WebSearchTool20250305,
