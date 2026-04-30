@@ -241,16 +241,16 @@ export default function SignInPage({ isDark, onToggleDark, navigate }: Props) {
 
         {/* Product demo preview */}
         <div className="mt-16 w-full max-w-2xl mx-auto">
-          <h2 className="text-xs font-medium tracking-widest uppercase text-slate-400 dark:text-slate-500 mb-4 text-center">
-            See it in action
+          <h2 className="font-serif text-3xl font-semibold text-slate-900 dark:text-slate-50 mb-6 text-center leading-tight">
+            See it <span className="text-indigo-600">in action</span>
           </h2>
           <ChatDemo />
         </div>
 
         {/* How it works */}
         <div className="mt-20 w-full max-w-2xl mx-auto px-4">
-          <h2 className="text-xs font-medium tracking-widest uppercase text-slate-400 dark:text-slate-500 mb-10 text-center">
-            How it works
+          <h2 className="font-serif text-3xl font-semibold text-slate-900 dark:text-slate-50 mb-10 text-center leading-tight">
+            How it <span className="text-indigo-600">works</span>
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
             {[
@@ -271,8 +271,8 @@ export default function SignInPage({ isDark, onToggleDark, navigate }: Props) {
 
         {/* Works with any museum */}
         <div className="mt-20 w-full max-w-2xl mx-auto px-4 text-center">
-          <h2 className="text-xs font-medium tracking-widest uppercase text-slate-400 dark:text-slate-500 mb-4">
-            Works with any museum or gallery
+          <h2 className="font-serif text-3xl font-semibold text-slate-900 dark:text-slate-50 mb-4 leading-tight">
+            Works with <span className="text-indigo-600">any</span> museum or gallery
           </h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
             Paste any publicly listed exhibition URL worldwide. Here are some places our users frequently explore:
@@ -294,8 +294,8 @@ export default function SignInPage({ isDark, onToggleDark, navigate }: Props) {
 
         {/* FAQ */}
         <div className="mt-20 w-full max-w-xl mx-auto px-4">
-          <h2 className="text-xs font-medium tracking-widest uppercase text-slate-400 dark:text-slate-500 mb-6 text-center">
-            Questions
+          <h2 className="font-serif text-3xl font-semibold text-slate-900 dark:text-slate-50 mb-6 text-center leading-tight">
+            <span className="text-indigo-600">FAQ</span>
           </h2>
           <div className="divide-y divide-slate-200 dark:divide-slate-700">
             {FAQS.map((faq, i) => (
@@ -327,12 +327,12 @@ export default function SignInPage({ isDark, onToggleDark, navigate }: Props) {
 
         {/* About */}
         <div className="mt-20 w-full mx-auto px-4 text-center" style={{ maxWidth: '520px' }}>
-          <h2 className="text-xs font-medium tracking-widest uppercase text-slate-400 dark:text-slate-500 mb-4">
-            About
+          <h2 className="font-serif text-3xl font-semibold text-slate-900 dark:text-slate-50 mb-4 leading-tight">
+            <span className="text-indigo-600">About</span>
           </h2>
           <p className="text-slate-500 dark:text-slate-400" style={{ fontSize: '17px', lineHeight: '1.75' }}>
             ArtSlaw was built by{' '}
-            <span className="text-slate-700 dark:text-slate-300 font-medium">Clemens Leopold</span>{' '}
+            <span className="text-slate-700 dark:text-slate-300">Clemens Leopold</span>{' '}
             as a way to make gallery visits more meaningful. I wanted a companion that could
             explain what you're seeing without making you feel like you needed an art degree.
             It uses Claude and live web search to research exhibitions in real time.
