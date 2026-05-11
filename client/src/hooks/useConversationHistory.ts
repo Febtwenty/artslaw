@@ -44,23 +44,35 @@ export function useConversationHistory({ isSignedIn, getToken }: Params): Return
     return () => { cancelled = true; };
   }, [isSignedIn]);
 
-  // Fetch curated starter exhibitions for new users with no past tours.
+  // Fetch the latest published blog posts to suggest as starter tours.
   useEffect(() => {
-    if (convLoading || !isSignedIn || conversations.length !== 0) return;
     let cancelled = false;
     (async () => {
       try {
-        const token = await getToken();
-        const res = await fetch('/api/discoveries', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch('/api/blog/published');
         if (!res.ok) return;
-        const data = await res.json();
-        if (!cancelled) setSuggestedTours((data as SuggestedTour[]).slice(0, 3));
+        const data = await res.json() as Array<{
+          title: string;
+          exhibitionUrl: string;
+          tags: string[];
+          coverImage?: { url: string; thumbnailUrl?: string } | null;
+        }>;
+        if (cancelled) return;
+        const tours: SuggestedTour[] = data
+          .filter((p) => p.exhibitionUrl)
+          .slice(0, 3)
+          .map((p) => ({
+            exhibitionTitle: p.title,
+            artistName: p.tags[0] ?? '',
+            gallery: p.tags[1] ?? '',
+            url: p.exhibitionUrl,
+            imageUrl: p.coverImage?.thumbnailUrl ?? p.coverImage?.url ?? null,
+          }));
+        setSuggestedTours(tours);
       } catch { /* non-critical */ }
     })();
     return () => { cancelled = true; };
-  }, [convLoading, isSignedIn, conversations.length]);
+  }, []);
 
   return { conversations, setConversations, convLoading, suggestedTours };
 }

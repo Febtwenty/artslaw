@@ -95,7 +95,7 @@ export default function ExhibitionLinkInput({ onStart, initialUrl, language, onL
       {suggestedTours && suggestedTours.length > 0 && (
         <div className="mt-10 w-full max-w-xl">
           <p className="text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">
-            Or explore a featured exhibition
+            Or start with a recent exhibition
           </p>
           <div className="flex flex-col gap-2.5">
             {suggestedTours.map((tour, i) => (
