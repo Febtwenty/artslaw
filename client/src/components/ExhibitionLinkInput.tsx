@@ -21,7 +21,7 @@ export default function ExhibitionLinkInput({ onStart, initialUrl, language, onL
   };
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-6 text-center pb-10">
+    <div className="flex-1 flex flex-col items-center justify-center px-6 text-center pt-12 md:pt-8 pb-10">
       {/* Wordmark — desktop only, already visible in the header on mobile */}
       <div className="hidden md:block mb-8">
         <LogoWordmark className="h-12 w-auto" />
