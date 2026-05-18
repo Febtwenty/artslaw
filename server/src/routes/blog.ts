@@ -301,13 +301,13 @@ blogApiRouter.post(
 );
 
 // Multer v2 error handler — catches MulterError (wrong type, size limit) from upload.single()
-blogApiRouter.use(((err: unknown, _req: Request, res: Response, next: NextFunction) => {
+blogApiRouter.use((err: unknown, _req: Request, res: Response, next: NextFunction) => {
   if (err instanceof multer.MulterError) {
     res.status(400).json({ error: err.message });
     return;
   }
   next(err);
-}) as RequestHandler);
+});
 
 // DELETE /api/blog/posts/:slug/cover-image — remove cover image (admin)
 blogApiRouter.delete('/posts/:slug/cover-image', requireAdmin, async (req: Request, res: Response) => {
