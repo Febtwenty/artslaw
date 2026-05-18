@@ -284,16 +284,30 @@ blogApiRouter.post(
     const file = req.file;
     if (!file) { res.status(400).json({ error: 'No image file provided' }); return; }
 
-    const existing = await getPost(slug);
-    if (!existing) { res.status(404).json({ error: 'Post not found' }); return; }
-    if (existing.coverImage?.type === 'uploaded') deleteCoverFiles(existing.coverImage);
+    try {
+      const existing = await getPost(slug);
+      if (!existing) { res.status(404).json({ error: 'Post not found' }); return; }
+      if (existing.coverImage?.type === 'uploaded') deleteCoverFiles(existing.coverImage);
 
-    const { url, thumbnailUrl } = await processAndSaveImage(file.buffer, slug);
-    const alt = typeof req.body.alt === 'string' ? req.body.alt : '';
-    const post = await updatePost(slug, { coverImage: { type: 'uploaded', url, thumbnailUrl, alt } });
-    res.json(post);
+      const { url, thumbnailUrl } = await processAndSaveImage(file.buffer, slug);
+      const alt = typeof req.body.alt === 'string' ? req.body.alt : '';
+      const post = await updatePost(slug, { coverImage: { type: 'uploaded', url, thumbnailUrl, alt } });
+      res.json(post);
+    } catch (err) {
+      console.error('[blog] cover-image upload error:', err);
+      res.status(500).json({ error: 'Failed to process image' });
+    }
   },
 );
+
+// Multer v2 error handler — catches MulterError (wrong type, size limit) from upload.single()
+blogApiRouter.use(((err: unknown, _req: Request, res: Response, next: NextFunction) => {
+  if (err instanceof multer.MulterError) {
+    res.status(400).json({ error: err.message });
+    return;
+  }
+  next(err);
+}) as RequestHandler);
 
 // DELETE /api/blog/posts/:slug/cover-image — remove cover image (admin)
 blogApiRouter.delete('/posts/:slug/cover-image', requireAdmin, async (req: Request, res: Response) => {
