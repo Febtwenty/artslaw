@@ -52,6 +52,7 @@ export function useConversationHistory({ isSignedIn, getToken }: Params): Return
         const res = await fetch('/api/blog/published');
         if (!res.ok) return;
         const data = await res.json() as Array<{
+          slug: string;
           title: string;
           exhibitionUrl: string;
           tags: string[];
@@ -67,6 +68,7 @@ export function useConversationHistory({ isSignedIn, getToken }: Params): Return
             gallery: p.tags[1] ?? '',
             url: p.exhibitionUrl,
             imageUrl: p.coverImage?.thumbnailUrl ?? p.coverImage?.url ?? null,
+            blogSlug: p.slug,
           }));
         setSuggestedTours(tours);
       } catch { /* non-critical */ }

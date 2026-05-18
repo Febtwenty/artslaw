@@ -8,9 +8,10 @@ interface Props {
   language: 'en' | 'de';
   onLanguageChange: (lang: 'en' | 'de') => void;
   suggestedTours?: SuggestedTour[];
+  onNavigateBlog?: (slug: string) => void;
 }
 
-export default function ExhibitionLinkInput({ onStart, initialUrl, language, onLanguageChange, suggestedTours }: Props) {
+export default function ExhibitionLinkInput({ onStart, initialUrl, language, onLanguageChange, suggestedTours, onNavigateBlog }: Props) {
   const [url, setUrl] = useState(initialUrl ?? '');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -120,14 +121,24 @@ export default function ExhibitionLinkInput({ onStart, initialUrl, language, onL
                         {tour.artistName}
                       </p>
                     )}
-                    <a
-                      href={tour.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm font-semibold text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 line-clamp-2 leading-snug text-left transition-colors"
-                    >
-                      {tour.exhibitionTitle || 'Untitled Exhibition'}
-                    </a>
+                    {tour.blogSlug && onNavigateBlog ? (
+                      <button
+                        type="button"
+                        onClick={() => onNavigateBlog(tour.blogSlug!)}
+                        className="text-sm font-semibold text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 line-clamp-2 leading-snug text-left transition-colors"
+                      >
+                        {tour.exhibitionTitle || 'Untitled Exhibition'}
+                      </button>
+                    ) : (
+                      <a
+                        href={tour.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm font-semibold text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 line-clamp-2 leading-snug text-left transition-colors"
+                      >
+                        {tour.exhibitionTitle || 'Untitled Exhibition'}
+                      </a>
+                    )}
                     {tour.gallery && (
                       <p className="text-xs text-slate-500 dark:text-slate-400 truncate text-left">{tour.gallery}</p>
                     )}

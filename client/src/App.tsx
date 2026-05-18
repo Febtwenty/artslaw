@@ -356,7 +356,7 @@ function App({ navigate }: { navigate: (path: string) => void }) {
           ) : (
             <div className="flex-1 flex flex-col max-w-3xl mx-auto w-full">
               {!hasStarted ? (
-                <ExhibitionLinkInput onStart={startConversation} language={language} onLanguageChange={setLanguage} suggestedTours={suggestedTours} />
+                <ExhibitionLinkInput onStart={startConversation} language={language} onLanguageChange={setLanguage} suggestedTours={suggestedTours} onNavigateBlog={navigateToBlog} />
               ) : (
                 <div className="flex-1 flex flex-col px-4 pb-2">
                   {exhibitionUrl && (

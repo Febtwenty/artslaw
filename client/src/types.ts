@@ -15,6 +15,7 @@ export interface SuggestedTour {
   gallery: string;
   url: string;
   imageUrl?: string | null;
+  blogSlug?: string;
 }
 
 export interface Conversation {
