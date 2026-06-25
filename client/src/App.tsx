@@ -40,6 +40,7 @@ function App({ navigate }: { navigate: (path: string) => void }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [language, setLanguage] = useState<'en' | 'de'>('en');
+  const [provider, setProvider] = useState<'claude' | 'mistral'>('claude');
   const { isDark, setIsDark } = useDarkMode();
   const [usageRefreshKey, setUsageRefreshKey] = useState(0);
   const { conversations, setConversations, convLoading, suggestedTours } =
@@ -59,6 +60,7 @@ function App({ navigate }: { navigate: (path: string) => void }) {
     loadConversationState,
   } = useChatTour({
     language,
+    provider,
     getToken,
     onConversationCreated: (conv) => {
       setConversations((prev) => [conv, ...prev]);
@@ -356,7 +358,7 @@ function App({ navigate }: { navigate: (path: string) => void }) {
           ) : (
             <div className="flex-1 flex flex-col max-w-3xl mx-auto w-full">
               {!hasStarted ? (
-                <ExhibitionLinkInput onStart={startConversation} language={language} onLanguageChange={setLanguage} suggestedTours={suggestedTours} onNavigateBlog={navigateToBlog} />
+                <ExhibitionLinkInput onStart={startConversation} language={language} onLanguageChange={setLanguage} provider={provider} onProviderChange={setProvider} suggestedTours={suggestedTours} onNavigateBlog={navigateToBlog} />
               ) : (
                 <div className="flex-1 flex flex-col px-4 pb-2">
                   {exhibitionUrl && (

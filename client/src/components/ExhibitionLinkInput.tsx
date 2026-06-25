@@ -7,11 +7,13 @@ interface Props {
   initialUrl?: string;
   language: 'en' | 'de';
   onLanguageChange: (lang: 'en' | 'de') => void;
+  provider: 'claude' | 'mistral';
+  onProviderChange: (p: 'claude' | 'mistral') => void;
   suggestedTours?: SuggestedTour[];
   onNavigateBlog?: (slug: string) => void;
 }
 
-export default function ExhibitionLinkInput({ onStart, initialUrl, language, onLanguageChange, suggestedTours, onNavigateBlog }: Props) {
+export default function ExhibitionLinkInput({ onStart, initialUrl, language, onLanguageChange, provider, onProviderChange, suggestedTours, onNavigateBlog }: Props) {
   const [url, setUrl] = useState(initialUrl ?? '');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -89,6 +91,22 @@ export default function ExhibitionLinkInput({ onStart, initialUrl, language, onL
             className={`transition-colors ${language === 'de' ? 'text-slate-600 dark:text-slate-300 font-medium' : 'hover:text-slate-600 dark:hover:text-slate-300'}`}
           >
             German
+          </button>
+          <span className="text-slate-300 dark:text-slate-600">·</span>
+          <button
+            type="button"
+            onClick={() => onProviderChange('claude')}
+            className={`transition-colors ${provider === 'claude' ? 'text-slate-600 dark:text-slate-300 font-medium' : 'hover:text-slate-600 dark:hover:text-slate-300'}`}
+          >
+            Claude
+          </button>
+          <span className="text-slate-300 dark:text-slate-600">/</span>
+          <button
+            type="button"
+            onClick={() => onProviderChange('mistral')}
+            className={`transition-colors ${provider === 'mistral' ? 'text-slate-600 dark:text-slate-300 font-medium' : 'hover:text-slate-600 dark:hover:text-slate-300'}`}
+          >
+            Mistral
           </button>
         </p>
       </form>

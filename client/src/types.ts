@@ -25,4 +25,5 @@ export interface Conversation {
   messages: Message[];
   createdAt: number;
   updatedAt: number;
+  provider?: 'claude' | 'mistral';
 }

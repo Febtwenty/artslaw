@@ -44,6 +44,19 @@ function getClient(): Anthropic {
   return _anthropic;
 }
 
+// @mistralai/mistralai v2 is ESM-only; use dynamic import to avoid
+// top-level import errors in a CommonJS-compiled TypeScript module.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _mistral: any = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function getMistralClient(): Promise<any> {
+  if (!_mistral) {
+    const { Mistral } = await import('@mistralai/mistralai');
+    _mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+  }
+  return _mistral;
+}
+
 const SYSTEM_PROMPTS = {
   en: `You are ArtSlaw, a knowledgeable and honest art guide. When a user provides a link to an art exhibition, use the web search tool to research it thoroughly. Present your response in this structure, keeping each section brief:
 
@@ -79,6 +92,8 @@ interface ChatRequestBody {
   messages: ChatMessage[];
   exhibitionUrl?: string;
   language?: 'en' | 'de';
+  provider?: 'claude' | 'mistral';
+  mistralConversationId?: string;
 }
 
 const checkUsageLimits: RequestHandler = async (req, res, next) => {
@@ -119,6 +134,8 @@ router.post('/', checkUsageLimits, async (req: Request, res: Response) => {
     }
 
     const isInitialRequest = Boolean(exhibitionUrl);
+    const provider = (req.body as ChatRequestBody).provider === 'mistral' ? 'mistral' : 'claude';
+    const lang = (req.body as ChatRequestBody).language === 'de' ? 'de' : 'en';
 
     // Build message list for the API call
     let apiMessages: Anthropic.MessageParam[] = messages.map((m) => ({
@@ -127,20 +144,39 @@ router.post('/', checkUsageLimits, async (req: Request, res: Response) => {
     }));
 
     if (isInitialRequest) {
-      // Fetch the exhibition page directly so Claude has its actual content,
-      // not just whatever a search engine happens to have indexed.
-      const pageContent = await fetchPageContent(exhibitionUrl!);
-
       const firstUserIdx = apiMessages.findIndex((m) => m.role === 'user');
       if (firstUserIdx !== -1) {
         const original = apiMessages[firstUserIdx].content as string;
-        const pageSection = pageContent
-          ? `\n\nHere is the text content of the exhibition page:\n"""\n${pageContent}\n"""`
-          : '';
-        apiMessages[firstUserIdx] = {
-          role: 'user',
-          content: `I'm looking at this exhibition: ${exhibitionUrl}${pageSection}\n\n${original}`,
-        };
+        if (provider === 'claude') {
+          // Fetch the exhibition page directly so Claude has its actual content,
+          // not just whatever a search engine happens to have indexed.
+          const pageContent = await fetchPageContent(exhibitionUrl!);
+          const pageSection = pageContent
+            ? `\n\nHere is the text content of the exhibition page:\n"""\n${pageContent}\n"""`
+            : '';
+          apiMessages[firstUserIdx] = {
+            role: 'user',
+            content: `I'm looking at this exhibition: ${exhibitionUrl}${pageSection}\n\n${original}`,
+          };
+        } else {
+          // Mistral: send only the URL but explicitly instruct it to perform
+          // multiple searches. Pre-fetching the page suppresses web_search
+          // because Mistral sees it already has the content; without the page
+          // content it will search — but by default it only searches for the
+          // URL itself. The numbered steps below push it to do the same breadth
+          // of research that Claude does via web_search_20250305.
+          apiMessages[firstUserIdx] = {
+            role: 'user',
+            content:
+              `I'm looking at this art exhibition: ${exhibitionUrl}\n\n` +
+              `Please use web search to research this comprehensively — perform multiple searches:\n` +
+              `1. Look up the exhibition page to find what is shown and who the featured artist(s) are.\n` +
+              `2. Search for the artist's background, career, style, and position in the art world.\n` +
+              `3. Search for critical reception, reviews, or notable context about this exhibition or the artist's work.\n` +
+              `4. Search for any relevant facts about the gallery, venue, or art movement.\n\n` +
+              original,
+          };
+        }
       }
     } else {
       // Follow-up: trim history to the last MAX_HISTORY_MESSAGES to keep
@@ -149,21 +185,6 @@ router.post('/', checkUsageLimits, async (req: Request, res: Response) => {
         apiMessages = apiMessages.slice(-MAX_HISTORY_MESSAGES);
       }
     }
-
-    // Pass the search tool on all requests so Claude can look up artist
-    // comparisons, market info, or related shows when follow-up questions need it.
-    // Claude decides whether to actually invoke search — simple contextual
-    // questions ("explain that more") are answered directly without a search call.
-    const tools: Anthropic.Messages.WebSearchTool20250305[] = [
-      { type: 'web_search_20250305', name: 'web_search' } as Anthropic.Messages.WebSearchTool20250305,
-    ];
-
-    const callParams = {
-      model: MODEL,
-      max_tokens: isInitialRequest ? INITIAL_MAX_TOKENS : FOLLOWUP_MAX_TOKENS,
-      system: SYSTEM_PROMPTS[(req.body as ChatRequestBody).language === 'de' ? 'de' : 'en'],
-      tools,
-    };
 
     // Use SSE (text/event-stream) so Render's load balancer passes chunks
     // through immediately without buffering. Plain text/plain responses are
@@ -175,60 +196,177 @@ router.post('/', checkUsageLimits, async (req: Request, res: Response) => {
     res.flushHeaders();
     streamStarted = true;
 
-    const runStream = async (msgs: Anthropic.MessageParam[]) => {
-      const stream = getClient().messages.stream({ ...callParams, messages: msgs });
-      let prevBlockWasSearch = false;
-      for await (const event of stream) {
-        if (event.type === 'content_block_start') {
-          if (event.content_block.type === 'text') {
-            // Only add a separator when resuming text after a search block
-            if (prevBlockWasSearch) res.write(`data: ${JSON.stringify({ t: '\n\n' })}\n\n`);
-            prevBlockWasSearch = false;
-          } else {
-            prevBlockWasSearch = true;
+    if (provider === 'claude') {
+      // Pass the search tool on all requests so Claude can look up artist
+      // comparisons, market info, or related shows when follow-up questions need it.
+      // Claude decides whether to actually invoke search — simple contextual
+      // questions ("explain that more") are answered directly without a search call.
+      const tools: Anthropic.Messages.WebSearchTool20250305[] = [
+        { type: 'web_search_20250305', name: 'web_search' } as Anthropic.Messages.WebSearchTool20250305,
+      ];
+
+      const callParams = {
+        model: MODEL,
+        max_tokens: isInitialRequest ? INITIAL_MAX_TOKENS : FOLLOWUP_MAX_TOKENS,
+        system: SYSTEM_PROMPTS[lang],
+        tools,
+      };
+
+      const runStream = async (msgs: Anthropic.MessageParam[]) => {
+        const stream = getClient().messages.stream({ ...callParams, messages: msgs });
+        let prevBlockWasSearch = false;
+        for await (const event of stream) {
+          if (event.type === 'content_block_start') {
+            if (event.content_block.type === 'text') {
+              // Only add a separator when resuming text after a search block
+              if (prevBlockWasSearch) res.write(`data: ${JSON.stringify({ t: '\n\n' })}\n\n`);
+              prevBlockWasSearch = false;
+            } else {
+              prevBlockWasSearch = true;
+            }
+          } else if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+            res.write(`data: ${JSON.stringify({ t: event.delta.text })}\n\n`);
           }
-        } else if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-          res.write(`data: ${JSON.stringify({ t: event.delta.text })}\n\n`);
         }
+        return stream.finalMessage();
+      };
+
+      // web_search_20250305 is server-side — Anthropic handles searches internally.
+      // pause_turn means the internal search loop hit its iteration cap; resume once.
+      const allFinalMessages: Anthropic.Message[] = [];
+      const firstFinal = await runStream(apiMessages);
+      allFinalMessages.push(firstFinal);
+      if (firstFinal.stop_reason === 'pause_turn') {
+        apiMessages.push({ role: 'assistant', content: firstFinal.content });
+        allFinalMessages.push(await runStream(apiMessages));
       }
-      return stream.finalMessage();
-    };
 
-    // web_search_20250305 is server-side — Anthropic handles searches internally.
-    // pause_turn means the internal search loop hit its iteration cap; resume once.
-    const allFinalMessages: Anthropic.Message[] = [];
-    const firstFinal = await runStream(apiMessages);
-    allFinalMessages.push(firstFinal);
-    if (firstFinal.stop_reason === 'pause_turn') {
-      apiMessages.push({ role: 'assistant', content: firstFinal.content });
-      allFinalMessages.push(await runStream(apiMessages));
-    }
-
-    // Extract source URLs from all web search result blocks across all final messages.
-    const seen = new Set<string>();
-    const allSources: { title: string; url: string }[] = [];
-    for (const fm of allFinalMessages) {
-      for (const block of fm.content) {
-        if (block.type === 'web_search_tool_result' && Array.isArray(block.content)) {
-          for (const result of block.content) {
-            if (result.type === 'web_search_result' && !seen.has(result.url)) {
-              seen.add(result.url);
-              allSources.push({ title: result.title, url: result.url });
+      // Extract source URLs from all web search result blocks across all final messages.
+      const seen = new Set<string>();
+      const allSources: { title: string; url: string }[] = [];
+      for (const fm of allFinalMessages) {
+        for (const block of fm.content) {
+          if (block.type === 'web_search_tool_result' && Array.isArray(block.content)) {
+            for (const result of block.content) {
+              if (result.type === 'web_search_result' && !seen.has(result.url)) {
+                seen.add(result.url);
+                allSources.push({ title: result.title, url: result.url });
+              }
             }
           }
         }
       }
-    }
-    if (allSources.length > 0) {
-      res.write(`data: ${JSON.stringify({ s: allSources })}\n\n`);
-    }
+      if (allSources.length > 0) {
+        res.write(`data: ${JSON.stringify({ s: allSources })}\n\n`);
+      }
 
-    res.end();
-    // Fire-and-forget — response is already sent
-    const totalInput  = allFinalMessages.reduce((s, m) => s + (m.usage?.input_tokens  ?? 0), 0);
-    const totalOutput = allFinalMessages.reduce((s, m) => s + (m.usage?.output_tokens ?? 0), 0);
-    recordUsage(userId, totalInput, totalOutput)
-      .catch(err => console.error('[usage] record failed:', err));
+      res.end();
+      // Fire-and-forget — response is already sent
+      const totalInput  = allFinalMessages.reduce((s, m) => s + (m.usage?.input_tokens  ?? 0), 0);
+      const totalOutput = allFinalMessages.reduce((s, m) => s + (m.usage?.output_tokens ?? 0), 0);
+      recordUsage(userId, totalInput, totalOutput)
+        .catch(err => console.error('[usage] record failed:', err));
+
+    } else {
+      // Mistral Conversations API — supports web_search tool with source citations
+      const body = req.body as ChatRequestBody;
+      const existingMistralConvId = body.mistralConversationId;
+      const client = await getMistralClient();
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let streamResult: any;
+
+      if (existingMistralConvId && !isInitialRequest) {
+        // In-session follow-up: Mistral holds conversation history server-side,
+        // so we only send the latest user message.
+        const lastUserMsg = apiMessages[apiMessages.length - 1].content as string;
+        streamResult = await client.beta.conversations.appendStream({
+          conversationId: existingMistralConvId,
+          conversationAppendStreamRequest: {
+            inputs: lastUserMsg,
+            completionArgs: { maxTokens: FOLLOWUP_MAX_TOKENS },
+          },
+        });
+      } else {
+        // Initial request or session reload (no Mistral conv ID stored):
+        // build inputs from the full apiMessages so context is preserved.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const inputs: any = apiMessages.length === 1
+          ? (apiMessages[0].content as string)
+          : apiMessages.map(m => ({
+              type: 'message.input' as const,
+              role: m.role as 'user' | 'assistant',
+              content: m.content as string,
+            }));
+        streamResult = await client.beta.conversations.startStream({
+          inputs,
+          instructions: SYSTEM_PROMPTS[lang],
+          model: 'mistral-medium-latest',
+          tools: [{ type: 'web_search' }],
+          completionArgs: { maxTokens: isInitialRequest ? INITIAL_MAX_TOKENS : FOLLOWUP_MAX_TOKENS },
+        });
+      }
+
+      let inputTokens = 0;
+      let outputTokens = 0;
+      let newMistralConvId: string | null = null;
+
+      for await (const event of streamResult) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const e = event as any;
+        // Use the SSE 'event:' field as discriminator — the SDK's discriminatedUnion
+        // falls back to { type:"UNKNOWN" } when JSON data lacks a matching 'type'
+        // field, making d.type unreliable for some events (e.g. response.started).
+        const evType: string = e.event ?? '';
+        const d = e.data;
+
+        if (evType === 'conversation.response.started') {
+          // conversationId may be in parsed d or in the raw fallback object
+          newMistralConvId = d?.conversationId ?? d?.raw?.conversation_id ?? null;
+        } else if (evType === 'message.output.delta') {
+          const content = d?.content;
+          if (typeof content === 'string' && content.length > 0) {
+            res.write(`data: ${JSON.stringify({ t: content })}\n\n`);
+          } else if (content?.type === 'text' && typeof content.text === 'string' && content.text.length > 0) {
+            res.write(`data: ${JSON.stringify({ t: content.text })}\n\n`);
+          }
+        } else if (evType === 'conversation.response.done') {
+          inputTokens  = d?.usage?.promptTokens    ?? 0;
+          outputTokens = d?.usage?.completionTokens ?? 0;
+        }
+      }
+
+      // tool_reference chunks (source citations) are NOT emitted as streaming
+      // delta events — they only appear in the full stored message. Fetch it now.
+      const convId = newMistralConvId ?? (req.body as ChatRequestBody).mistralConversationId ?? null;
+      if (convId) {
+        try {
+          const msgs = await client.beta.conversations.getMessages({ conversationId: convId });
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const lastAssistant = [...(msgs as any).messages].reverse().find((m: any) => m.role === 'assistant');
+          if (lastAssistant && Array.isArray(lastAssistant.content)) {
+            const seen = new Set<string>();
+            const sources: { title: string; url: string }[] = [];
+            for (const chunk of lastAssistant.content) {
+              const isToolRef = chunk.type === 'tool_reference' || (chunk.type == null && chunk.url != null);
+              if (isToolRef && chunk.url && !seen.has(chunk.url)) {
+                seen.add(chunk.url);
+                sources.push({ title: chunk.title ?? chunk.url, url: chunk.url });
+              }
+            }
+            if (sources.length > 0) res.write(`data: ${JSON.stringify({ s: sources })}\n\n`);
+            console.log(`[mistral] ${sources.length} source(s), ${inputTokens}in/${outputTokens}out`);
+          }
+        } catch (err) {
+          console.error('[mistral] getMessages failed:', err);
+        }
+        res.write(`data: ${JSON.stringify({ m: convId })}\n\n`);
+      }
+
+      res.end();
+      recordUsage(userId, inputTokens, outputTokens)
+        .catch(err => console.error('[usage] record failed:', err));
+    }
   } catch (error) {
     console.error('Chat error:', error);
 
