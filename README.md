@@ -16,6 +16,7 @@ ArtSlaw uses Claude (`claude-haiku-4-5`) or Mistral (`mistral-medium-latest`) �
 - **Authentication** — user accounts via Clerk
 - **Per-user token usage caps** — daily and monthly limits enforced server-side, with a live usage indicator in the header (desktop) and sidebar (mobile)
 - **Dark mode**
+- **Blog** — admin users can generate AI-drafted exhibition write-ups via a two-phase Claude pipeline (research → format), then publish them to a server-rendered public blog at `/blog`
 
 ---
 
@@ -33,7 +34,7 @@ ArtSlaw uses Claude (`claude-haiku-4-5`) or Mistral (`mistral-medium-latest`) �
 
 ### 1. Clone and configure environment
 
-**Server** (`server/.env` or root `.env`):
+**Server** (root `.env`):
 ```
 ANTHROPIC_API_KEY=sk-ant-...
 MISTRAL_API_KEY=...
@@ -95,7 +96,7 @@ Default caps (defined in `server/src/config/limits.ts`):
 
 | Period  | Token limit |
 |---------|-------------|
-| Daily   | 100,000     |
+| Daily   | 200,000     |
 | Monthly | 2,000,000   |
 
 To change the limits, edit `DEFAULT_LIMITS` in `server/src/config/limits.ts` and redeploy.
@@ -119,7 +120,12 @@ artslaw/
 │   │   │   ├── Sidebar.tsx
 │   │   │   ├── SignInPage.tsx
 │   │   │   ├── TourPage.tsx
-│   │   │   └── UsageIndicator.tsx
+│   │   │   ├── UsageIndicator.tsx
+│   │   │   ├── LogoWordmark.tsx
+│   │   │   ├── BlogPage.tsx
+│   │   │   ├── BlogAdmin.tsx
+│   │   │   ├── PrivacyPage.tsx
+│   │   │   └── TermsPage.tsx
 │   │   ├── hooks/
 │   │   │   ├── useChatTour.ts
 │   │   │   ├── useConversationHistory.ts
@@ -134,16 +140,19 @@ artslaw/
 │       ├── config/
 │       │   └── limits.ts     # Daily/monthly token caps
 │       ├── db/
-│       │   └── usage.ts      # token_usage collection helpers
+│       │   ├── usage.ts      # token_usage collection helpers
+│       │   └── blog.ts       # blog posts collection helpers
 │       ├── db.ts             # MongoDB connection
 │       ├── index.ts
 │       └── routes/
-│           ├── chat.ts       # POST /api/chat (streaming)
+│           ├── chat.ts        # POST /api/chat (streaming)
 │           ├── conversations.ts
 │           ├── discoveries.ts # GET /api/discoveries (CAL scraper)
 │           ├── title.ts
-│           ├── tour.ts       # GET /api/tour/:id (public share)
-│           └── usage.ts      # GET /api/usage
+│           ├── tour.ts        # GET /api/tour/:id (public share)
+│           ├── usage.ts       # GET /api/usage
+│           ├── blog.ts        # Blog CRUD, AI generation, public pages
+│           └── favicon.ts
 ├── .env                      # Your secrets (not committed)
 └── render.yaml               # Render deployment config
 ```
@@ -161,11 +170,20 @@ artslaw/
 | Auth | Clerk |
 | Database | MongoDB (Atlas) |
 | Scraping | Cheerio (CAL exhibition data) |
-| Markdown | `react-markdown` + `remark-gfm` |
+| Image Processing | `sharp` (WebP conversion/resizing), `multer` (file upload) |
+| Markdown | `react-markdown` + `remark-gfm` (client) · `marked` (server blog pages) |
 
 ---
 
 ## Production build
+
+From the project root (installs and builds both client and server in one step):
+
+```bash
+npm run build
+```
+
+Or manually:
 
 ```bash
 cd server && npm run build
