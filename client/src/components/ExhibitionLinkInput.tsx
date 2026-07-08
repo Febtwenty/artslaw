@@ -82,7 +82,7 @@ export default function ExhibitionLinkInput({ onStart, initialUrl, language, onL
             onClick={() => onLanguageChange('en')}
             className={`transition-colors ${language === 'en' ? 'text-slate-600 dark:text-slate-300 font-medium' : 'hover:text-slate-600 dark:hover:text-slate-300'}`}
           >
-            English
+            en
           </button>
           <span className="text-slate-300 dark:text-slate-600">/</span>
           <button
@@ -90,7 +90,7 @@ export default function ExhibitionLinkInput({ onStart, initialUrl, language, onL
             onClick={() => onLanguageChange('de')}
             className={`transition-colors ${language === 'de' ? 'text-slate-600 dark:text-slate-300 font-medium' : 'hover:text-slate-600 dark:hover:text-slate-300'}`}
           >
-            German
+            de
           </button>
           <span className="text-slate-300 dark:text-slate-600">·</span>
           <button
@@ -98,7 +98,7 @@ export default function ExhibitionLinkInput({ onStart, initialUrl, language, onL
             onClick={() => onProviderChange('claude')}
             className={`transition-colors ${provider === 'claude' ? 'text-slate-600 dark:text-slate-300 font-medium' : 'hover:text-slate-600 dark:hover:text-slate-300'}`}
           >
-            Claude
+            🇺🇸 Claude
           </button>
           <span className="text-slate-300 dark:text-slate-600">/</span>
           <button
@@ -106,7 +106,7 @@ export default function ExhibitionLinkInput({ onStart, initialUrl, language, onL
             onClick={() => onProviderChange('mistral')}
             className={`transition-colors ${provider === 'mistral' ? 'text-slate-600 dark:text-slate-300 font-medium' : 'hover:text-slate-600 dark:hover:text-slate-300'}`}
           >
-            Mistral
+            🇪🇺 Mistral
           </button>
         </p>
       </form>
