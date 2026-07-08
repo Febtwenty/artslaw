@@ -194,6 +194,7 @@ function App({ navigate }: { navigate: (path: string) => void }) {
   const loadConversation = (id: string) => {
     const conv = conversations.find((c) => c.id === id);
     if (!conv) return;
+    setProvider(conv.provider ?? 'claude');
     loadConversationState(conv);
     setView('home');
   };
@@ -362,11 +363,14 @@ function App({ navigate }: { navigate: (path: string) => void }) {
               ) : (
                 <div className="flex-1 flex flex-col px-4 pb-2">
                   {exhibitionUrl && (
-                    <div className="flex-shrink-0 mt-4 mb-2">
-                      <a href={exhibitionUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-xs text-slate-400 hover:text-indigo-500 transition-colors">
+                    <div className="flex-shrink-0 mt-4 mb-2 flex items-center justify-between gap-2">
+                      <a href={exhibitionUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-xs text-slate-400 hover:text-indigo-500 transition-colors min-w-0">
                         <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 flex-shrink-0" />
                         <span className="truncate max-w-xs">{exhibitionUrl}</span>
                       </a>
+                      <span className="text-xs text-slate-400 flex-shrink-0">
+                        {provider === 'mistral' ? '🇪🇺 Mistral' : '🇺🇸 Claude'}
+                      </span>
                     </div>
                   )}
                   <ChatWindow

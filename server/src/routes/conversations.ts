@@ -28,6 +28,7 @@ router.get('/', h(async (req: Request, res: Response) => {
     messages:      d.messages ?? [],
     createdAt:     d.createdAt,
     updatedAt:     d.updatedAt,
+    provider:      d.provider,
   }));
 
   res.json(conversations);
@@ -38,7 +39,7 @@ router.post('/', h(async (req: Request, res: Response) => {
   const { userId } = getAuth(req);
   if (!userId) { res.status(401).json({ error: 'Authentication required.' }); return; }
 
-  const { id, title, exhibitionUrl, messages, createdAt, updatedAt } = req.body;
+  const { id, title, exhibitionUrl, messages, createdAt, updatedAt, provider } = req.body;
   if (!id || !title || !exhibitionUrl || !Array.isArray(messages)) {
     res.status(400).json({ error: 'Missing required fields.' }); return;
   }
@@ -52,6 +53,7 @@ router.post('/', h(async (req: Request, res: Response) => {
     messages,
     createdAt,
     updatedAt,
+    provider,
   });
 
   res.status(201).json({ ok: true });
