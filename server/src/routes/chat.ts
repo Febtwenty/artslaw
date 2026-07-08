@@ -89,6 +89,7 @@ Für Folgefragen nutze die Websuche nur, wenn die Frage wirklich neue Informatio
 };
 
 const MODEL = 'claude-haiku-4-5';
+const MISTRAL_MODEL = 'mistral-small-latest';
 // Initial research (with web search) can be longer; follow-ups are short Q&A
 const INITIAL_MAX_TOKENS = 2000;
 const FOLLOWUP_MAX_TOKENS = 1200;
@@ -250,6 +251,7 @@ router.post('/', checkUsageLimits, async (req: Request, res: Response) => {
       // Fire-and-forget — response is already sent
       const totalInput  = allFinalMessages.reduce((s, m) => s + (m.usage?.input_tokens  ?? 0), 0);
       const totalOutput = allFinalMessages.reduce((s, m) => s + (m.usage?.output_tokens ?? 0), 0);
+      console.log(`[chat] provider=claude model=${MODEL} input=${totalInput} output=${totalOutput}`);
       recordUsage(userId, totalInput, totalOutput)
         .catch(err => console.error('[usage] record failed:', err));
 
@@ -273,7 +275,7 @@ router.post('/', checkUsageLimits, async (req: Request, res: Response) => {
       const allSources: Source[] = [];
 
       for (let i = 0; i < MAX_TOOL_ITERATIONS; i++) {
-        const stream = await client.chat.stream({ model: 'mistral-small-latest', messages: msgs, tools, maxTokens });
+        const stream = await client.chat.stream({ model: MISTRAL_MODEL, messages: msgs, tools, maxTokens });
 
         let textThisTurn = '';
         // The SDK's own streaming example overwrites (not appends/concatenates)
@@ -318,6 +320,7 @@ router.post('/', checkUsageLimits, async (req: Request, res: Response) => {
       }
 
       res.end();
+      console.log(`[chat] provider=mistral model=${MISTRAL_MODEL} input=${totalInputTokens} output=${totalOutputTokens}`);
       recordUsage(userId, totalInputTokens, totalOutputTokens)
         .catch(err => console.error('[usage] record failed:', err));
     }

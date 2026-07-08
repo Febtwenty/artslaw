@@ -29,6 +29,8 @@ export async function tavilySearch(query: string): Promise<TavilyResult[]> {
     const data = await res.json() as { results?: { title: string; url: string; content: string }[] };
     if (!Array.isArray(data.results)) return [];
 
+    console.log(`[tavily] search: "${query}" -> ${data.results.length} result(s)`);
+
     return data.results.map((r) => ({
       title: r.title,
       url: r.url,
