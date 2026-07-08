@@ -305,7 +305,7 @@ router.post('/', checkUsageLimits, async (req: Request, res: Response) => {
         streamResult = await client.beta.conversations.startStream({
           inputs,
           instructions: SYSTEM_PROMPTS[lang],
-          model: 'mistral-medium-latest',
+          model: 'mistral-small-latest',
           tools: [{ type: 'web_search' }],
           completionArgs: { maxTokens: isInitialRequest ? INITIAL_MAX_TOKENS : FOLLOWUP_MAX_TOKENS },
         });

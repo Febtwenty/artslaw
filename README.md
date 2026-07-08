@@ -2,7 +2,7 @@
 
 An AI-powered art tour guide. Paste a link to any museum or gallery exhibition and chat with ArtSlaw — your knowledgeable, friendly gallery companion.
 
-ArtSlaw uses Claude (`claude-haiku-4-5`) or Mistral (`mistral-medium-latest`) — switchable per conversation — with live web search to research exhibitions in real time, then explains the artist, the works, the movement, and related artists in an accessible, engaging way. Tours are saved per user and can be shared as public read-only links.
+ArtSlaw uses Claude (`claude-haiku-4-5`) or Mistral (`mistral-small-latest`) — switchable per conversation — with live web search to research exhibitions in real time, then explains the artist, the works, the movement, and related artists in an accessible, engaging way. Tours are saved per user and can be shared as public read-only links.
 
 ---
 
@@ -165,7 +165,7 @@ artslaw/
 |---|---|
 | Frontend | React 18, Vite 5, TypeScript, Tailwind CSS |
 | Backend | Node.js, Express, TypeScript |
-| AI | Anthropic SDK (`@anthropic-ai/sdk`), `claude-haiku-4-5` · Mistral SDK (`@mistralai/mistralai`), `mistral-medium-latest` |
+| AI | Anthropic SDK (`@anthropic-ai/sdk`), `claude-haiku-4-5` · Mistral SDK (`@mistralai/mistralai`), `mistral-small-latest` |
 | Search | Anthropic `web_search_20250305` · Mistral Conversations API built-in `web_search` |
 | Auth | Clerk |
 | Database | MongoDB (Atlas) |
