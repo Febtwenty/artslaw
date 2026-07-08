@@ -10,6 +10,9 @@ import {
   createPost, updatePost, deletePost, getPost, getAllPosts,
   getPublishedPosts, getPublishedPost,
 } from '../db/blog';
+import { anthropicWebSearchTool, handleAnthropicToolUse } from '../services/webSearchTool';
+
+const MAX_TOOL_ITERATIONS = 4;
 
 // ---------------------------------------------------------------------------
 // Admin auth — read env at call time, NOT at module load time.
@@ -159,12 +162,10 @@ Return ONLY a raw JSON object with these exact fields — no markdown fences, no
 }
 Write with critical honesty — not every exhibition is groundbreaking. The review should reflect the actual quality and significance of the work.`;
 
-  const tools: Anthropic.Messages.WebSearchTool20250305[] = [
-    { type: 'web_search_20250305', name: 'web_search' } as Anthropic.Messages.WebSearchTool20250305,
-  ];
+  const tools: Anthropic.Tool[] = [anthropicWebSearchTool()];
 
   try {
-    // Phase 1: let Haiku research via web_search
+    // Phase 1: let Haiku research via web_search (executed against Tavily)
     let msgs: Anthropic.MessageParam[] = [{ role: 'user', content: userMessage }];
     let result = await getClient().messages.create({
       model: 'claude-haiku-4-5',
@@ -174,8 +175,11 @@ Write with critical honesty — not every exhibition is groundbreaking. The revi
       messages: msgs,
     });
 
-    while (result.stop_reason === 'pause_turn' || result.stop_reason === 'tool_use') {
-      msgs = [...msgs, { role: 'assistant', content: result.content }];
+    let iterations = 0;
+    while (result.stop_reason === 'tool_use' && iterations < MAX_TOOL_ITERATIONS) {
+      const handled = await handleAnthropicToolUse(result);
+      if (!handled) break;
+      msgs = [...msgs, ...handled.toAppend];
       result = await getClient().messages.create({
         model: 'claude-haiku-4-5',
         max_tokens: 2000,
@@ -183,6 +187,7 @@ Write with critical honesty — not every exhibition is groundbreaking. The revi
         tools,
         messages: msgs,
       });
+      iterations++;
     }
 
     // Phase 2: format research into JSON — no tools so model must just output text

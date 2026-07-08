@@ -41,14 +41,13 @@ export function useChatTour({
   const [error, setError] = useState<string | null>(null);
   const [hasStarted, setHasStarted] = useState(false);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
-  const [mistralConversationId, setMistralConversationId] = useState<string | null>(null);
 
   const sendToApi = async (
     nextMessages: Message[],
     url?: string,
     lang: 'en' | 'de' = 'en',
     onChunk?: (accumulated: string) => void
-  ): Promise<{ text: string; sources: Source[]; newMistralConvId: string | null }> => {
+  ): Promise<{ text: string; sources: Source[] }> => {
     const token = await getToken();
     const response = await fetch('/api/chat', {
       method: 'POST',
@@ -61,7 +60,6 @@ export function useChatTour({
         ...(url ? { exhibitionUrl: url } : {}),
         language: lang,
         provider,
-        ...(mistralConversationId ? { mistralConversationId } : {}),
       }),
     });
 
@@ -97,7 +95,6 @@ export function useChatTour({
     const decoder = new TextDecoder();
     let fullText = '';
     let sources: Source[] = [];
-    let newMistralConvId: string | null = null;
     let buffer = '';
 
     while (true) {
@@ -110,7 +107,7 @@ export function useChatTour({
       for (const event of events) {
         const dataLine = event.split('\n').find(l => l.startsWith('data: '));
         if (!dataLine) continue;
-        let json: { t?: string; s?: Source[]; m?: string };
+        let json: { t?: string; s?: Source[] };
         try {
           json = JSON.parse(dataLine.slice(6));
         } catch {
@@ -123,14 +120,12 @@ export function useChatTour({
           onChunk?.(fullText);
         } else if (json.s !== undefined) {
           sources = json.s as Source[];
-        } else if (json.m !== undefined) {
-          newMistralConvId = json.m as string;
         }
       }
     }
 
     const text = fullText || "I wasn't able to complete the research. Please try again.";
-    return { text, sources, newMistralConvId };
+    return { text, sources };
   };
 
   const startConversation = async (url: string): Promise<void> => {
@@ -149,10 +144,9 @@ export function useChatTour({
     setError(null);
 
     try {
-      const { text: reply, sources, newMistralConvId } = await sendToApi([userMessage], url, language, (accumulated) => {
+      const { text: reply, sources } = await sendToApi([userMessage], url, language, (accumulated) => {
         setMessages([userMessage, { role: 'assistant', content: accumulated }]);
       });
-      if (newMistralConvId) setMistralConversationId(newMistralConvId);
       const finalMessages: Message[] = [userMessage, { role: 'assistant', content: reply, sources }];
       setMessages(finalMessages);
 
@@ -203,10 +197,9 @@ export function useChatTour({
     setError(null);
 
     try {
-      const { text: reply, sources, newMistralConvId } = await sendToApi(nextMessages, undefined, language, (accumulated) => {
+      const { text: reply, sources } = await sendToApi(nextMessages, undefined, language, (accumulated) => {
         setMessages([...nextMessages, { role: 'assistant', content: accumulated }]);
       });
-      if (newMistralConvId) setMistralConversationId(newMistralConvId);
       const finalMessages: Message[] = [...nextMessages, { role: 'assistant', content: reply, sources }];
       setMessages(finalMessages);
 
@@ -228,7 +221,6 @@ export function useChatTour({
 
   const resetChatState = (): void => {
     setActiveConversationId(null);
-    setMistralConversationId(null);
     setHasStarted(false);
     setMessages([]);
     setExhibitionUrl('');

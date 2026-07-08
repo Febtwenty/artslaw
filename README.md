@@ -2,14 +2,14 @@
 
 An AI-powered art tour guide. Paste a link to any museum or gallery exhibition and chat with ArtSlaw — your knowledgeable, friendly gallery companion.
 
-ArtSlaw uses Claude (`claude-haiku-4-5`) or Mistral (`mistral-small-latest`) — switchable per conversation — with live web search to research exhibitions in real time, then explains the artist, the works, the movement, and related artists in an accessible, engaging way. Tours are saved per user and can be shared as public read-only links.
+ArtSlaw uses Claude (`claude-haiku-4-5`) or Mistral (`mistral-small-latest`) — switchable per conversation — with a Tavily-backed web search tool to research exhibitions in real time, then explains the artist, the works, the movement, and related artists in an accessible, engaging way. Tours are saved per user and can be shared as public read-only links.
 
 ---
 
 ## Features
 
 - **Exhibition tours** — paste any gallery or museum URL and start a guided chat
-- **Model toggle** — switch between Claude and Mistral per conversation; each uses its own built-in web search
+- **Model toggle** — switch between Claude and Mistral per conversation; both share the same Tavily-backed `web_search` tool, called on demand by whichever model is active
 - **Discover** — surfaces upcoming exhibition recommendations based on artists you've already researched, scraped from contemporaryartlibrary.org with a 7-day cache
 - **Conversation history** — all past tours are saved to MongoDB and listed in the sidebar
 - **Shareable tours** — every tour gets a public `/tour/:id` link for read-only sharing
@@ -25,6 +25,7 @@ ArtSlaw uses Claude (`claude-haiku-4-5`) or Mistral (`mistral-small-latest`) —
 - Node.js 18+
 - An [Anthropic API key](https://console.anthropic.com)
 - A [Mistral API key](https://console.mistral.ai) (for the Mistral model toggle)
+- A [Tavily API key](https://tavily.com) (web search, used by both models)
 - A [Clerk](https://clerk.com) application (for auth)
 - A [MongoDB Atlas](https://www.mongodb.com/atlas) cluster (for conversation persistence)
 
@@ -38,6 +39,7 @@ ArtSlaw uses Claude (`claude-haiku-4-5`) or Mistral (`mistral-small-latest`) —
 ```
 ANTHROPIC_API_KEY=sk-ant-...
 MISTRAL_API_KEY=...
+TAVILY_API_KEY=tvly-...
 CLERK_SECRET_KEY=sk_...
 CLERK_PUBLISHABLE_KEY=pk_...
 MONGODB_URI=mongodb+srv://<user>:<password>@cluster0.xxxxx.mongodb.net/artslaw?retryWrites=true&w=majority
@@ -142,6 +144,9 @@ artslaw/
 │       ├── db/
 │       │   ├── usage.ts      # token_usage collection helpers
 │       │   └── blog.ts       # blog posts collection helpers
+│       ├── services/
+│       │   ├── tavily.ts         # Tavily search API wrapper
+│       │   └── webSearchTool.ts  # shared web_search tool schema + loop helpers
 │       ├── db.ts             # MongoDB connection
 │       ├── index.ts
 │       └── routes/
@@ -166,7 +171,7 @@ artslaw/
 | Frontend | React 18, Vite 5, TypeScript, Tailwind CSS |
 | Backend | Node.js, Express, TypeScript |
 | AI | Anthropic SDK (`@anthropic-ai/sdk`), `claude-haiku-4-5` · Mistral SDK (`@mistralai/mistralai`), `mistral-small-latest` |
-| Search | Anthropic `web_search_20250305` · Mistral Conversations API built-in `web_search` |
+| Search | Tavily Search API, called via a shared model-driven `web_search` tool used by both providers |
 | Auth | Clerk |
 | Database | MongoDB (Atlas) |
 | Scraping | Cheerio (CAL exhibition data) |
