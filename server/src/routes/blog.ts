@@ -11,6 +11,12 @@ import {
   getPublishedPosts, getPublishedPost,
 } from '../db/blog';
 import { anthropicWebSearchTool, handleAnthropicToolUse } from '../services/webSearchTool';
+import {
+  buildBlogResearchUserMessage,
+  BLOG_RESEARCH_SYSTEM_PROMPT,
+  BLOG_FORMAT_SYSTEM_PROMPT,
+  BLOG_FORMAT_TRIGGER_MESSAGE,
+} from '../prompts';
 
 const MAX_TOOL_ITERATIONS = 4;
 
@@ -139,28 +145,7 @@ blogApiRouter.post('/generate', requireAdmin, async (req: Request, res: Response
   }
 
   const pageContent = await fetchPageContent(exhibitionUrl);
-  const pageSection = pageContent
-    ? `\n\nHere is the text content of the exhibition page:\n"""\n${pageContent}\n"""`
-    : '';
-
-  const userMessage = `Research this exhibition: ${exhibitionUrl}${pageSection}`;
-
-  // Phase 1: research freely with web_search — no JSON requirement
-  const researchSystem = `You are ArtSlaw, an expert art critic. Research the given exhibition using web search.
-Find: exhibition title, dates, venue, the artist(s), key works on display, cultural context, and visitor information.
-Summarise everything you find in plain prose.`;
-
-  // Phase 2: format into JSON — no tools, just structured output
-  const formatSystem = `You are ArtSlaw, an expert art critic. Based on the research in the conversation, write a blog review.
-Return ONLY a raw JSON object with these exact fields — no markdown fences, no prose before or after:
-{
-  "title": "clear, informative headline",
-  "metaDescription": "max 160 chars SEO summary",
-  "body": "full review in markdown with H2 sections: Overview, The Artist, Key Works to Look For, In Perspective, Visitor Info",
-  "tags": ["artist name", "gallery", "city", "movement"],
-  "suggestedSlug": "url-friendly-slug"
-}
-Write with critical honesty — not every exhibition is groundbreaking. The review should reflect the actual quality and significance of the work.`;
+  const userMessage = buildBlogResearchUserMessage({ exhibitionUrl, pageContent });
 
   const tools: Anthropic.Tool[] = [anthropicWebSearchTool()];
 
@@ -170,7 +155,7 @@ Write with critical honesty — not every exhibition is groundbreaking. The revi
     let result = await getClient().messages.create({
       model: 'claude-haiku-4-5',
       max_tokens: 2000,
-      system: researchSystem,
+      system: BLOG_RESEARCH_SYSTEM_PROMPT,
       tools,
       messages: msgs,
     });
@@ -183,7 +168,7 @@ Write with critical honesty — not every exhibition is groundbreaking. The revi
       result = await getClient().messages.create({
         model: 'claude-haiku-4-5',
         max_tokens: 2000,
-        system: researchSystem,
+        system: BLOG_RESEARCH_SYSTEM_PROMPT,
         tools,
         messages: msgs,
       });
@@ -194,12 +179,12 @@ Write with critical honesty — not every exhibition is groundbreaking. The revi
     msgs = [
       ...msgs,
       { role: 'assistant', content: result.content },
-      { role: 'user', content: 'Now write the blog review. Return ONLY the raw JSON object, starting with { and ending with }.' },
+      { role: 'user', content: BLOG_FORMAT_TRIGGER_MESSAGE },
     ];
     const formatResult = await getClient().messages.create({
       model: 'claude-haiku-4-5',
       max_tokens: 4000,
-      system: formatSystem,
+      system: BLOG_FORMAT_SYSTEM_PROMPT,
       messages: msgs,
     });
 

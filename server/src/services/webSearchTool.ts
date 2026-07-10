@@ -1,13 +1,18 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { tavilySearch } from './tavily';
+import {
+  WEB_SEARCH_TOOL_DESCRIPTION,
+  WEB_SEARCH_QUERY_PARAM_DESCRIPTION,
+  WEB_SEARCH_NO_RESULTS_MESSAGE,
+  formatWebSearchResults,
+} from '../prompts';
 
 export const WEB_SEARCH_TOOL_NAME = 'web_search';
-export const WEB_SEARCH_TOOL_DESCRIPTION =
-  'Search the web for current information. Use this when you need facts, context, or research not already available in the conversation.';
+export { WEB_SEARCH_TOOL_DESCRIPTION };
 export const WEB_SEARCH_TOOL_PARAMETERS = {
   type: 'object' as const,
   properties: {
-    query: { type: 'string', description: 'The search query' },
+    query: { type: 'string', description: WEB_SEARCH_QUERY_PARAM_DESCRIPTION },
   },
   required: ['query'],
 };
@@ -40,13 +45,11 @@ export async function runWebSearchTool(query: string): Promise<{ resultText: str
   const results = await tavilySearch(query);
   if (results.length === 0) {
     return {
-      resultText: 'No results found for this search, or the search failed. Continue with what you already know, or tell the user you could not verify this.',
+      resultText: WEB_SEARCH_NO_RESULTS_MESSAGE,
       sources: [],
     };
   }
-  const resultText = results
-    .map((r, i) => `${i + 1}. ${r.title}\n${r.url}\n${r.content}`)
-    .join('\n\n');
+  const resultText = formatWebSearchResults(results);
   return { resultText, sources: results.map((r) => ({ title: r.title, url: r.url })) };
 }
 

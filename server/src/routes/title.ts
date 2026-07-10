@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import Anthropic from '@anthropic-ai/sdk';
+import { buildTitleExtractionPrompt } from '../prompts';
 
 const router = Router();
 
@@ -19,7 +20,7 @@ router.post('/', async (req: Request, res: Response) => {
       max_tokens: 40,
       messages: [{
         role: 'user',
-        content: `From this art guide text, extract the artist name and exhibition name. Return ONLY the title in this format: "Artist Name - Exhibition Name". If you cannot determine the artist, return just the exhibition name. No quotes, no explanation.\n\nText: ${text.slice(0, 2000)}`,
+        content: buildTitleExtractionPrompt(text),
       }],
     });
     const title = msg.content[0]?.type === 'text' ? msg.content[0].text.trim() : 'Untitled Tour';

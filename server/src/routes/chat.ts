@@ -11,6 +11,7 @@ import {
   dedupeSources,
   Source,
 } from '../services/webSearchTool';
+import { CHAT_SYSTEM_PROMPTS, buildChatInitialUserMessage } from '../prompts';
 
 const router = Router();
 
@@ -64,29 +65,6 @@ async function getMistralClient(): Promise<any> {
   }
   return _mistral;
 }
-
-const SYSTEM_PROMPTS = {
-  en: `You are ArtSlaw, a knowledgeable and honest art guide. When a user provides a link to an art exhibition, use the web search tool to research it thoroughly. Present your response in this structure, keeping each section brief, no enumeration in the headers:
-
-1. A short, grounded opening that sets the scene.
-2. **The Artist** — who they are, their background, style, and where they stand in the art world.
-3. **The Exhibition** — what the show is about, notable works, and one or two interesting facts.
-4. **What to Look For** — concrete things to notice and why they matter, written for someone with no art background.
-
-Be curious, honest, and educational. Not every exhibition is exceptional — if the work is derivative, the show is modest in scope, or the concept feels thin, say so plainly. Engagement comes from specificity and honesty, not from enthusiasm. Avoid jargon unless you explain it.
-
-For follow-up questions, only invoke web search if the question genuinely requires new information not available from your initial research — for example, an entirely different artist or venue the user now asks about. For questions that ask you to elaborate, summarize, reformat, or build on information already in the conversation, answer directly from that context without searching.`,
-  de: `Du bist ArtSlaw, ein kenntnisreicher und ehrlicher Kunstführer. Wenn ein Benutzer einen Link zu einer Kunstausstellung angibt, nutze das Web-Suchwerkzeug, um diese gründlich zu recherchieren. Präsentiere deine Antwort in dieser Struktur, wobei du jeden Abschnitt kurz hältst, keine Aufzählungsnummern in den Überschriften:
-
-1. Ein kurzer, sachlicher Eröffnungsparagraph, der die Situation beschreibt.
-2. **Der Künstler** – wer er/sie ist, Hintergrund, Stil und Stellung in der Kunstwelt.
-3. **Die Ausstellung** – worum es in der Schau geht, nennenswerte Werke und ein oder zwei interessante Fakten.
-4. **Worauf man achten sollte** – konkrete Dinge, die man bemerken sollte und warum sie interessant sind, erklärt für jemanden ohne Kunstkenntnisse.
-
-Sei neugierig, ehrlich und lehrreich. Nicht jede Ausstellung ist außergewöhnlich – wenn die Werke konventionell sind, die Schau einen bescheidenen Rahmen hat oder das Konzept dünn wirkt, sage das offen. Engagement entsteht durch Genauigkeit und Ehrlichkeit, nicht durch Begeisterung. Vermeide Fachbegriffe, wenn du sie nicht erklärst. Antworte immer auf Deutsch.
-
-Für Folgefragen nutze die Websuche nur, wenn die Frage wirklich neue Informationen erfordert, die in deiner ursprünglichen Recherche nicht abgedeckt wurden — zum Beispiel einen völlig anderen Künstler oder Veranstaltungsort, nach dem der Nutzer jetzt fragt. Für Fragen, die darum bitten, bereits Besprochenes auszuarbeiten, zusammenzufassen, umzuformatieren oder darauf aufzubauen, antworte direkt aus diesem Kontext heraus, ohne zu suchen.`,
-};
 
 const MODEL = 'claude-haiku-4-5';
 const MISTRAL_MODEL = 'mistral-small-latest';
@@ -165,15 +143,9 @@ router.post('/', checkUsageLimits, async (req: Request, res: Response) => {
         // not just whatever a search engine happens to have indexed. Both providers
         // now share the same web_search tool for anything the page doesn't cover.
         const pageContent = await fetchPageContent(exhibitionUrl!);
-        const pageSection = pageContent
-          ? `\n\nHere is the text content of the exhibition page:\n"""\n${pageContent}\n"""`
-          : '';
         apiMessages[firstUserIdx] = {
           role: 'user',
-          content:
-            `I'm looking at this exhibition: ${exhibitionUrl}${pageSection}\n\n` +
-            `Use the web_search tool for anything not covered above — the artist's background, career, and critical context, or reception of the exhibition.\n\n` +
-            original,
+          content: buildChatInitialUserMessage({ exhibitionUrl: exhibitionUrl!, pageContent, original }),
         };
       }
     } else {
@@ -204,7 +176,7 @@ router.post('/', checkUsageLimits, async (req: Request, res: Response) => {
       const callParams = {
         model: MODEL,
         max_tokens: isInitialRequest ? INITIAL_MAX_TOKENS : FOLLOWUP_MAX_TOKENS,
-        system: SYSTEM_PROMPTS[lang],
+        system: CHAT_SYSTEM_PROMPTS[lang],
         tools,
       };
 
@@ -264,7 +236,7 @@ router.post('/', checkUsageLimits, async (req: Request, res: Response) => {
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let msgs: any[] = [
-        { role: 'system', content: SYSTEM_PROMPTS[lang] },
+        { role: 'system', content: CHAT_SYSTEM_PROMPTS[lang] },
         ...apiMessages.map((m) => ({ role: m.role, content: m.content as string })),
       ];
 

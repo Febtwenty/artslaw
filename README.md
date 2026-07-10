@@ -148,6 +148,7 @@ artslaw/
 │       │   ├── tavily.ts         # Tavily search API wrapper
 │       │   └── webSearchTool.ts  # shared web_search tool schema + loop helpers
 │       ├── db.ts             # MongoDB connection
+│       ├── prompts.ts        # All LLM prompt text (system prompts, templates, tool descriptions)
 │       ├── index.ts
 │       └── routes/
 │           ├── chat.ts        # POST /api/chat (streaming)
