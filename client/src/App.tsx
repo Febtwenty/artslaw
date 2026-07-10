@@ -40,7 +40,7 @@ function App({ navigate }: { navigate: (path: string) => void }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [language, setLanguage] = useState<'en' | 'de'>('en');
-  const [provider, setProvider] = useState<'claude' | 'mistral'>('claude');
+  const [provider, setProvider] = useState<'claude' | 'mistral'>('mistral');
   const { isDark, setIsDark } = useDarkMode();
   const [usageRefreshKey, setUsageRefreshKey] = useState(0);
   const { conversations, setConversations, convLoading, suggestedTours } =
@@ -188,6 +188,7 @@ function App({ navigate }: { navigate: (path: string) => void }) {
 
   const startNewTour = () => {
     resetChatState();
+    setProvider('mistral');
     setView('home');
   };
 
