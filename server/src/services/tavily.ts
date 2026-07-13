@@ -10,7 +10,7 @@ const SEARCH_DEPTH = 'basic';
 const MAX_RESULTS = 5;
 const MAX_CONTENT_LENGTH = 1500;
 
-export async function tavilySearch(query: string): Promise<TavilyResult[]> {
+export async function tavilySearch(query: string, maxResults: number = MAX_RESULTS): Promise<TavilyResult[]> {
   try {
     const res = await fetch('https://api.tavily.com/search', {
       method: 'POST',
@@ -19,7 +19,7 @@ export async function tavilySearch(query: string): Promise<TavilyResult[]> {
         api_key: process.env.TAVILY_API_KEY,
         query,
         search_depth: SEARCH_DEPTH,
-        max_results: MAX_RESULTS,
+        max_results: maxResults,
         include_answer: false,
       }),
       signal: AbortSignal.timeout(10000),

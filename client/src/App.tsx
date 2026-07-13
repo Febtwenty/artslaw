@@ -15,7 +15,7 @@ import { useDarkMode } from './hooks/useDarkMode';
 import { useConversationHistory } from './hooks/useConversationHistory';
 import { useChatTour } from './hooks/useChatTour';
 import { useUsage } from './hooks/useUsage';
-import { authedFetch } from './utils';
+import { authedFetch, normalizeUrlInput } from './utils';
 import UsageIndicator from './components/UsageIndicator';
 
 export type { Source, Message, SuggestedTour, Conversation } from './types';
@@ -54,6 +54,8 @@ function App({ navigate }: { navigate: (path: string) => void }) {
     isLoading,
     isStreaming,
     error,
+    isDiscovering,
+    startDiscovery,
     startConversation,
     sendMessage,
     resetChatState,
@@ -214,6 +216,18 @@ function App({ navigate }: { navigate: (path: string) => void }) {
     startConversation(url);
   };
 
+  // Until a tour is picked, the chat input keeps searching: a pasted URL
+  // starts the tour directly, anything else runs a fresh exhibition search.
+  const handleChatSend = (text: string) => {
+    if (!exhibitionUrl) {
+      const normalized = normalizeUrlInput(text.trim());
+      if (normalized) startConversation(normalized);
+      else startDiscovery(text);
+    } else {
+      sendMessage(text);
+    }
+  };
+
   const isDiscover = view === 'discover';
   const isBlog = view === 'blog';
 
@@ -360,7 +374,7 @@ function App({ navigate }: { navigate: (path: string) => void }) {
           ) : (
             <div className="flex-1 flex flex-col max-w-3xl mx-auto w-full">
               {!hasStarted ? (
-                <ExhibitionLinkInput onStart={startConversation} language={language} onLanguageChange={setLanguage} provider={provider} onProviderChange={setProvider} suggestedTours={suggestedTours} onNavigateBlog={navigateToBlog} />
+                <ExhibitionLinkInput onStart={startConversation} onDiscover={startDiscovery} language={language} onLanguageChange={setLanguage} provider={provider} onProviderChange={setProvider} suggestedTours={suggestedTours} onNavigateBlog={navigateToBlog} />
               ) : (
                 <div className="flex-1 flex flex-col px-4 pb-2">
                   {exhibitionUrl && (
@@ -378,13 +392,19 @@ function App({ navigate }: { navigate: (path: string) => void }) {
                     messages={messages}
                     isLoading={isLoading}
                     shareUrl={activeConversationId ? `${window.location.origin}/tour/${activeConversationId}` : undefined}
+                    loadingLabel={isDiscovering ? (language === 'de' ? 'Suche aktuelle Ausstellungen…' : 'Searching current exhibitions…') : undefined}
+                    onStartTour={!exhibitionUrl ? handleStartTour : undefined}
                   />
                   {error && (
                     <div className="flex-shrink-0 mt-2 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm dark:bg-red-950 dark:border-red-800 dark:text-red-400">
                       {error}
                     </div>
                   )}
-                  <InputBar onSend={sendMessage} isLoading={isLoading || isStreaming} />
+                  <InputBar
+                    onSend={handleChatSend}
+                    isLoading={isLoading || isStreaming}
+                    placeholder={!exhibitionUrl ? (language === 'de' ? 'Ausstellungen suchen oder Link einfügen…' : 'Search exhibitions, or paste a link…') : undefined}
+                  />
                 </div>
               )}
             </div>

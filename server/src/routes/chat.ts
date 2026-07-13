@@ -1,8 +1,8 @@
-import { Router, Request, Response, RequestHandler } from 'express';
+import { Router, Request, Response } from 'express';
 import { getAuth } from '@clerk/express';
 import Anthropic from '@anthropic-ai/sdk';
-import { checkLimits, recordUsage } from '../db/usage';
-import { getLimitsForUser } from '../config/limits';
+import { recordUsage } from '../db/usage';
+import { checkUsageLimits } from '../middleware/checkUsageLimits';
 import {
   anthropicWebSearchTool,
   mistralWebSearchTool,
@@ -88,27 +88,6 @@ interface ChatRequestBody {
   provider?: 'claude' | 'mistral';
 }
 
-const checkUsageLimits: RequestHandler = async (req, res, next) => {
-  const { userId } = getAuth(req);
-  if (!userId) { next(); return; } // main handler re-checks auth
-  try {
-    const result = await checkLimits(userId, getLimitsForUser(userId));
-    if (!result.allowed) {
-      res.status(429).json({
-        error: 'limit_exceeded',
-        reason: result.reason,
-        usage: { daily: result.daily, monthly: result.monthly },
-        resetsAt: result.resetsAt?.toISOString(),
-      });
-      return;
-    }
-    next();
-  } catch (err) {
-    console.error('[usage] limit check failed:', err);
-    next(); // fail-open: don't block chat if usage DB is temporarily down
-  }
-};
-
 router.post('/', checkUsageLimits, async (req: Request, res: Response) => {
   let streamStarted = false;
   try {
@@ -136,14 +115,19 @@ router.post('/', checkUsageLimits, async (req: Request, res: Response) => {
     }));
 
     if (isInitialRequest) {
-      const firstUserIdx = apiMessages.findIndex((m) => m.role === 'user');
-      if (firstUserIdx !== -1) {
-        const original = apiMessages[firstUserIdx].content as string;
+      // Target the LAST user message: with free-text discovery, earlier user
+      // messages are search queries — the tour request is always the latest.
+      let lastUserIdx = -1;
+      for (let i = apiMessages.length - 1; i >= 0; i--) {
+        if (apiMessages[i].role === 'user') { lastUserIdx = i; break; }
+      }
+      if (lastUserIdx !== -1) {
+        const original = apiMessages[lastUserIdx].content as string;
         // Fetch the exhibition page directly so the model has its actual content,
         // not just whatever a search engine happens to have indexed. Both providers
         // now share the same web_search tool for anything the page doesn't cover.
         const pageContent = await fetchPageContent(exhibitionUrl!);
-        apiMessages[firstUserIdx] = {
+        apiMessages[lastUserIdx] = {
           role: 'user',
           content: buildChatInitialUserMessage({ exhibitionUrl: exhibitionUrl!, pageContent, original }),
         };

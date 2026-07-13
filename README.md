@@ -9,6 +9,7 @@ ArtSlaw uses Claude (`claude-haiku-4-5`) or Mistral (`mistral-small-latest`) —
 ## Features
 
 - **Exhibition tours** — paste any gallery or museum URL and start a guided chat
+- **Free-text search** — type an artist, city, or exhibition name instead of a URL; the chat opens, ArtSlaw searches the web (Tavily + LLM extraction) and presents matching current exhibitions as cards in the conversation; refine the search by typing again, or tap a card to start the tour
 - **Model toggle** — switch between Claude and Mistral per conversation (defaults to Mistral for each new tour); both share the same Tavily-backed `web_search` tool, called on demand by whichever model is active. The chosen provider is shown as a flag badge in the chat window and persisted with the saved conversation
 - **Discover** — surfaces upcoming exhibition recommendations based on artists you've already researched, scraped from contemporaryartlibrary.org with a 7-day cache
 - **Conversation history** — all past tours are saved to MongoDB and listed in the sidebar
@@ -85,7 +86,7 @@ The Vite dev server proxies `/api/*` requests to the Express backend automatical
 ## Usage
 
 1. Sign in with your Clerk account
-2. Paste any exhibition URL and click **Begin the Tour**
+2. Paste any exhibition URL — or type an artist, city, or exhibition name and pick from the exhibition cards that appear in the chat — and click **Begin the Tour**
 3. ArtSlaw researches the exhibition via live web search and starts the conversation
 4. Ask follow-up questions — about the artist, genre, related works, what to look for
 5. Open **Discover** (search icon in the header) to browse recommended upcoming shows based on artists you've toured
@@ -147,6 +148,8 @@ artslaw/
 │       ├── services/
 │       │   ├── tavily.ts         # Tavily search API wrapper
 │       │   └── webSearchTool.ts  # shared web_search tool schema + loop helpers
+│       ├── middleware/
+│       │   └── checkUsageLimits.ts  # shared 429 guard for LLM routes
 │       ├── db.ts             # MongoDB connection
 │       ├── prompts.ts        # All LLM prompt text (system prompts, templates, tool descriptions)
 │       ├── index.ts
@@ -154,6 +157,7 @@ artslaw/
 │           ├── chat.ts        # POST /api/chat (streaming)
 │           ├── conversations.ts
 │           ├── discoveries.ts # GET /api/discoveries (CAL scraper)
+│           ├── exhibitionSearch.ts # POST /api/exhibition-search (free-text → exhibition candidates)
 │           ├── title.ts
 │           ├── tour.ts        # GET /api/tour/:id (public share)
 │           ├── usage.ts       # GET /api/usage

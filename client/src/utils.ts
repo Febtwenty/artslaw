@@ -9,6 +9,22 @@ export function titleFromUrl(url: string): string {
   }
 }
 
+// Returns a normalized https URL when the input looks like one (full URL or
+// bare hostname like "moma.org/exhibitions/..."), or null when it reads as a
+// free-text search query (spaces, no dot) that should go through discovery.
+export function normalizeUrlInput(input: string): string | null {
+  if (/\s/.test(input)) return null;
+  try {
+    const { protocol } = new URL(input);
+    if (protocol === 'http:' || protocol === 'https:') return input;
+    return null;
+  } catch {
+    // not an absolute URL — fall through to the hostname heuristic
+  }
+  if (/^[\w-]+(\.[\w-]+)+(\/\S*)?$/.test(input)) return `https://${input}`;
+  return null;
+}
+
 export async function authedFetch(
   getToken: () => Promise<string | null>,
   path: string,

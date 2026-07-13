@@ -85,6 +85,34 @@ export const BLOG_FORMAT_TRIGGER_MESSAGE =
   'Now write the blog review. Return ONLY the raw JSON object, starting with { and ending with }.';
 
 // ---------------------------------------------------------------------------
+// /api/exhibition-search (exhibitionSearch.ts) — free-text exhibition discovery
+// ---------------------------------------------------------------------------
+
+export function buildDiscoveryExtractionSystemPrompt(language: 'en' | 'de'): string {
+  const languageName = language === 'de' ? 'German' : 'English';
+  return `You extract current art exhibitions from web search results. Return ONLY a raw JSON array — no markdown fences, no prose before or after — of at most 4 objects with these exact fields:
+{"title": "exhibition title", "artist": "artist name or empty string", "venue": "museum or gallery name or empty string", "url": "source URL", "snippet": "one short sentence about the exhibition, max 200 characters"}
+Rules:
+- Today is ${new Date().toISOString().slice(0, 10)}. Include only exhibitions that appear to be currently running or upcoming.
+- If the user's query names a city, region, or country, include ONLY exhibitions whose venue is located there. Exclude exhibitions that are merely about that place or drawn from that place's museum collections (e.g. a show of the Albertina's holdings staged in Bilbao is NOT a Vienna exhibition).
+- In "venue", include both the venue name and its city (e.g. "Leopold Museum, Vienna").
+- "url" MUST be copied verbatim from one of the provided source URLs — never invent, shorten, or modify a URL.
+- Prefer exhibition detail pages over listing or overview pages when both are available.
+- If the results contain no identifiable exhibitions, return [].
+- Write "title", "venue", and "snippet" in ${languageName}.`;
+}
+
+export function buildDiscoveryExtractionUserMessage(params: {
+  query: string;
+  results: { title: string; url: string; content: string }[];
+}): string {
+  return (
+    `The user is looking for an art exhibition and searched for: "${params.query}"\n\n` +
+    `Web search results:\n\n${formatWebSearchResults(params.results)}`
+  );
+}
+
+// ---------------------------------------------------------------------------
 // /api/generate-title (title.ts) — Claude only
 // ---------------------------------------------------------------------------
 

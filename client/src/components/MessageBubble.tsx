@@ -7,6 +7,9 @@ interface Props {
   message: Message;
   isLoading?: boolean;
   shareUrl?: string;
+  // Present only while no tour is active — candidate cards render their
+  // "Start Tour" button only when provided
+  onStartTour?: (url: string) => void;
 }
 
 function stripMarkdown(text: string): string {
@@ -21,7 +24,7 @@ function stripMarkdown(text: string): string {
     .trim();
 }
 
-export default function MessageBubble({ message, isLoading, shareUrl }: Props) {
+export default function MessageBubble({ message, isLoading, shareUrl, onStartTour }: Props) {
   const isUser = message.role === 'user';
   const [playState, setPlayState] = useState<'idle' | 'playing' | 'paused'>('idle');
   const [copied, setCopied] = useState(false);
@@ -119,6 +122,49 @@ export default function MessageBubble({ message, isLoading, shareUrl }: Props) {
             {message.content}
           </ReactMarkdown>
         </div>
+
+        {/* Exhibition candidates from a discovery search */}
+        {message.candidates && message.candidates.length > 0 && (
+          <div className="mt-3 flex flex-col gap-2.5">
+            {message.candidates.map((candidate) => (
+              <div
+                key={candidate.url}
+                className="flex items-center gap-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3"
+              >
+                <div className="min-w-0 flex-1">
+                  {candidate.artist && (
+                    <p className="text-xs font-medium text-indigo-600 dark:text-indigo-400 truncate text-left">
+                      {candidate.artist}
+                    </p>
+                  )}
+                  <a
+                    href={candidate.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-semibold text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 line-clamp-2 leading-snug text-left transition-colors"
+                  >
+                    {candidate.title}
+                  </a>
+                  {candidate.venue && (
+                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate text-left">{candidate.venue}</p>
+                  )}
+                  {candidate.snippet && (
+                    <p className="text-xs text-slate-400 dark:text-slate-500 line-clamp-2 text-left">{candidate.snippet}</p>
+                  )}
+                </div>
+                {onStartTour && (
+                  <button
+                    type="button"
+                    onClick={() => onStartTour(candidate.url)}
+                    className="text-xs font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-3 py-1.5 flex-shrink-0 transition-colors"
+                  >
+                    Start Tour
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Sources — collapsible pill, Claude.ai style */}
         {uniqueSources.length > 0 && (

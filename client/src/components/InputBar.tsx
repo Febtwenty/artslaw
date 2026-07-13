@@ -3,9 +3,10 @@ import { useState, useRef, useEffect, KeyboardEvent } from 'react';
 interface Props {
   onSend: (message: string) => void;
   isLoading: boolean;
+  placeholder?: string;
 }
 
-export default function InputBar({ onSend, isLoading }: Props) {
+export default function InputBar({ onSend, isLoading, placeholder }: Props) {
   const [input, setInput] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -41,7 +42,7 @@ export default function InputBar({ onSend, isLoading }: Props) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask about this exhibition…"
+          placeholder={placeholder ?? 'Ask about this exhibition…'}
           rows={1}
           disabled={isLoading}
           className="block w-full bg-transparent px-4 py-3 pr-14 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none text-base resize-none disabled:opacity-40"

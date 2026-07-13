@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import LogoWordmark from './LogoWordmark';
 import type { SuggestedTour } from '../types';
+import { normalizeUrlInput } from '../utils';
 
 interface Props {
   onStart: (url: string) => void;
+  onDiscover: (query: string) => void;
   initialUrl?: string;
   language: 'en' | 'de';
   onLanguageChange: (lang: 'en' | 'de') => void;
@@ -13,14 +15,16 @@ interface Props {
   onNavigateBlog?: (slug: string) => void;
 }
 
-export default function ExhibitionLinkInput({ onStart, initialUrl, language, onLanguageChange, provider, onProviderChange, suggestedTours, onNavigateBlog }: Props) {
+export default function ExhibitionLinkInput({ onStart, onDiscover, initialUrl, language, onLanguageChange, provider, onProviderChange, suggestedTours, onNavigateBlog }: Props) {
   const [url, setUrl] = useState(initialUrl ?? '');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = url.trim();
     if (!trimmed) return;
-    onStart(trimmed);
+    const normalized = normalizeUrlInput(trimmed);
+    if (normalized) onStart(normalized);
+    else onDiscover(trimmed);
   };
 
   return (
@@ -36,7 +40,7 @@ export default function ExhibitionLinkInput({ onStart, initialUrl, language, onL
       </h2>
 
       <p className="text-slate-500 dark:text-slate-400 text-base max-w-md leading-relaxed mb-10">
-        Paste a link to any gallery or museum exhibition. ArtSlaw will research it and walk you through the artist, the works, and the ideas.
+        Paste a link to a museum or gallery exhibition — or just type an artist, a city, or a show — and ArtSlaw will find it and walk you through the artist, the works, and the ideas.
       </p>
 
       <form onSubmit={handleSubmit} className="w-full max-w-xl">
@@ -46,7 +50,7 @@ export default function ExhibitionLinkInput({ onStart, initialUrl, language, onL
               type="text"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://www.moma.org/exhibitions/..."
+              placeholder="Exhibition link, artist, or city"
               className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl px-4 py-3.5 pr-12 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all text-base md:text-sm shadow-sm"
             />
             {/* Link icon */}
@@ -75,7 +79,7 @@ export default function ExhibitionLinkInput({ onStart, initialUrl, language, onL
         </div>
 
         <p className="text-slate-400 dark:text-slate-500 text-xs mt-4 flex items-center justify-center gap-2">
-          <span>Works with museum sites, gallery pages, or any exhibition URL</span>
+          <span>Paste an exhibition URL, or type an artist, city, or exhibition name</span>
           <span className="text-slate-300 dark:text-slate-600">·</span>
           <button
             type="button"

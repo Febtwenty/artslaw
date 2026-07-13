@@ -10,6 +10,7 @@ import conversationsRouter from './routes/conversations';
 import titleRouter from './routes/title';
 import tourRouter from './routes/tour';
 import discoveriesRouter from './routes/discoveries';
+import exhibitionSearchRouter from './routes/exhibitionSearch';
 import usageRouter from './routes/usage';
 import { blogApiRouter, blogPageRouter } from './routes/blog';
 import faviconRouter from './routes/favicon';
@@ -39,6 +40,7 @@ app.use('/api/conversations', conversationsRouter);
 app.use('/api/generate-title', titleRouter);
 app.use('/api/tour', tourRouter);
 app.use('/api/discoveries', discoveriesRouter);
+app.use('/api/exhibition-search', exhibitionSearchRouter);
 app.use('/api/usage', usageRouter);
 app.use('/api/blog', blogApiRouter);
 

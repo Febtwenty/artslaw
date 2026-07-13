@@ -2,6 +2,23 @@ import { useState } from 'react';
 import type { Message, Source, Conversation } from '../types';
 import { titleFromUrl, authedFetch } from '../utils';
 
+const DISCOVERY_STRINGS = {
+  en: {
+    intro: "Here are current exhibitions matching your search — pick one and I'll guide you through it:",
+    empty: 'No current exhibitions found. Try a different search or paste an exhibition URL.',
+    limit: 'You have reached your usage limit. Please try again later.',
+    error: 'Something went wrong searching for exhibitions. Please try again.',
+  },
+  de: {
+    intro: 'Hier sind aktuelle Ausstellungen zu deiner Suche — wähle eine aus und ich führe dich hindurch:',
+    empty: 'Keine aktuellen Ausstellungen gefunden. Versuche eine andere Suche oder füge einen Ausstellungslink ein.',
+    limit: 'Du hast dein Nutzungslimit erreicht. Bitte versuche es später erneut.',
+    error: 'Bei der Ausstellungssuche ist etwas schiefgelaufen. Bitte versuche es erneut.',
+  },
+};
+
+const MAX_DISCOVERY_QUERY_LENGTH = 200;
+
 interface Params {
   language: 'en' | 'de';
   provider: 'claude' | 'mistral';
@@ -20,6 +37,8 @@ interface Return {
   isStreaming: boolean;
   error: string | null;
   setError: (err: string | null) => void;
+  isDiscovering: boolean;
+  startDiscovery: (query: string) => Promise<void>;
   startConversation: (url: string) => Promise<void>;
   sendMessage: (content: string) => Promise<void>;
   resetChatState: () => void;
@@ -41,6 +60,7 @@ export function useChatTour({
   const [error, setError] = useState<string | null>(null);
   const [hasStarted, setHasStarted] = useState(false);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const [isDiscovering, setIsDiscovering] = useState(false);
 
   const sendToApi = async (
     nextMessages: Message[],
@@ -128,26 +148,68 @@ export function useChatTour({
     return { text, sources };
   };
 
+  // Free-text search for current exhibitions, shown as cards in the chat.
+  // No conversation is persisted until the user picks one and a tour starts.
+  const startDiscovery = async (query: string): Promise<void> => {
+    const trimmedQuery = query.trim().slice(0, MAX_DISCOVERY_QUERY_LENGTH);
+    if (!trimmedQuery) return;
+    const strings = DISCOVERY_STRINGS[language];
+    const nextMessages: Message[] = [...messages, { role: 'user', content: trimmedQuery }];
+
+    setHasStarted(true);
+    setMessages(nextMessages);
+    setIsDiscovering(true);
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const res = await authedFetch(getToken, '/api/exhibition-search', {
+        method: 'POST',
+        body: JSON.stringify({ query: trimmedQuery, language, provider }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const candidates = Array.isArray(data.candidates) ? data.candidates : [];
+        setMessages([
+          ...nextMessages,
+          candidates.length > 0
+            ? { role: 'assistant', content: strings.intro, candidates }
+            : { role: 'assistant', content: strings.empty },
+        ]);
+      } else {
+        setError(res.status === 429 ? strings.limit : strings.error);
+      }
+    } catch {
+      setError(strings.error);
+    } finally {
+      setIsDiscovering(false);
+      setIsLoading(false);
+    }
+  };
+
   const startConversation = async (url: string): Promise<void> => {
     const id = crypto.randomUUID();
     const userMessage: Message = {
       role: 'user',
       content: 'Please guide me through this exhibition.',
     };
+    // Keep any discovery history (search query + candidate cards) in the tour
+    const baseMessages = messages;
+    const nextMessages: Message[] = [...baseMessages, userMessage];
 
     setActiveConversationId(id);
     setExhibitionUrl(url);
     setHasStarted(true);
-    setMessages([userMessage]);
+    setMessages(nextMessages);
     setIsLoading(true);
     setIsStreaming(false);
     setError(null);
 
     try {
-      const { text: reply, sources } = await sendToApi([userMessage], url, language, (accumulated) => {
-        setMessages([userMessage, { role: 'assistant', content: accumulated }]);
+      const { text: reply, sources } = await sendToApi(nextMessages, url, language, (accumulated) => {
+        setMessages([...nextMessages, { role: 'assistant', content: accumulated }]);
       });
-      const finalMessages: Message[] = [userMessage, { role: 'assistant', content: reply, sources }];
+      const finalMessages: Message[] = [...nextMessages, { role: 'assistant', content: reply, sources }];
       setMessages(finalMessages);
 
       let title = titleFromUrl(url);
@@ -225,6 +287,7 @@ export function useChatTour({
     setMessages([]);
     setExhibitionUrl('');
     setError(null);
+    setIsDiscovering(false);
   };
 
   const loadConversationState = (conv: Conversation): void => {
@@ -246,6 +309,8 @@ export function useChatTour({
     isStreaming,
     error,
     setError,
+    isDiscovering,
+    startDiscovery,
     startConversation,
     sendMessage,
     resetChatState,

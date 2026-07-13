@@ -6,9 +6,11 @@ interface Props {
   messages: Message[];
   isLoading: boolean;
   shareUrl?: string;
+  loadingLabel?: string;
+  onStartTour?: (url: string) => void;
 }
 
-export default function ChatWindow({ messages, isLoading, shareUrl }: Props) {
+export default function ChatWindow({ messages, isLoading, shareUrl, loadingLabel, onStartTour }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const userScrolledUp = useRef(false);
 
@@ -49,6 +51,7 @@ export default function ChatWindow({ messages, isLoading, shareUrl }: Props) {
             message={msg}
             isLoading={isLoading}
             shareUrl={!isLoading && i === lastAssistantIdx ? shareUrl : undefined}
+            onStartTour={onStartTour}
           />
         ));
       })()}
@@ -75,7 +78,7 @@ export default function ChatWindow({ messages, isLoading, shareUrl }: Props) {
               />
             </div>
             <span className="text-slate-400 text-xs italic">
-              Researching the exhibition…
+              {loadingLabel ?? 'Researching the exhibition…'}
             </span>
           </div>
         </div>
