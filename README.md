@@ -81,6 +81,10 @@ Then open [http://localhost:5173](http://localhost:5173).
 
 The Vite dev server proxies `/api/*` requests to the Express backend automatically.
 
+### Known console warnings
+
+Firefox logs `Cookie "_cfuvid" has been rejected for invalid domain` roughly every minute, both locally and in production. This comes from Clerk's Cloudflare edge, not from this codebase: ClerkJS refreshes the session token every ~50 s against the Clerk Frontend API, and each response carries a `Set-Cookie: _cfuvid=…; Domain=clerkprod-cloudflare.net` header whose `Domain` doesn't match the serving host, so the browser rejects it (Chrome does the same, silently). The cookie is Cloudflare's rate-limiting helper; its rejection has **no effect** on auth or any feature. There is nothing to fix here — the issue has been reported to Clerk. To hide it while developing, type `-_cfuvid` in the Firefox DevTools console filter box.
+
 ---
 
 ## Usage
