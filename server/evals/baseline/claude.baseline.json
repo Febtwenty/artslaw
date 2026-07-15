@@ -1,0 +1,33 @@
+{
+  "provider": "claude",
+  "chatModel": "claude-haiku-4-5",
+  "createdAt": "2026-07-15T11:35:29.560Z",
+  "repeat": 3,
+  "mode": "replay",
+  "aggregates": {
+    "provider": "claude",
+    "runs": 36,
+    "errors": 0,
+    "groundedness": 0.9246987951807228,
+    "contradictionRate": 0,
+    "totalClaims": 332,
+    "hedgingPassRate": 0.6666666666666666,
+    "toolCallAccuracy": 1,
+    "toolArgsValidity": 1,
+    "loopTerminationRate": 0.9629629629629629,
+    "sourceIntegrityViolations": 0,
+    "discoveryParseRate": 1,
+    "hallucinatedUrlRate": 0.375,
+    "discoveryExpectationRate": 1,
+    "structureRate": 0.6666666666666666,
+    "languageMatchRate": 1,
+    "judgeStructureRate": 0.5882352941176471,
+    "judgeLanguageRate": 1,
+    "latencyP50Ms": 6246,
+    "latencyP95Ms": 19559,
+    "ttftP50Ms": 2192,
+    "costPerTourUsd": 0.010257666666666665,
+    "totalAppCostUsd": 0.31753099999999995,
+    "judgeCostUsd": 1.487277
+  }
+}

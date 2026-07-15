@@ -18,6 +18,7 @@ ArtSlaw uses Claude (`claude-haiku-4-5`) or Mistral (`mistral-small-latest`) —
 - **Per-user token usage caps** — daily and monthly limits enforced server-side, with a live usage indicator in the header (desktop) and sidebar (mobile)
 - **Dark mode**
 - **Blog** — admin users can generate AI-drafted exhibition write-ups via a two-phase Claude pipeline (research → format), then publish them to a server-rendered public blog at `/blog`
+- **Evaluation suite** — offline evals for groundedness (LLM-as-judge against the exact evidence the model saw), tool-call accuracy, discovery quality, structure/language adherence, latency & cost — run per provider with baseline regression gating. See [`server/evals/README.md`](server/evals/README.md)
 
 ---
 
@@ -143,6 +144,7 @@ artslaw/
 │   ├── index.html
 │   └── vite.config.ts        # Proxies /api → localhost:3001
 ├── server/                   # Express + Anthropic SDK backend
+│   ├── evals/                # Offline eval suite (fixtures, judge, baselines) — see evals/README.md
 │   └── src/
 │       ├── config/
 │       │   └── limits.ts     # Daily/monthly token caps
@@ -151,14 +153,18 @@ artslaw/
 │       │   └── blog.ts       # blog posts collection helpers
 │       ├── services/
 │       │   ├── tavily.ts         # Tavily search API wrapper
-│       │   └── webSearchTool.ts  # shared web_search tool schema + loop helpers
+│       │   ├── webSearchTool.ts  # shared web_search tool schema + loop helpers
+│       │   ├── chatRunner.ts     # provider tool loops (Claude/Mistral), shared by route + evals
+│       │   ├── discovery.ts      # free-text discovery core (search + extraction + URL filter)
+│       │   ├── pageContent.ts    # exhibition page fetch/extract
+│       │   └── llmClients.ts     # lazy Anthropic/Mistral client getters
 │       ├── middleware/
 │       │   └── checkUsageLimits.ts  # shared 429 guard for LLM routes
 │       ├── db.ts             # MongoDB connection
 │       ├── prompts.ts        # All LLM prompt text (system prompts, templates, tool descriptions)
 │       ├── index.ts
 │       └── routes/
-│           ├── chat.ts        # POST /api/chat (streaming)
+│           ├── chat.ts        # POST /api/chat (streaming; SSE + auth around chatRunner)
 │           ├── conversations.ts
 │           ├── discoveries.ts # GET /api/discoveries (CAL scraper)
 │           ├── exhibitionSearch.ts # POST /api/exhibition-search (free-text → exhibition candidates)
@@ -205,3 +211,19 @@ cd ../client && npm run build
 ```
 
 The client build outputs to `client/dist/`, served as static files by the Express server in production.
+
+---
+
+## Evaluation suite
+
+Offline evals live in `server/evals/` (excluded from the production build) and exercise the **production** chat tool loop and discovery pipeline directly. Groundedness is scored by an LLM judge (`claude-sonnet-5`, structured outputs) against the exact web evidence each response was generated from; tool-call behavior, discovery URL-hallucination filtering, structure/language, latency, and cost are scored deterministically. The full suite runs once per provider (Claude / Mistral) over identical scenarios and is gated against checked-in per-provider baselines — making provider or prompt changes regression-testable.
+
+```bash
+cd server
+npm run eval            # replay recorded web fixtures, judge, gate vs baseline (exit 1 on regression)
+npm run eval:live       # against the live web
+npm run eval:record     # refresh fixtures
+npm run eval:baseline   # re-baseline (deliberate act, commit the JSONs)
+```
+
+See [`server/evals/README.md`](server/evals/README.md) for metrics, fixtures, and thresholds.

@@ -1,0 +1,33 @@
+{
+  "provider": "mistral",
+  "chatModel": "mistral-small-latest",
+  "createdAt": "2026-07-15T11:35:29.560Z",
+  "repeat": 3,
+  "mode": "replay",
+  "aggregates": {
+    "provider": "mistral",
+    "runs": 36,
+    "errors": 0,
+    "groundedness": 0.7591623036649214,
+    "contradictionRate": 0.02356020942408377,
+    "totalClaims": 382,
+    "hedgingPassRate": 0.6666666666666666,
+    "toolCallAccuracy": 1,
+    "toolArgsValidity": 1,
+    "loopTerminationRate": 1,
+    "sourceIntegrityViolations": 0,
+    "discoveryParseRate": 1,
+    "hallucinatedUrlRate": 0.041666666666666664,
+    "discoveryExpectationRate": 1,
+    "structureRate": 0.6,
+    "languageMatchRate": 1,
+    "judgeStructureRate": 0.8333333333333334,
+    "judgeLanguageRate": 1,
+    "latencyP50Ms": 2182,
+    "latencyP95Ms": 10321,
+    "ttftP50Ms": 829,
+    "costPerTourUsd": 0.0005333962962962963,
+    "totalAppCostUsd": 0.017338999999999997,
+    "judgeCostUsd": 1.732614
+  }
+}

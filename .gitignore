@@ -22,6 +22,9 @@ Thumbs.db
 .vscode/settings.json
 .idea/
 
+# Eval run outputs (fixtures and baselines ARE committed)
+server/evals/results/
+
 # Logs
 *.log
 npm-debug.log*

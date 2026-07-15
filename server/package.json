@@ -6,10 +6,16 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "eval": "ts-node --transpile-only -P evals/tsconfig.json evals/run.ts",
+    "eval:live": "ts-node --transpile-only -P evals/tsconfig.json evals/run.ts --live",
+    "eval:record": "ts-node --transpile-only -P evals/tsconfig.json evals/run.ts --record",
+    "eval:baseline": "ts-node --transpile-only -P evals/tsconfig.json evals/run.ts --repeat 3 --write-baseline",
+    "eval:judge-sanity": "ts-node --transpile-only -P evals/tsconfig.json evals/judgeSanity.ts",
+    "eval:typecheck": "tsc -p evals/tsconfig.json"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.52.0",
+    "@anthropic-ai/sdk": "^0.111.0",
     "@clerk/express": "^2.0.5",
     "@mistralai/mistralai": "^2.3.0",
     "@types/multer": "^2.1.0",
@@ -27,7 +33,9 @@
     "@types/express": "^4.17.21",
     "@types/node": "^20.11.0",
     "@types/sharp": "^0.31.1",
+    "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "zod": "^4.4.3"
   }
 }
