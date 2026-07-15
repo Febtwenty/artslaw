@@ -75,7 +75,7 @@ These check: is every fact in the tour backed by the exhibition page or the sear
 
 | Scenario | What it simulates |
 |---|---|
-| `followup-elaborate-en` | After a tour, the user asks "summarize that in three sentences". Everything needed is already in the conversation — searching here is a mistake (wasted time and money). |
+| `followup-elaborate-en` | After a tour, the user asks "summarize that in three sentences". Everything needed is already in the conversation — searching here is a mistake (wasted time and money). The judge grades the summary's faithfulness against the earlier conversation. |
 | `followup-newartist-en` | The user asks about a *different* artist (Marina Abramović). Now the model **must** search — it has no evidence about her. |
 | `followup-elaborate-de` | Same as the first, in German. |
 
@@ -185,7 +185,7 @@ Guardrails honored throughout: search goes through Tavily only (never a provider
 
 **Claim** — One atomic, checkable factual statement extracted from an answer ("Emin was born in 1963", "the show spans four decades"). The judge grades each claim separately as *supported*, *unsupported*, or *contradicted* by the evidence.
 
-**Evidence** — Everything the model had to work with when answering: the fetched exhibition page text plus the web search results it received. Groundedness is judged against this — not against general world knowledge.
+**Evidence** — Everything the model had to work with when answering: the fetched exhibition page text, the web search results it received, and — for follow-up questions — the earlier conversation (a faithful "summarize that" is graded against what was actually said before). Groundedness is judged against this — not against general world knowledge.
 
 **Hedging** — Honestly flagging missing information ("the available information doesn't specify…") instead of filling the gap with a guess. In no-evidence scenarios, hedging is the *correct* behavior and is scored as a pass.
 

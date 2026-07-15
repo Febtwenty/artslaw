@@ -8,7 +8,7 @@ ArtSlaw uses Claude (`claude-haiku-4-5`) or Mistral (`mistral-small-latest`) —
 
 ## Features
 
-- **Exhibition tours** — paste any gallery or museum URL and start a guided chat
+- **Exhibition tours** — paste any gallery or museum URL and start a guided chat. Every tour follows a fixed structure (a short opening, then **The Artist(s)**, **The Exhibition**, **What to Look For**) and is strictly grounded: the model may only state facts found on the exhibition page or in its live web searches — memorized artist knowledge doesn't count, and thin evidence produces shorter sections rather than invented details
 - **Free-text search** — type an artist, city, or exhibition name instead of a URL; the chat opens, ArtSlaw searches the web (Tavily + LLM extraction) and presents matching current exhibitions as cards in the conversation; refine the search by typing again, or tap a card to start the tour
 - **Model toggle** — switch between Claude and Mistral per conversation (defaults to Mistral for each new tour); both share the same Tavily-backed `web_search` tool, called on demand by whichever model is active. The chosen provider is shown as a flag badge in the chat window and persisted with the saved conversation
 - **Discover** — surfaces upcoming exhibition recommendations based on artists you've already researched, scraped from contemporaryartlibrary.org with a 7-day cache

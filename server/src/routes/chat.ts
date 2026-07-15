@@ -10,7 +10,7 @@ import {
   CHAT_MODEL,
   MISTRAL_CHAT_MODEL,
 } from '../services/chatRunner';
-import { CHAT_SYSTEM_PROMPTS, buildChatInitialUserMessage } from '../prompts';
+import { buildChatSystemPrompt, buildChatInitialUserMessage } from '../prompts';
 
 const router = Router();
 
@@ -95,7 +95,7 @@ router.post('/', checkUsageLimits, async (req: Request, res: Response) => {
     streamStarted = true;
 
     const maxTokens = isInitialRequest ? INITIAL_MAX_TOKENS : FOLLOWUP_MAX_TOKENS;
-    const system = CHAT_SYSTEM_PROMPTS[lang];
+    const system = buildChatSystemPrompt(lang);
     const onText = (t: string) => res.write(`data: ${JSON.stringify({ t })}\n\n`);
 
     const result =

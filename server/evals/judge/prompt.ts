@@ -10,6 +10,7 @@ You receive the EVIDENCE the guide model actually saw (the exhibition page text 
    - "supported" — the evidence states it (paraphrase is fine, meaning must match).
    - "unsupported" — the evidence is silent on it. Your own world knowledge does NOT count as support, even if you know the claim is true.
    - "contradicted" — the evidence says otherwise.
+   An "earlier conversation" evidence block counts fully: for follow-up answers (summaries, elaborations), a claim stated in the earlier conversation is "supported" — faithfulness to the conversation is exactly what is being graded there.
    For supported/contradicted claims, copy the relevant evidence span into evidence_quote (verbatim, shortened with … is fine). For unsupported claims use an empty string.
 3. Report whether the response honestly acknowledges gaps: acknowledges_missing_info is true if the response explicitly flags information as unavailable, unverified, or not specified where the evidence is silent (phrases like "the available information doesn't specify"). If the evidence covers everything the response says, or the response papers over gaps with confident prose, it is false.
 4. Report language_matches: whether the response is written in the requested language.

@@ -7,7 +7,7 @@ import {
 import { runDiscovery, ExhibitionCandidate } from '../../src/services/discovery';
 import { Source } from '../../src/services/webSearchTool';
 import { WEB_SEARCH_NO_RESULTS_MESSAGE } from '../../src/prompts';
-import { CHAT_SYSTEM_PROMPTS, buildChatInitialUserMessage } from '../../src/prompts';
+import { buildChatSystemPrompt, buildChatInitialUserMessage } from '../../src/prompts';
 import { INITIAL_MAX_TOKENS, FOLLOWUP_MAX_TOKENS } from '../config';
 import { EvalScenario, EvidenceMode, Provider } from '../scenarios/types';
 import { createSearchEnv } from './searchStub';
@@ -50,8 +50,22 @@ export interface RunRecord {
   error?: string;
 }
 
-function buildEvidence(pageContent: string | null | undefined, toolCalls: ToolCallRecord[]): EvidenceItem[] {
+function buildEvidence(
+  priorMessages: EvalScenario['priorMessages'],
+  pageContent: string | null | undefined,
+  toolCalls: ToolCallRecord[],
+): EvidenceItem[] {
   const evidence: EvidenceItem[] = [];
+  // The prior conversation is legitimate grounding for follow-up answers —
+  // a faithful "summarize that" must be judged against what was actually said.
+  if (priorMessages && priorMessages.length > 0) {
+    evidence.push({
+      label: 'earlier conversation',
+      text: priorMessages
+        .map((m) => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`)
+        .join('\n\n'),
+    });
+  }
   if (typeof pageContent === 'string' && pageContent.length > 0) {
     evidence.push({ label: 'exhibition page', text: pageContent });
   }
@@ -103,7 +117,7 @@ export async function runScenario(
     }
 
     // Chat kinds — mirror the route's message building exactly (chat.ts).
-    const system = CHAT_SYSTEM_PROMPTS[scenario.language];
+    const system = buildChatSystemPrompt(scenario.language);
     let pageContent: string | null | undefined;
     let messages: Anthropic.MessageParam[];
 
@@ -152,6 +166,7 @@ export async function runScenario(
     env.finalize();
 
     const evidenceAvailable =
+      (scenario.priorMessages?.length ?? 0) > 0 ||
       (typeof pageContent === 'string' && pageContent.length > 0) ||
       result.toolCalls.some((c) => c.servedSourceUrls.length > 0);
 
@@ -163,7 +178,7 @@ export async function runScenario(
       iterations: result.iterations,
       stoppedAtIterationCap: result.stoppedAtIterationCap,
       pageContent,
-      evidence: buildEvidence(pageContent, result.toolCalls),
+      evidence: buildEvidence(scenario.priorMessages, pageContent, result.toolCalls),
       evidenceAvailable,
       latencyMs,
       ttftMs,
