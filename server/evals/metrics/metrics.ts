@@ -9,10 +9,12 @@ import { costUsd } from './pricing';
 // ---------------------------------------------------------------------------
 
 // Models render the prompt's `**Header**` sections either as bold text or as
-// markdown headings (`## Header`) — accept both.
+// markdown headings (`## Header`) — accept both. First-section variants per
+// the prompt: The Artist(s) for solo/group shows, The Institution when the
+// show is about a museum/collection itself.
 const SECTION_HEADERS = {
-  en: [/(\*\*|#)\s*The Artist/i, /(\*\*|#)\s*The Exhibition/i, /(\*\*|#)\s*What to Look For/i],
-  de: [/(\*\*|#)\s*(Der|Die) K(ü|ue)nstler/i, /(\*\*|#)\s*Die Ausstellung/i, /(\*\*|#)\s*Worauf man achten sollte/i],
+  en: [/(\*\*|#)\s*The (Artists?|Institution)/i, /(\*\*|#)\s*The Exhibition/i, /(\*\*|#)\s*What to Look For/i],
+  de: [/(\*\*|#)\s*((Der|Die) K(ü|ue)nstler|Die Institution)/i, /(\*\*|#)\s*Die Ausstellung/i, /(\*\*|#)\s*Worauf man achten sollte/i],
 };
 
 export function hasRequiredStructure(text: string, lang: 'en' | 'de'): boolean {

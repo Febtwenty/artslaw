@@ -1,4 +1,7 @@
-const MAX_PAGE_CONTENT_LENGTH = 3000;
+// 6000 (raised from 3000): exhibition pages often list the actual works past
+// the 3k mark — cutting there starved the models of exactly the details they
+// then invented. Costs ~750 extra input tokens per model round-trip.
+const MAX_PAGE_CONTENT_LENGTH = 6000;
 
 export async function fetchPageContent(url: string): Promise<string | null> {
   try {

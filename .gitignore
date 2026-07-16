@@ -31,3 +31,6 @@ npm-debug.log*
 
 # Claude constitution
 CLAUDE.md
+
+# Blog content
+blog/

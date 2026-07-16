@@ -13,7 +13,7 @@ export const PRICES: Record<string, ModelPrice> = {
   'claude-sonnet-5': { inputPerMTok: 3.0, outputPerMTok: 15.0 },
   // TODO: verify against https://mistral.ai/pricing before trusting cost
   // numbers for Mistral — placeholder values below.
-  'mistral-small-latest': { inputPerMTok: 0.1, outputPerMTok: 0.3 },
+  'mistral-small-latest': { inputPerMTok: 0.15, outputPerMTok: 0.6 },
 };
 
 export function costUsd(model: string, usage: { inputTokens: number; outputTokens: number }): number {

@@ -5,7 +5,7 @@ export const JUDGE_SYSTEM_PROMPT = `You are a strict fact-checking judge for an 
 
 You receive the EVIDENCE the guide model actually saw (the exhibition page text and/or web search results) and the RESPONSE it produced. Your job:
 
-1. Extract every discrete factual claim from the RESPONSE — biographical facts (birth year, nationality, training, career milestones), dates, counts of works, work titles, media, venue/institution names, staging or installation details, and reception/acclaim claims. Split compound sentences into separate claims. Do NOT extract subjective interpretation, viewing advice, or general art-historical framing that makes no checkable assertion.
+1. Extract every discrete factual claim from the RESPONSE — biographical facts (birth year, nationality, training, career milestones), dates, counts of works, work titles, media, venue/institution names, what is physically on display, staging or installation details, provenance, curatorial facts, and reception/acclaim presented as fact. Split compound sentences into separate claims. Do NOT extract purely interpretive or thematic readings of a work or the show ("reflects on loss", "explores exile and belonging", "invites the viewer to…"), subjective viewing advice, or general art-historical framing — those are the guide's interpretation, not checkable facts. A sentence mixing both yields only its factual part (e.g. "My Bed (1998), a meditation on despair" → extract the title/year claim, not the meditation).
 2. For each claim, judge it AGAINST THE EVIDENCE ONLY:
    - "supported" — the evidence states it (paraphrase is fine, meaning must match).
    - "unsupported" — the evidence is silent on it. Your own world knowledge does NOT count as support, even if you know the claim is true.

@@ -20,9 +20,11 @@ export const BASELINE_DIR = path.join(EVALS_DIR, 'baseline');
 export const JUDGE_MODEL = 'claude-sonnet-5';
 export const JUDGE_MAX_TOKENS = 8000;
 
-// Cap the evidence bundle handed to the judge (page ≤3000 chars, Tavily
-// entries ≤1500 chars each — normally well under this).
-export const MAX_EVIDENCE_CHARS = 20000;
+// Cap the evidence bundle handed to the judge. Sized for the worst case
+// (6000-char page + 2–3 searches × 5 results × ≤2000 chars ≈ 36k) — a
+// truncated bundle would make the judge mark genuinely-sourced claims
+// unsupported.
+export const MAX_EVIDENCE_CHARS = 40000;
 
 // Mirror the route's token budgets (chat.ts) so eval runs match production.
 export const INITIAL_MAX_TOKENS = 2000;
