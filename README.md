@@ -37,6 +37,8 @@ ArtSlaw uses Claude (`claude-haiku-4-5`) or Mistral (`mistral-small-latest`) —
 
 ### 1. Clone and configure environment
 
+Copy the templates and fill in your own keys: `.env.example` → `.env` (server) and `client/.env.example` → `client/.env.local` (client).
+
 **Server** (root `.env`):
 ```
 ANTHROPIC_API_KEY=sk-ant-...
@@ -227,3 +229,15 @@ npm run eval:baseline   # re-baseline (deliberate act, commit the JSONs)
 ```
 
 See [`server/evals/README.md`](server/evals/README.md) for metrics, fixtures, and thresholds.
+
+---
+
+## Security
+
+Found a vulnerability? Please report it privately — see [`SECURITY.md`](SECURITY.md).
+
+---
+
+## License
+
+[AGPL-3.0](LICENSE). You are free to use, study, modify, and share this code; if you run a modified version as a network service, you must make your modified source available to its users under the same license.
