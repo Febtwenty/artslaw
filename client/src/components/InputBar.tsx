@@ -4,9 +4,10 @@ interface Props {
   onSend: (message: string) => void;
   isLoading: boolean;
   placeholder?: string;
+  language?: 'en' | 'de';
 }
 
-export default function InputBar({ onSend, isLoading, placeholder }: Props) {
+export default function InputBar({ onSend, isLoading, placeholder, language = 'en' }: Props) {
   const [input, setInput] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -79,6 +80,12 @@ export default function InputBar({ onSend, isLoading, placeholder }: Props) {
           )}
         </button>
       </div>
+
+      <p className="text-xs text-slate-400 dark:text-slate-500 text-center mt-1.5">
+        {language === 'de'
+          ? 'ArtSlaw ist KI und kann Fehler machen. Bitte Antworten überprüfen.'
+          : 'ArtSlaw is AI and can make mistakes. Please double-check responses.'}
+      </p>
     </div>
   );
 }

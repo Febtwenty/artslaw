@@ -404,6 +404,7 @@ function App({ navigate }: { navigate: (path: string) => void }) {
                     onSend={handleChatSend}
                     isLoading={isLoading || isStreaming}
                     placeholder={!exhibitionUrl ? (language === 'de' ? 'Ausstellungen suchen oder Link einfügen…' : 'Search exhibitions, or paste a link…') : undefined}
+                    language={language}
                   />
                 </div>
               )}
