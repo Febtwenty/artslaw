@@ -185,7 +185,7 @@ artslaw/
 
 | Layer | Technology |
 |---|---|
-| Frontend | React 18, Vite 5, TypeScript, Tailwind CSS |
+| Frontend | React 18, Vite 6, TypeScript, Tailwind CSS |
 | Backend | Node.js, Express, TypeScript |
 | AI | Anthropic SDK (`@anthropic-ai/sdk`), `claude-haiku-4-5` · Mistral SDK (`@mistralai/mistralai`), `mistral-small-latest` |
 | Search | Tavily Search API, called via a shared model-driven `web_search` tool used by both providers |
