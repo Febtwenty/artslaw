@@ -74,14 +74,19 @@ export async function runClaudeChat(
     events.onText?.(t);
   };
 
+  // Persists across tool-loop turns: a turn that continues the loop ends with a
+  // tool_use (search) block, so the next turn's first text block must be split
+  // off with a blank line or the resumed section (e.g. "## The Artist") merges
+  // inline into the previous paragraph and CommonMark renders it as plain text.
+  let prevBlockWasSearch = false;
   const runStream = async (msgs: Anthropic.MessageParam[]) => {
     const stream = getAnthropicClient().messages.stream({ ...callParams, messages: msgs });
-    let prevBlockWasSearch = false;
     for await (const event of stream) {
       if (event.type === 'content_block_start') {
         if (event.content_block.type === 'text') {
-          // Only add a separator when resuming text after a search block
-          if (prevBlockWasSearch) emit('\n\n');
+          // Separate text resuming after a search block, but never add a leading
+          // break (search-first turn) or double an existing one.
+          if (prevBlockWasSearch && text.length > 0 && !text.endsWith('\n\n')) emit('\n\n');
           prevBlockWasSearch = false;
         } else {
           prevBlockWasSearch = true;
@@ -162,6 +167,10 @@ export async function runMistralChat(
   const toolCalls: ToolCallRecord[] = [];
   let iterations = 0;
   let lastFinishReason: string | null | undefined = null;
+  // Mistral has no per-block separator; bridge the paragraph->heading boundary
+  // across a tool-call turn ourselves so a section resumed after a search
+  // doesn't merge inline into the previous paragraph.
+  let prevTurnWasTool = false;
 
   for (let i = 0; i < MAX_TOOL_ITERATIONS; i++) {
     iterations = i + 1;
@@ -185,6 +194,11 @@ export async function runMistralChat(
       if (!choice) continue;
       const content = choice.delta?.content;
       if (typeof content === 'string' && content.length > 0) {
+        // First text chunk after a search turn: split it off with a blank line,
+        // but never add a leading or doubled break.
+        if (prevTurnWasTool && textThisTurn === '' && text.length > 0 && !text.endsWith('\n\n')) {
+          emit('\n\n');
+        }
         textThisTurn += content;
         emit(content);
       }
@@ -197,6 +211,7 @@ export async function runMistralChat(
     }
 
     lastFinishReason = finishReason;
+    prevTurnWasTool = finishReason === 'tool_calls';
     if (finishReason !== 'tool_calls' || !latestToolCalls || latestToolCalls.length === 0) break;
 
     msgs.push({ role: 'assistant', content: textThisTurn || null, toolCalls: latestToolCalls });

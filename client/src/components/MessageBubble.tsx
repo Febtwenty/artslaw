@@ -12,6 +12,27 @@ interface Props {
   onStartTour?: (url: string) => void;
 }
 
+// Defensive repair of structural markdown glue before rendering. Weaker models
+// (e.g. Mistral) sometimes emit block elements without the surrounding blank
+// lines CommonMark needs. Scope is intentionally minimal — headings and stray
+// horizontal rules only; unmatched "**" is a prompt-layer concern, not touched
+// here. Well-formed output (Claude) passes through unchanged.
+function normalizeMarkdown(text: string): string {
+  return text
+    // An ATX heading glued to preceding text on the same line -> own block. The
+    // preceding char must not be "#" (so a valid "## H" is never split apart) nor
+    // a newline (already separated); "#{1,6} \S" needs trailing non-space so a
+    // partially-streamed bare "##" doesn't match early.
+    .replace(/([^\n#])(#{1,6}[ \t]+\S)/g, '$1\n\n$2')
+    // Drop horizontal-rule runs the model emits as separators. Glued to the end of
+    // a line (e.g. "lens---") they render literally; on their own line under text
+    // they'd form a setext heading. Strip both, then collapse the blank lines left.
+    .replace(/([^\n-])-{3,}(?=\r?\n|$)/g, '$1')
+    .replace(/^[ \t]*-{3,}[ \t]*$/gm, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trimEnd();
+}
+
 function stripMarkdown(text: string): string {
   return text
     .replace(/#{1,6}\s+/g, '')
@@ -119,7 +140,7 @@ export default function MessageBubble({ message, isLoading, shareUrl, onStartTou
         </span>
         <div className="prose-art text-slate-700 dark:text-slate-300 text-base font-serif">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {message.content}
+            {normalizeMarkdown(message.content)}
           </ReactMarkdown>
         </div>
 
