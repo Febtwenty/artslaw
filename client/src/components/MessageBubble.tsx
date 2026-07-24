@@ -10,6 +10,8 @@ interface Props {
   // Present only while no tour is active — candidate cards render their
   // "Start Tour" button only when provided
   onStartTour?: (url: string) => void;
+  // Collect-visit stamp — passed only for the last assistant message
+  collectSlot?: React.ReactNode;
 }
 
 // Defensive repair of structural markdown glue before rendering. Weaker models
@@ -45,7 +47,7 @@ function stripMarkdown(text: string): string {
     .trim();
 }
 
-export default function MessageBubble({ message, isLoading, shareUrl, onStartTour }: Props) {
+export default function MessageBubble({ message, isLoading, shareUrl, onStartTour, collectSlot }: Props) {
   const isUser = message.role === 'user';
   const [playState, setPlayState] = useState<'idle' | 'playing' | 'paused'>('idle');
   const [copied, setCopied] = useState(false);
@@ -314,6 +316,9 @@ export default function MessageBubble({ message, isLoading, shareUrl, onStartTou
               )}
             </button>
           )}
+
+          {/* Collect-visit stamp — last assistant message only */}
+          {collectSlot && <span className="ml-1.5">{collectSlot}</span>}
 
         </div>
       </div>

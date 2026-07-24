@@ -411,19 +411,8 @@ function App({ navigate }: { navigate: (path: string) => void }) {
                         <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 flex-shrink-0" />
                         <span className="truncate max-w-xs">{exhibitionUrl}</span>
                       </a>
-                      <span className="flex items-center gap-2 flex-shrink-0">
-                        <CollectStampButton
-                          exhibitionUrl={exhibitionUrl}
-                          title={conversations.find((c) => c.id === activeConversationId)?.title ?? titleFromUrl(exhibitionUrl)}
-                          conversationId={activeConversationId ?? undefined}
-                          visit={gamification.visitForUrl(exhibitionUrl)}
-                          onCollect={gamification.collect}
-                          onUncollect={gamification.uncollect}
-                          onUploadPhoto={gamification.uploadPhoto}
-                        />
-                        <span className="text-xs text-slate-400 flex-shrink-0">
-                          {provider === 'mistral' ? '🇪🇺 Mistral' : '🇺🇸 Claude'}
-                        </span>
+                      <span className="text-xs text-slate-400 flex-shrink-0">
+                        {provider === 'mistral' ? '🇪🇺 Mistral' : '🇺🇸 Claude'}
                       </span>
                     </div>
                   )}
@@ -433,6 +422,17 @@ function App({ navigate }: { navigate: (path: string) => void }) {
                     shareUrl={activeConversationId ? `${window.location.origin}/tour/${activeConversationId}` : undefined}
                     loadingLabel={isDiscovering ? (language === 'de' ? 'Suche aktuelle Ausstellungen…' : 'Searching current exhibitions…') : undefined}
                     onStartTour={!exhibitionUrl ? handleStartTour : undefined}
+                    collectSlot={exhibitionUrl ? (
+                      <CollectStampButton
+                        exhibitionUrl={exhibitionUrl}
+                        title={conversations.find((c) => c.id === activeConversationId)?.title ?? titleFromUrl(exhibitionUrl)}
+                        conversationId={activeConversationId ?? undefined}
+                        visit={gamification.visitForUrl(exhibitionUrl)}
+                        onCollect={gamification.collect}
+                        onUncollect={gamification.uncollect}
+                        onUploadPhoto={gamification.uploadPhoto}
+                      />
+                    ) : undefined}
                   />
                   {error && (
                     <div className="flex-shrink-0 mt-2 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm dark:bg-red-950 dark:border-red-800 dark:text-red-400">
