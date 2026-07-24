@@ -12,19 +12,23 @@ import tourRouter from './routes/tour';
 import discoveriesRouter from './routes/discoveries';
 import exhibitionSearchRouter from './routes/exhibitionSearch';
 import usageRouter from './routes/usage';
+import visitsRouter from './routes/visits';
 import { blogApiRouter, blogPageRouter } from './routes/blog';
 import faviconRouter from './routes/favicon';
 import { ensureUsageIndexes } from './db/usage';
+import { ensureVisitIndexes } from './db/visits';
 import { ensureBlogIndexes, getPublishedPosts } from './db/blog';
 
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 ensureUsageIndexes().catch(err => console.error('[usage] index setup failed:', err));
 ensureBlogIndexes().catch(err => console.error('[blog] index setup failed:', err));
+ensureVisitIndexes().catch(err => console.error('[visits] index setup failed:', err));
 
 // Ensure uploads directory exists
 const uploadsDir = path.resolve(__dirname, '../uploads');
 fs.mkdirSync(path.join(uploadsDir, 'blog'), { recursive: true });
+fs.mkdirSync(path.join(uploadsDir, 'visits'), { recursive: true });
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -42,6 +46,7 @@ app.use('/api/tour', tourRouter);
 app.use('/api/discoveries', discoveriesRouter);
 app.use('/api/exhibition-search', exhibitionSearchRouter);
 app.use('/api/usage', usageRouter);
+app.use('/api/visits', visitsRouter);
 app.use('/api/blog', blogApiRouter);
 
 app.get('/robots.txt', (_req, res) => {

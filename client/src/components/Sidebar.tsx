@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { Conversation } from '../types';
 import UsageIndicator from './UsageIndicator';
+import GamificationChip from './GamificationChip';
 import type { UsageData } from '../hooks/useUsage';
 
 interface Props {
@@ -13,6 +14,8 @@ interface Props {
   onDelete: (id: string) => void;
   navigate: (path: string) => void;
   usage: UsageData | null;
+  gamification: { points: number; loaded: boolean };
+  onOpenCollection: () => void;
 }
 
 function formatDate(ts: number): string {
@@ -27,7 +30,7 @@ function formatDate(ts: number): string {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-export default function Sidebar({ isOpen, onClose, conversations, activeId, onSelect, onNew, onDelete, navigate, usage }: Props) {
+export default function Sidebar({ isOpen, onClose, conversations, activeId, onSelect, onNew, onDelete, navigate, usage, gamification, onOpenCollection }: Props) {
   const [query, setQuery] = useState('');
 
   // Lock body scroll on mobile when drawer is open
@@ -88,6 +91,16 @@ export default function Sidebar({ isOpen, onClose, conversations, activeId, onSe
           />
         </div>
       )}
+
+      {/* My Collection — mobile entry point (desktop uses the header chip) */}
+      <div className="md:hidden flex-shrink-0 px-3 pb-2">
+        <GamificationChip
+          points={gamification.points}
+          loaded={gamification.loaded}
+          onClick={onOpenCollection}
+          className="flex flex-col gap-1 w-full"
+        />
+      </div>
 
       {/* Label */}
       {conversations.length > 0 && (

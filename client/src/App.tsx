@@ -15,16 +15,22 @@ import { useDarkMode } from './hooks/useDarkMode';
 import { useConversationHistory } from './hooks/useConversationHistory';
 import { useChatTour } from './hooks/useChatTour';
 import { useUsage } from './hooks/useUsage';
-import { authedFetch, normalizeUrlInput } from './utils';
+import { useGamification } from './hooks/useGamification';
+import { authedFetch, normalizeUrlInput, titleFromUrl } from './utils';
 import UsageIndicator from './components/UsageIndicator';
+import GamificationChip from './components/GamificationChip';
+import CollectStampButton from './components/CollectStampButton';
+import LevelUpOverlay from './components/LevelUpOverlay';
+import CollectionPage from './components/CollectionPage';
 
 export type { Source, Message, SuggestedTour, Conversation } from './types';
 
-type View = 'home' | 'discover' | 'privacy' | 'terms' | 'blog' | 'admin';
+type View = 'home' | 'discover' | 'privacy' | 'terms' | 'blog' | 'admin' | 'collection';
 
 function parsePath(): { view: View; blogSlug: string | null } {
   const p = window.location.pathname;
   if (p === '/discover') return { view: 'discover', blogSlug: null };
+  if (p === '/collection') return { view: 'collection', blogSlug: null };
   if (p === '/admin/blog') return { view: 'admin', blogSlug: null };
   if (p === '/blog') return { view: 'blog', blogSlug: null };
   if (p.startsWith('/blog/')) return { view: 'blog', blogSlug: decodeURIComponent(p.slice(6)) };
@@ -46,6 +52,7 @@ function App({ navigate }: { navigate: (path: string) => void }) {
   const { conversations, setConversations, convLoading, suggestedTours } =
     useConversationHistory({ isSignedIn, getToken });
   const { usage } = useUsage({ getToken, isSignedIn: isSignedIn ?? false, refreshKey: usageRefreshKey });
+  const gamification = useGamification({ getToken, isSignedIn: isSignedIn ?? false });
   const {
     exhibitionUrl,
     messages,
@@ -90,6 +97,7 @@ function App({ navigate }: { navigate: (path: string) => void }) {
   useEffect(() => {
     let target = '/';
     if (view === 'discover') target = '/discover';
+    else if (view === 'collection') target = '/collection';
     else if (view === 'admin') target = '/admin/blog';
     else if (view === 'blog') target = blogSlug ? `/blog/${encodeURIComponent(blogSlug)}` : '/blog';
     if (window.location.pathname !== target) {
@@ -318,6 +326,12 @@ function App({ navigate }: { navigate: (path: string) => void }) {
           )}
 
           <div className="hidden sm:block w-px h-4 bg-slate-200 dark:bg-slate-700" />
+          <GamificationChip
+            points={gamification.points}
+            loaded={gamification.loaded}
+            onClick={() => setView('collection')}
+            className="hidden sm:flex flex-col gap-0.5 w-28"
+          />
           <UsageIndicator usage={usage} />
           {/* Dark mode toggle */}
           <button
@@ -352,6 +366,8 @@ function App({ navigate }: { navigate: (path: string) => void }) {
           onNew={() => { startNewTour(); setSidebarOpen(false); }}
           onDelete={deleteConversation}
           usage={usage}
+          gamification={{ points: gamification.points, loaded: gamification.loaded }}
+          onOpenCollection={() => { setView('collection'); setSidebarOpen(false); }}
           navigate={(path) => {
             if (path === '/privacy') setView('privacy');
             else if (path === '/terms') setView('terms');
@@ -369,6 +385,18 @@ function App({ navigate }: { navigate: (path: string) => void }) {
             <PrivacyPage navigate={(path) => { if (path === '/privacy') setView('privacy'); else if (path === '/terms') setView('terms'); else { setView('home'); navigate('/'); } }} />
           ) : view === 'terms' ? (
             <TermsPage navigate={(path) => { if (path === '/privacy') setView('privacy'); else if (path === '/terms') setView('terms'); else { setView('home'); navigate('/'); } }} />
+          ) : view === 'collection' ? (
+            <CollectionPage
+              visits={gamification.visits}
+              points={gamification.points}
+              badges={gamification.badges}
+              conversations={conversations}
+              onReopenTour={loadConversation}
+              onStartTour={startNewTour}
+              onUncollect={gamification.uncollect}
+              onUploadPhoto={gamification.uploadPhoto}
+              onRemovePhoto={gamification.removePhoto}
+            />
           ) : isDiscover ? (
             <DiscoverPage onStartTour={handleStartTour} />
           ) : (
@@ -383,8 +411,19 @@ function App({ navigate }: { navigate: (path: string) => void }) {
                         <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 flex-shrink-0" />
                         <span className="truncate max-w-xs">{exhibitionUrl}</span>
                       </a>
-                      <span className="text-xs text-slate-400 flex-shrink-0">
-                        {provider === 'mistral' ? '🇪🇺 Mistral' : '🇺🇸 Claude'}
+                      <span className="flex items-center gap-2 flex-shrink-0">
+                        <CollectStampButton
+                          exhibitionUrl={exhibitionUrl}
+                          title={conversations.find((c) => c.id === activeConversationId)?.title ?? titleFromUrl(exhibitionUrl)}
+                          conversationId={activeConversationId ?? undefined}
+                          visit={gamification.visitForUrl(exhibitionUrl)}
+                          onCollect={gamification.collect}
+                          onUncollect={gamification.uncollect}
+                          onUploadPhoto={gamification.uploadPhoto}
+                        />
+                        <span className="text-xs text-slate-400 flex-shrink-0">
+                          {provider === 'mistral' ? '🇪🇺 Mistral' : '🇺🇸 Claude'}
+                        </span>
                       </span>
                     </div>
                   )}
@@ -412,6 +451,7 @@ function App({ navigate }: { navigate: (path: string) => void }) {
           )}
         </main>
       </div>
+      <LevelUpOverlay levelUp={gamification.levelUp} onDismiss={gamification.clearLevelUp} />
     </div>
   );
 }
