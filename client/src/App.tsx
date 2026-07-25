@@ -431,6 +431,7 @@ function App({ navigate }: { navigate: (path: string) => void }) {
                         onCollect={gamification.collect}
                         onUncollect={gamification.uncollect}
                         onUploadPhoto={gamification.uploadPhoto}
+                        onOpenCollection={() => setView('collection')}
                       />
                     ) : undefined}
                   />

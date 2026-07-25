@@ -11,6 +11,7 @@ interface Props {
   onCollect: (args: { exhibitionUrl: string; title: string; conversationId?: string }) => Promise<CollectResult | null>;
   onUncollect: (visitId: string) => Promise<void>;
   onUploadPhoto: (visitId: string, file: File) => Promise<{ pointsDelta: number } | null>;
+  onOpenCollection: () => void;
 }
 
 export default function CollectStampButton({
@@ -21,6 +22,7 @@ export default function CollectStampButton({
   onCollect,
   onUncollect,
   onUploadPhoto,
+  onOpenCollection,
 }: Props) {
   const [busy, setBusy] = useState(false);
   const [floatText, setFloatText] = useState<string | null>(null);
@@ -94,8 +96,8 @@ export default function CollectStampButton({
           {/* Photo affordance — only once collected */}
           {visit.photoUrl ? (
             <button
-              onClick={() => fileInputRef.current?.click()}
-              title="Replace your visit photo"
+              onClick={onOpenCollection}
+              title="View in your collection"
               className="flex-shrink-0"
             >
               <img
