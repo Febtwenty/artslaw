@@ -210,22 +210,40 @@ export default function CollectionPage({
       {/* View toggle                                                         */}
       {/* ------------------------------------------------------------------ */}
       {visits.length > 0 && (
-        <div className="flex justify-end mb-6">
-          <div className="inline-flex rounded-lg bg-slate-100 dark:bg-slate-800 p-0.5">
-            {(['grid', 'timeline'] as const).map(v => (
-              <button
-                key={v}
-                onClick={() => setCollectionView(v)}
-                className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
-                  collectionView === v
-                    ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-sm'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-                }`}
-              >
-                {v === 'grid' ? 'Grid' : 'Timeline'}
-              </button>
-            ))}
-          </div>
+        <div className="flex justify-center gap-4 mb-6">
+          <button
+            onClick={() => setCollectionView('grid')}
+            title="Grid view"
+            aria-label="Grid view"
+            aria-pressed={collectionView === 'grid'}
+            className={`transition-colors ${
+              collectionView === 'grid'
+                ? 'text-indigo-500'
+                : 'text-slate-300 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-400'
+            }`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+              <path d="M3 3h7.5v7.5H3V3Zm10.5 0H21v7.5h-7.5V3ZM3 13.5h7.5V21H3v-7.5Zm10.5 0H21V21h-7.5v-7.5Z" />
+            </svg>
+          </button>
+          <button
+            onClick={() => setCollectionView('timeline')}
+            title="Timeline view"
+            aria-label="Timeline view"
+            aria-pressed={collectionView === 'timeline'}
+            className={`transition-colors ${
+              collectionView === 'timeline'
+                ? 'text-indigo-500'
+                : 'text-slate-300 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-400'
+            }`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className="w-5 h-5">
+              <path d="M5 3v18" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+              <circle cx="5" cy="7" r="2.25" fill="currentColor" />
+              <circle cx="5" cy="17" r="2.25" fill="currentColor" />
+              <path d="M10 7h9M10 17h9" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+            </svg>
+          </button>
         </div>
       )}
 
