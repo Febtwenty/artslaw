@@ -12,7 +12,7 @@ ArtSlaw uses Claude (`claude-haiku-4-5`) or Mistral (`mistral-small-latest`) —
 - **Free-text search** — type an artist, city, or exhibition name instead of a URL; the chat opens, ArtSlaw searches the web (Tavily + LLM extraction) and presents matching current exhibitions as cards in the conversation; refine the search by typing again, or tap a card to start the tour
 - **Model toggle** — switch between Claude and Mistral per conversation (defaults to Mistral for each new tour); both share the same Tavily-backed `web_search` tool, called on demand by whichever model is active. The chosen provider is shown as a flag badge in the chat window and persisted with the saved conversation
 - **Discover** — surfaces upcoming exhibition recommendations based on artists you've already researched, scraped from contemporaryartlibrary.org with a 7-day cache
-- **My Collection (gamification)** — stamp exhibitions you've actually visited with the **Collect this visit** button in the chat, and they appear on a month-grouped timeline at `/collection`. Collecting earns points (10 per exhibition, once per exhibition URL) toward six art-world levels (Gallery Newcomer → Art-World Legend), with one-time badge bonuses (First Visit, 5/10/20 Exhibitions, 3-in-one-month), a monthly visit streak (+5 per consecutive month), and an optional photo per visit (+5 the first time; center-cropped to 512×512 WebP server-side). A clickable level chip lives in the header (desktop) and sidebar (mobile); crossing a level threshold triggers a confetti celebration. All awarding happens server-side; level/badge constants are duplicated in `server/src/config/gamification.ts` and `client/src/lib/gamification.ts` and must be kept in sync
+- **My Collection (gamification)** — stamp exhibitions you've actually visited with the **Collect this visit** button in the chat, and they appear at `/collection` in either a photo-first **Grid** (default) or a month-grouped **Timeline** — a segmented toggle switches between them and the choice is remembered in `localStorage`. On desktop the grid shows Discover-style cards; on mobile it's a bare Instagram-style image wall where tapping a tile opens a lightbox with the visit's details and actions. Collecting earns points (10 per exhibition, once per exhibition URL) toward six art-world levels (Gallery Newcomer → Art-World Legend), with one-time badge bonuses (First Visit, 5/10/20 Exhibitions, 3-in-one-month), a monthly visit streak (+5 per consecutive month), and an optional photo per visit (+5 the first time; center-cropped to 512×512 WebP server-side). A clickable level chip lives in the header (desktop) and sidebar (mobile); crossing a level threshold triggers a confetti celebration. All awarding happens server-side; level/badge constants are duplicated in `server/src/config/gamification.ts` and `client/src/lib/gamification.ts` and must be kept in sync
 - **Conversation history** — all past tours are saved to MongoDB and listed in the sidebar
 - **Shareable tours** — every tour gets a public `/tour/:id` link for read-only sharing
 - **Authentication** — user accounts via Clerk
@@ -131,7 +131,7 @@ artslaw/
 │   │   │   ├── Sidebar.tsx
 │   │   │   ├── SignInPage.tsx
 │   │   │   ├── TourPage.tsx
-│   │   │   ├── CollectionPage.tsx    # /collection — visited-exhibitions timeline + level/badges
+│   │   │   ├── CollectionPage.tsx    # /collection — visited-exhibitions grid/timeline + level/badges
 │   │   │   ├── CollectStampButton.tsx
 │   │   │   ├── GamificationChip.tsx
 │   │   │   ├── LevelUpOverlay.tsx
