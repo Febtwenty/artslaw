@@ -28,7 +28,7 @@
     "marked": "^18.0.0",
     "mongodb": "^6.21.0",
     "multer": "^2.1.1",
-    "sharp": "^0.34.5"
+    "sharp": "^0.35.3"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
