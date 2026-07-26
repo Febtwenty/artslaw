@@ -13,6 +13,7 @@ ArtSlaw uses Claude (`claude-haiku-4-5`) or Mistral (`mistral-small-latest`) —
 - **Model toggle** — switch between Claude and Mistral per conversation (defaults to Mistral for each new tour); both share the same Tavily-backed `web_search` tool, called on demand by whichever model is active. The chosen provider is shown as a flag badge in the chat window and persisted with the saved conversation
 - **Discover** — surfaces upcoming exhibition recommendations based on artists you've already researched, scraped from contemporaryartlibrary.org with a 7-day cache
 - **My Collection (gamification)** — stamp exhibitions you've actually visited with the **Collect this visit** button in the chat, and they appear at `/collection` in either a photo-first **Grid** (default) or a month-grouped **Timeline** — a segmented toggle switches between them and the choice is remembered in `localStorage`. On desktop the grid shows Discover-style cards; on mobile it's a bare Instagram-style image wall where tapping a tile opens a lightbox with the visit's details and actions. Collecting earns points (10 per exhibition, once per exhibition URL) toward six art-world levels (Gallery Newcomer → Art-World Legend), with one-time badge bonuses (First Visit, 5/10/20 Exhibitions, 3-in-one-month), a monthly visit streak (+5 per consecutive month), and an optional photo per visit (+5 the first time; center-cropped to 512×512 WebP server-side). A clickable level chip lives in the header (desktop) and sidebar (mobile); crossing a level threshold triggers a confetti celebration. All awarding happens server-side; level/badge constants are duplicated in `server/src/config/gamification.ts` and `client/src/lib/gamification.ts` and must be kept in sync
+- **Response feedback** — thumbs up/down below each assistant response; a down-vote opens a short reason-chip + optional comment form. Ratings are stored server-side as self-contained records (`message_feedback` collection) for reviewing response quality and comparing providers; the selection is remembered on the conversation and shown as a highlighted thumb
 - **Conversation history** — all past tours are saved to MongoDB and listed in the sidebar
 - **Shareable tours** — every tour gets a public `/tour/:id` link for read-only sharing
 - **Authentication** — user accounts via Clerk
@@ -162,6 +163,7 @@ artslaw/
 │       ├── db/
 │       │   ├── usage.ts      # token_usage collection helpers
 │       │   ├── visits.ts     # exhibition_visits + user_stats collection helpers
+│       │   ├── feedback.ts   # message_feedback collection helpers (thumbs up/down)
 │       │   └── blog.ts       # blog posts collection helpers
 │       ├── services/
 │       │   ├── tavily.ts         # Tavily search API wrapper
@@ -184,6 +186,7 @@ artslaw/
 │           ├── tour.ts        # GET /api/tour/:id (public share)
 │           ├── usage.ts       # GET /api/usage
 │           ├── visits.ts      # GET/POST /api/visits, DELETE /api/visits/:id, POST/DELETE /api/visits/:id/photo
+│           ├── feedback.ts    # POST /api/feedback (thumbs up/down on assistant messages)
 │           ├── blog.ts        # Blog CRUD, AI generation, public pages
 │           └── favicon.ts
 ├── .env                      # Your secrets (not committed)

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
-import type { Message } from '../types';
+import type { Message, Rating } from '../types';
 import MessageBubble from './MessageBubble';
 
 interface Props {
@@ -9,11 +9,12 @@ interface Props {
   shareUrl?: string;
   loadingLabel?: string;
   onStartTour?: (url: string) => void;
+  onFeedback?: (messageId: string, rating: Rating | null, reason?: string, comment?: string) => void;
   // Rendered in the action bar of the last assistant message (collect-visit stamp)
   collectSlot?: ReactNode;
 }
 
-export default function ChatWindow({ messages, isLoading, shareUrl, loadingLabel, onStartTour, collectSlot }: Props) {
+export default function ChatWindow({ messages, isLoading, shareUrl, loadingLabel, onStartTour, onFeedback, collectSlot }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const userScrolledUp = useRef(false);
 
@@ -55,6 +56,7 @@ export default function ChatWindow({ messages, isLoading, shareUrl, loadingLabel
             isLoading={isLoading}
             shareUrl={!isLoading && i === lastAssistantIdx ? shareUrl : undefined}
             onStartTour={onStartTour}
+            onFeedback={onFeedback}
             collectSlot={!isLoading && i === lastAssistantIdx ? collectSlot : undefined}
           />
         ));

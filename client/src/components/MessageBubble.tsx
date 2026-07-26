@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import type { Message } from '../types';
+import type { Message, Rating } from '../types';
 
 interface Props {
   message: Message;
@@ -10,9 +10,14 @@ interface Props {
   // Present only while no tour is active — candidate cards render their
   // "Start Tour" button only when provided
   onStartTour?: (url: string) => void;
+  // Records a thumbs rating for this message; null toggles it off
+  onFeedback?: (messageId: string, rating: Rating | null, reason?: string, comment?: string) => void;
   // Collect-visit stamp — passed only for the last assistant message
   collectSlot?: React.ReactNode;
 }
+
+// Reason chips for a thumbs-down (single-select) + free-text comment.
+const DOWN_REASONS = ['Inaccurate', 'Made things up', 'Too generic', 'Not helpful', 'Other'];
 
 // Defensive repair of structural markdown glue before rendering. Weaker models
 // (e.g. Mistral) sometimes emit block elements without the surrounding blank
@@ -47,12 +52,46 @@ function stripMarkdown(text: string): string {
     .trim();
 }
 
-export default function MessageBubble({ message, isLoading, shareUrl, onStartTour, collectSlot }: Props) {
+export default function MessageBubble({ message, isLoading, shareUrl, onStartTour, onFeedback, collectSlot }: Props) {
   const isUser = message.role === 'user';
   const [playState, setPlayState] = useState<'idle' | 'playing' | 'paused'>('idle');
   const [copied, setCopied] = useState(false);
   const [shared, setShared] = useState(false);
   const [sourcesOpen, setSourcesOpen] = useState(false);
+  const [downOpen, setDownOpen] = useState(false);
+  const [downReason, setDownReason] = useState('');
+  const [downComment, setDownComment] = useState('');
+
+  // Thumbs render on real narrative responses only — never on discovery cards,
+  // and only once the message has a stable id and a handler is wired.
+  const canRate = !isUser && !!onFeedback && !!message.id && !message.candidates?.length;
+
+  const handleThumbUp = () => {
+    if (!message.id || !onFeedback) return;
+    setDownOpen(false);
+    onFeedback(message.id, message.feedback === 'up' ? null : 'up');
+  };
+
+  const handleThumbDown = () => {
+    if (!message.id || !onFeedback) return;
+    if (message.feedback === 'down') {
+      // Toggle off
+      onFeedback(message.id, null);
+      setDownOpen(false);
+      return;
+    }
+    // Record the bare down-vote immediately, then reveal the reason popover
+    onFeedback(message.id, 'down');
+    setDownReason('');
+    setDownComment('');
+    setDownOpen(true);
+  };
+
+  const submitDownDetail = () => {
+    if (!message.id || !onFeedback) return;
+    onFeedback(message.id, 'down', downReason || undefined, downComment.trim() || undefined);
+    setDownOpen(false);
+  };
 
   const getDomain = (url: string) => {
     try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return url; }
@@ -298,6 +337,36 @@ export default function MessageBubble({ message, isLoading, shareUrl, onStartTou
             )}
           </button>
 
+          {/* Feedback thumbs — narrative responses only */}
+          {canRate && (
+            <>
+              <button
+                onClick={handleThumbUp}
+                aria-label="Good response"
+                aria-pressed={message.feedback === 'up'}
+                className={`w-7 h-7 flex items-center justify-center rounded-md transition-colors ${
+                  message.feedback === 'up' ? 'text-indigo-500' : 'text-slate-400 hover:text-indigo-500'
+                }`}
+              >
+                <svg className="w-4 h-4" fill={message.feedback === 'up' ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.633 10.5c.806 0 1.533-.446 2.031-1.08a9.041 9.041 0 0 1 2.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 0 0 .322-1.672V2.75a.75.75 0 0 1 .75-.75 2.25 2.25 0 0 1 2.25 2.25c0 1.152-.26 2.243-.723 3.218-.266.558.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 0 1-2.649 7.521c-.388.482-.987.729-1.605.729H14.23c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 0 0-1.423-.23H5.904M6.633 10.5H5.25m1.383 0c.055.194.084.4.084.612v6.276c0 .212-.03.418-.084.612m0-7.5H2.25a2.25 2.25 0 0 0-2.25 2.25v3a2.25 2.25 0 0 0 2.25 2.25h4.383" />
+                </svg>
+              </button>
+              <button
+                onClick={handleThumbDown}
+                aria-label="Bad response"
+                aria-pressed={message.feedback === 'down'}
+                className={`w-7 h-7 flex items-center justify-center rounded-md transition-colors ${
+                  message.feedback === 'down' ? 'text-indigo-500' : 'text-slate-400 hover:text-indigo-500'
+                }`}
+              >
+                <svg className="w-4 h-4" fill={message.feedback === 'down' ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 15h2.25m8.024-9.75c.011.05.028.1.052.148.591 1.2.924 2.55.924 3.977a8.96 8.96 0 0 1-.999 4.125m.023-8.25c-.076-.365.183-.75.575-.75h.908c.889 0 1.713.518 1.972 1.368.339 1.11.521 2.287.521 3.507 0 1.553-.295 3.036-.831 4.398C20.613 14.547 19.833 15 19 15h-1.053c-.472 0-.745-.556-.5-.96a8.95 8.95 0 0 0 .303-.54m.023-8.25H16.48a4.5 4.5 0 0 1-1.423-.23l-3.114-1.04a4.5 4.5 0 0 0-1.423-.23H6.504c-.618 0-1.217.247-1.605.729A11.95 11.95 0 0 0 2.25 12c0 .434.023.863.068 1.285C2.427 14.306 3.346 15 4.372 15h3.126c.618 0 .991.724.725 1.282A7.471 7.471 0 0 0 7.5 19.5a2.25 2.25 0 0 0 2.25 2.25.75.75 0 0 0 .75-.75v-.633c0-.573.11-1.14.322-1.672.304-.76.93-1.33 1.653-1.715a9.04 9.04 0 0 0 2.86-2.4c.498-.634 1.226-1.08 2.032-1.08h.384" />
+                </svg>
+              </button>
+            </>
+          )}
+
           {/* Share */}
           {shareUrl && (
             <button
@@ -321,6 +390,54 @@ export default function MessageBubble({ message, isLoading, shareUrl, onStartTou
           {collectSlot && <span className="ml-1.5">{collectSlot}</span>}
 
         </div>
+
+        {/* Thumbs-down reason popover */}
+        {canRate && downOpen && (
+          <div className="mt-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 p-3 max-w-md">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">What went wrong?</span>
+              <button
+                onClick={() => setDownOpen(false)}
+                aria-label="Dismiss feedback form"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-1.5 mb-2.5">
+              {DOWN_REASONS.map((r) => (
+                <button
+                  key={r}
+                  onClick={() => setDownReason((cur) => (cur === r ? '' : r))}
+                  className={`text-xs font-medium rounded-full px-2.5 py-1 border transition-colors ${
+                    downReason === r
+                      ? 'bg-indigo-600 border-indigo-600 text-white'
+                      : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-indigo-400'
+                  }`}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+            <textarea
+              value={downComment}
+              onChange={(e) => setDownComment(e.target.value)}
+              placeholder="Add a comment (optional)"
+              rows={2}
+              className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-2.5 py-1.5 text-base sm:text-sm text-slate-700 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 resize-none"
+            />
+            <div className="flex justify-end mt-2">
+              <button
+                onClick={submitDownDetail}
+                className="text-xs font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-3 py-1.5 transition-colors"
+              >
+                Submit
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

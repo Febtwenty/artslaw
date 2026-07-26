@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Message, Source, Conversation } from '../types';
+import type { Message, Source, Conversation, Rating } from '../types';
 import { titleFromUrl, authedFetch } from '../utils';
 
 const DISCOVERY_STRINGS = {
@@ -41,6 +41,7 @@ interface Return {
   startDiscovery: (query: string) => Promise<void>;
   startConversation: (url: string) => Promise<void>;
   sendMessage: (content: string) => Promise<void>;
+  submitFeedback: (messageId: string, rating: Rating | null, reason?: string, comment?: string) => Promise<void>;
   resetChatState: () => void;
   loadConversationState: (conv: Conversation) => void;
 }
@@ -209,7 +210,7 @@ export function useChatTour({
       const { text: reply, sources } = await sendToApi(nextMessages, url, language, (accumulated) => {
         setMessages([...nextMessages, { role: 'assistant', content: accumulated }]);
       });
-      const finalMessages: Message[] = [...nextMessages, { role: 'assistant', content: reply, sources }];
+      const finalMessages: Message[] = [...nextMessages, { role: 'assistant', content: reply, sources, id: crypto.randomUUID() }];
       setMessages(finalMessages);
 
       let title = titleFromUrl(url);
@@ -262,7 +263,7 @@ export function useChatTour({
       const { text: reply, sources } = await sendToApi(nextMessages, undefined, language, (accumulated) => {
         setMessages([...nextMessages, { role: 'assistant', content: accumulated }]);
       });
-      const finalMessages: Message[] = [...nextMessages, { role: 'assistant', content: reply, sources }];
+      const finalMessages: Message[] = [...nextMessages, { role: 'assistant', content: reply, sources, id: crypto.randomUUID() }];
       setMessages(finalMessages);
 
       if (activeConversationId) {
@@ -293,11 +294,66 @@ export function useChatTour({
   const loadConversationState = (conv: Conversation): void => {
     setActiveConversationId(conv.id);
     setExhibitionUrl(conv.exhibitionUrl);
-    setMessages(conv.messages);
+    // Backfill ids on assistant messages saved before the feedback field existed,
+    // so their thumbs have a stable key. Persisted on the next save/feedback action.
+    setMessages(
+      conv.messages.map((m) =>
+        m.role === 'assistant' && !m.id ? { ...m, id: crypto.randomUUID() } : m
+      )
+    );
     setHasStarted(true);
     setError(null);
     setIsLoading(false);
     setIsStreaming(false);
+  };
+
+  // Records a thumbs rating for one assistant message: updates local state, mirrors
+  // it onto the persisted conversation (so the highlight survives reload), and posts
+  // a self-contained analytics record. `rating: null` toggles the rating off.
+  const submitFeedback = async (
+    messageId: string,
+    rating: Rating | null,
+    reason?: string,
+    comment?: string
+  ): Promise<void> => {
+    const idx = messages.findIndex((m) => m.id === messageId);
+    if (idx === -1) return;
+    const target = messages[idx];
+
+    const updated = messages.map((m) =>
+      m.id === messageId ? { ...m, feedback: rating ?? undefined } : m
+    );
+    setMessages(updated);
+
+    // Nearest preceding user prompt, for standalone analysis of the rated turn
+    let userPrompt: string | undefined;
+    for (let i = idx - 1; i >= 0; i--) {
+      if (messages[i].role === 'user') { userPrompt = messages[i].content; break; }
+    }
+
+    authedFetch(getToken, '/api/feedback', {
+      method: 'POST',
+      body: JSON.stringify({
+        messageId,
+        rating,
+        reason,
+        comment,
+        provider,
+        exhibitionUrl: exhibitionUrl || undefined,
+        conversationId: activeConversationId ?? undefined,
+        messageText: target.content,
+        userPrompt,
+      }),
+    }).catch((err) => console.error('[feedback] submit failed:', err));
+
+    if (activeConversationId) {
+      const now = Date.now();
+      onConversationUpdated(activeConversationId, updated, now);
+      authedFetch(getToken, `/api/conversations/${activeConversationId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ messages: updated, updatedAt: now }),
+      }).catch((err) => console.error('[conversations] update failed:', err));
+    }
   };
 
   return {
@@ -313,6 +369,7 @@ export function useChatTour({
     startDiscovery,
     startConversation,
     sendMessage,
+    submitFeedback,
     resetChatState,
     loadConversationState,
   };

@@ -65,6 +65,7 @@ function App({ navigate }: { navigate: (path: string) => void }) {
     startDiscovery,
     startConversation,
     sendMessage,
+    submitFeedback,
     resetChatState,
     loadConversationState,
   } = useChatTour({
@@ -422,6 +423,7 @@ function App({ navigate }: { navigate: (path: string) => void }) {
                     shareUrl={activeConversationId ? `${window.location.origin}/tour/${activeConversationId}` : undefined}
                     loadingLabel={isDiscovering ? (language === 'de' ? 'Suche aktuelle Ausstellungen…' : 'Searching current exhibitions…') : undefined}
                     onStartTour={!exhibitionUrl ? handleStartTour : undefined}
+                    onFeedback={submitFeedback}
                     collectSlot={exhibitionUrl ? (
                       <CollectStampButton
                         exhibitionUrl={exhibitionUrl}

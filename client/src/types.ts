@@ -3,12 +3,18 @@ export interface Source {
   url: string;
 }
 
+export type Rating = 'up' | 'down';
+
 export interface Message {
   role: 'user' | 'assistant';
   content: string;
   sources?: Source[];
   // Exhibition options from a free-text discovery search, rendered as cards
   candidates?: DiscoveredExhibition[];
+  // Stable id, assigned to rateable assistant messages (used to key feedback)
+  id?: string;
+  // This user's current thumbs selection, persisted with the conversation
+  feedback?: Rating;
 }
 
 export interface SuggestedTour {
