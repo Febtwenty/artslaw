@@ -365,7 +365,7 @@ export default function CollectionPage({
                     !!visit.conversationId && conversations.some(c => c.id === visit.conversationId);
                   return (
                     <div key={visit.id} className="relative group">
-                      <span className="absolute -left-[27px] top-4 w-2.5 h-2.5 rounded-full bg-indigo-500" />
+                      <span className="absolute -left-[26px] top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-indigo-500" />
                       <div className="flex gap-3 items-start p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
                         {/* Thumbnail: photo or favicon */}
                         <div className="relative flex-shrink-0">
