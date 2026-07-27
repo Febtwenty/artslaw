@@ -101,7 +101,7 @@ export default function CollectStampButton({
               className="flex-shrink-0"
             >
               <img
-                src={visit.photoUrl}
+                src={visit.photoThumbnailUrl ?? visit.photoUrl}
                 alt="Your visit"
                 className="w-6 h-6 rounded object-cover border border-slate-200 dark:border-slate-600 hover:opacity-80 transition-opacity"
               />

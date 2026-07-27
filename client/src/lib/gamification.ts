@@ -32,6 +32,7 @@ export interface Visit {
   visitedAt: string;
   monthKey: string;
   photoUrl: string | null;
+  photoThumbnailUrl: string | null;
 }
 
 export interface EarnedBadge {

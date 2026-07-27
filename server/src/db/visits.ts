@@ -13,7 +13,7 @@ export interface VisitDoc {
   conversationId?: string;
   visitedAt: Date;
   monthKey: string; // "YYYY-MM"
-  photo?: { url: string };
+  photo?: { url: string; thumbnailUrl?: string };
   createdAt: Date;
 }
 
@@ -173,7 +173,7 @@ export async function payPhotoBonusOnce(
 export async function setVisitPhoto(
   userId: string,
   id: string,
-  photo: { url: string } | null
+  photo: { url: string; thumbnailUrl?: string } | null
 ): Promise<VisitDoc | null> {
   const db = await getDb();
   return db.collection<VisitDoc>(VISITS).findOneAndUpdate(

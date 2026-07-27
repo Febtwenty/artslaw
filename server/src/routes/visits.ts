@@ -57,15 +57,34 @@ function deleteUploadedFile(url: string): void {
   fs.unlink(path.join(UPLOADS_DIR, path.basename(url)), () => {});
 }
 
-async function processAndSavePhoto(buffer: Buffer): Promise<string> {
-  const name = `${randomUUID()}.webp`;
+// Removes both the full-size and thumbnail files backing a stored photo.
+function deletePhotoFiles(photo: { url: string; thumbnailUrl?: string }): void {
+  deleteUploadedFile(photo.url);
+  if (photo.thumbnailUrl) deleteUploadedFile(photo.thumbnailUrl);
+}
+
+async function processAndSavePhoto(
+  buffer: Buffer
+): Promise<{ url: string; thumbnailUrl: string }> {
+  const base = randomUUID();
+  const name = `${base}.webp`;
+  const thumbName = `${base}-thumb.webp`;
   // .rotate() with no args auto-corrects EXIF orientation (essential for phone photos)
-  await sharp(buffer)
-    .rotate()
-    .resize(512, 512, { fit: 'cover', position: 'centre' })
+  const img = sharp(buffer).rotate();
+  await img
+    .clone()
+    .resize(1200, 1200, { fit: 'cover', position: 'centre' })
     .webp({ quality: 85 })
     .toFile(path.join(UPLOADS_DIR, name));
-  return `/uploads/visits/${name}`;
+  await img
+    .clone()
+    .resize(480, 480, { fit: 'cover', position: 'centre' })
+    .webp({ quality: 85 })
+    .toFile(path.join(UPLOADS_DIR, thumbName));
+  return {
+    url: `/uploads/visits/${name}`,
+    thumbnailUrl: `/uploads/visits/${thumbName}`,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -81,6 +100,7 @@ function toClientVisit(d: VisitDoc) {
     visitedAt: d.visitedAt,
     monthKey: d.monthKey,
     photoUrl: d.photo?.url ?? null,
+    photoThumbnailUrl: d.photo?.thumbnailUrl ?? null,
   };
 }
 
@@ -183,7 +203,7 @@ router.delete('/:id', h(async (req: Request, res: Response) => {
   const deleted = await deleteVisit(userId, req.params.id);
   if (!deleted) { res.status(404).json({ error: 'Visit not found.' }); return; }
 
-  if (deleted.photo) deleteUploadedFile(deleted.photo.url);
+  if (deleted.photo) deletePhotoFiles(deleted.photo);
   const totalPoints = await incPoints(userId, -VISIT_POINTS);
 
   res.json({ totalPoints, pointsDelta: -VISIT_POINTS });
@@ -201,12 +221,12 @@ router.post('/:id/photo', upload.single('photo'), h(async (req: Request, res: Re
   const visit = await getVisit(userId, req.params.id);
   if (!visit) { res.status(404).json({ error: 'Visit not found.' }); return; }
 
-  const url = await processAndSavePhoto(req.file.buffer);
-  if (visit.photo) deleteUploadedFile(visit.photo.url); // replacement — no points
-  const updated = await setVisitPhoto(userId, visit._id, { url });
+  const photo = await processAndSavePhoto(req.file.buffer);
+  if (visit.photo) deletePhotoFiles(visit.photo); // replacement — no points
+  const updated = await setVisitPhoto(userId, visit._id, photo);
   if (!updated) {
-    // Visit was un-collected mid-upload; don't leave an orphaned file behind
-    deleteUploadedFile(url);
+    // Visit was un-collected mid-upload; don't leave orphaned files behind
+    deletePhotoFiles(photo);
     res.status(404).json({ error: 'Visit not found.' }); return;
   }
 
@@ -231,7 +251,7 @@ router.delete('/:id/photo', h(async (req: Request, res: Response) => {
   const visit = await getVisit(userId, req.params.id);
   if (!visit) { res.status(404).json({ error: 'Visit not found.' }); return; }
 
-  if (visit.photo) deleteUploadedFile(visit.photo.url);
+  if (visit.photo) deletePhotoFiles(visit.photo);
   const updated = await setVisitPhoto(userId, visit._id, null);
   if (!updated) { res.status(404).json({ error: 'Visit not found.' }); return; }
 

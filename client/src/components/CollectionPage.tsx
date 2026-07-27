@@ -277,7 +277,7 @@ export default function CollectionPage({
                   {visit.photoUrl ? (
                     <>
                       <img
-                        src={visit.photoUrl}
+                        src={visit.photoThumbnailUrl ?? visit.photoUrl}
                         alt={`Your photo of ${visit.title}`}
                         loading="lazy"
                         onClick={() => pickPhoto(visit.id)}
@@ -372,7 +372,7 @@ export default function CollectionPage({
                           {visit.photoUrl ? (
                             <>
                               <img
-                                src={visit.photoUrl}
+                                src={visit.photoThumbnailUrl ?? visit.photoUrl}
                                 alt={`Your photo of ${visit.title}`}
                                 className="w-14 h-14 rounded-lg object-cover cursor-pointer hover:opacity-80 transition-opacity"
                                 onClick={() => pickPhoto(visit.id)}
