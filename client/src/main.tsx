@@ -1,14 +1,17 @@
 import '@fontsource/inter/300.css';
 import '@fontsource/inter/400.css';
 import '@fontsource/inter/500.css';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
 import { ClerkProvider } from '@clerk/react';
 import App from './App';
 import TourPage from './components/TourPage';
-import PrivacyPage from './components/PrivacyPage';
-import TermsPage from './components/TermsPage';
 import './index.css';
+
+// Legal pages are reached only by navigation — kept out of the entry chunk.
+// App.tsx lazy-loads the same two modules, so they share one chunk each.
+const PrivacyPage = lazy(() => import('./components/PrivacyPage'));
+const TermsPage = lazy(() => import('./components/TermsPage'));
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string;
 if (!PUBLISHABLE_KEY) {
@@ -49,7 +52,9 @@ if (tourMatch) {
               ← Back
             </button>
           </div>
-          {children}
+          <Suspense fallback={<div className="flex justify-center pt-16"><div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" /></div>}>
+            {children}
+          </Suspense>
         </div>
       );
     }

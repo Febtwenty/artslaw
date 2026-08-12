@@ -32,6 +32,11 @@ export default defineConfig({
       sourcemap: false,
     },
   },
+  build: {
+    // React + Clerk + react-markdown put the floor near 480 kB raw
+    // (~150 kB gzip). Warn only on genuine regressions above that.
+    chunkSizeWarningLimit: 600,
+  },
   server: {
     proxy: {
       '/api': {

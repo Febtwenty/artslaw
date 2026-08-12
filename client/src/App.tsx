@@ -1,16 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useAuth, useClerk, UserButton } from '@clerk/react';
 import ChatWindow from './components/ChatWindow';
 import InputBar from './components/InputBar';
 import ExhibitionLinkInput from './components/ExhibitionLinkInput';
 import Sidebar from './components/Sidebar';
 import SignInPage from './components/SignInPage';
-import DiscoverPage from './components/DiscoverPage';
-import PrivacyPage from './components/PrivacyPage';
-import TermsPage from './components/TermsPage';
 import LogoWordmark from './components/LogoWordmark';
-import BlogPage from './components/BlogPage';
-import BlogAdmin from './components/BlogAdmin';
 import { useDarkMode } from './hooks/useDarkMode';
 import { useConversationHistory } from './hooks/useConversationHistory';
 import { useChatTour } from './hooks/useChatTour';
@@ -21,11 +16,26 @@ import UsageIndicator from './components/UsageIndicator';
 import GamificationChip from './components/GamificationChip';
 import CollectStampButton from './components/CollectStampButton';
 import LevelUpOverlay from './components/LevelUpOverlay';
-import CollectionPage from './components/CollectionPage';
+
+// Pages reached only by navigation — kept out of the initial bundle.
+const BlogPage = lazy(() => import('./components/BlogPage'));
+const BlogAdmin = lazy(() => import('./components/BlogAdmin'));
+const PrivacyPage = lazy(() => import('./components/PrivacyPage'));
+const TermsPage = lazy(() => import('./components/TermsPage'));
+const CollectionPage = lazy(() => import('./components/CollectionPage'));
+const DiscoverPage = lazy(() => import('./components/DiscoverPage'));
 
 export type { Source, Message, SuggestedTour, Conversation } from './types';
 
 type View = 'home' | 'discover' | 'privacy' | 'terms' | 'blog' | 'admin' | 'collection';
+
+function PageFallback() {
+  return (
+    <div className="flex-1 min-h-[12rem] flex items-center justify-center bg-slate-50 dark:bg-slate-900">
+      <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+}
 
 function parsePath(): { view: View; blogSlug: string | null } {
   const p = window.location.pathname;
@@ -178,7 +188,9 @@ function App({ navigate }: { navigate: (path: string) => void }) {
             </div>
           </header>
           <main className="flex-1 overflow-y-auto">
-            <BlogPage initialSlug={blogSlug} onNavigatePost={navigateToBlog} />
+            <Suspense fallback={<PageFallback />}>
+              <BlogPage initialSlug={blogSlug} onNavigatePost={navigateToBlog} />
+            </Suspense>
           </main>
         </div>
       );
@@ -378,6 +390,7 @@ function App({ navigate }: { navigate: (path: string) => void }) {
 
         {/* Main content */}
         <main className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden min-w-0">
+          <Suspense fallback={<PageFallback />}>
           {view === 'blog' ? (
             <BlogPage initialSlug={blogSlug} onNavigatePost={navigateToBlog} onStartTour={handleStartTour} />
           ) : view === 'admin' ? (
@@ -452,6 +465,7 @@ function App({ navigate }: { navigate: (path: string) => void }) {
               )}
             </div>
           )}
+          </Suspense>
         </main>
       </div>
       <LevelUpOverlay levelUp={gamification.levelUp} onDismiss={gamification.clearLevelUp} />
