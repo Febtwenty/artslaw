@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import LogoWordmark from './LogoWordmark';
+import RecentVisitsGrid from './RecentVisitsGrid';
 import type { SuggestedTour } from '../types';
+import type { Visit } from '../lib/gamification';
 import { normalizeUrlInput } from '../utils';
 
 interface Props {
@@ -13,9 +15,13 @@ interface Props {
   onProviderChange: (p: 'claude' | 'mistral') => void;
   suggestedTours?: SuggestedTour[];
   onNavigateBlog?: (slug: string) => void;
+  visits?: Visit[];
+  visitsLoaded?: boolean;
+  onOpenVisit?: (visitId: string) => void;
+  onViewCollection?: () => void;
 }
 
-export default function ExhibitionLinkInput({ onStart, onDiscover, initialUrl, language, onLanguageChange, provider, onProviderChange, suggestedTours, onNavigateBlog }: Props) {
+export default function ExhibitionLinkInput({ onStart, onDiscover, initialUrl, language, onLanguageChange, provider, onProviderChange, suggestedTours, onNavigateBlog, visits, visitsLoaded, onOpenVisit, onViewCollection }: Props) {
   const [url, setUrl] = useState(initialUrl ?? '');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -114,6 +120,14 @@ export default function ExhibitionLinkInput({ onStart, onDiscover, initialUrl, l
           </button>
         </p>
       </form>
+
+      {visitsLoaded && visits && onOpenVisit && onViewCollection && (
+        <RecentVisitsGrid
+          visits={visits}
+          onOpenVisit={onOpenVisit}
+          onViewCollection={onViewCollection}
+        />
+      )}
 
       {suggestedTours && suggestedTours.length > 0 && (
         <div className="mt-10 w-full max-w-xl">

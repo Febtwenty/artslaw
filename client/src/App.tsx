@@ -55,6 +55,7 @@ function App({ navigate }: { navigate: (path: string) => void }) {
   const [blogSlug, setBlogSlug] = useState<string | null>(initial.blogSlug);
   const [isAdmin, setIsAdmin] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [pendingVisitId, setPendingVisitId] = useState<string | null>(null);
   const [language, setLanguage] = useState<'en' | 'de'>('en');
   const [provider, setProvider] = useState<'claude' | 'mistral'>('mistral');
   const { isDark, setIsDark } = useDarkMode();
@@ -133,9 +134,20 @@ function App({ navigate }: { navigate: (path: string) => void }) {
     }
   }, [view]);
 
+  // Drop the deep-linked visit once we leave the collection, so coming back
+  // later doesn't reopen a stale detail panel.
+  useEffect(() => {
+    if (view !== 'collection') setPendingVisitId(null);
+  }, [view]);
+
   const navigateToBlog = (slug: string | null) => {
     setBlogSlug(slug);
     setView('blog');
+  };
+
+  const openVisit = (visitId: string) => {
+    setPendingVisitId(visitId);
+    setView('collection');
   };
 
   if (!isLoaded) {
@@ -410,13 +422,14 @@ function App({ navigate }: { navigate: (path: string) => void }) {
               onUncollect={gamification.uncollect}
               onUploadPhoto={gamification.uploadPhoto}
               onRemovePhoto={gamification.removePhoto}
+              initialVisitId={pendingVisitId}
             />
           ) : isDiscover ? (
             <DiscoverPage onStartTour={handleStartTour} />
           ) : (
             <div className="flex-1 flex flex-col max-w-3xl mx-auto w-full">
               {!hasStarted ? (
-                <ExhibitionLinkInput onStart={startConversation} onDiscover={startDiscovery} language={language} onLanguageChange={setLanguage} provider={provider} onProviderChange={setProvider} suggestedTours={suggestedTours} onNavigateBlog={navigateToBlog} />
+                <ExhibitionLinkInput onStart={startConversation} onDiscover={startDiscovery} language={language} onLanguageChange={setLanguage} provider={provider} onProviderChange={setProvider} suggestedTours={suggestedTours} onNavigateBlog={navigateToBlog} visits={gamification.visits} visitsLoaded={gamification.loaded} onOpenVisit={openVisit} onViewCollection={() => setView('collection')} />
               ) : (
                 <div className="flex-1 flex flex-col px-4 pb-2">
                   {exhibitionUrl && (

@@ -8,6 +8,7 @@ import {
 } from '../lib/gamification';
 import type { Visit, EarnedBadge } from '../lib/gamification';
 import type { Conversation } from '../types';
+import VisitDetail, { visitDate, hostnameOf } from './VisitDetail';
 
 interface Props {
   visits: Visit[];
@@ -19,6 +20,8 @@ interface Props {
   onUncollect: (visitId: string) => Promise<void>;
   onUploadPhoto: (visitId: string, file: File) => Promise<{ pointsDelta: number } | null>;
   onRemovePhoto: (visitId: string) => Promise<void>;
+  /** Opens the detail panel on this visit when the page mounts (deep-link from the start screen). */
+  initialVisitId?: string | null;
 }
 
 function monthLabel(monthKey: string): string {
@@ -27,18 +30,6 @@ function monthLabel(monthKey: string): string {
     year: 'numeric',
     timeZone: 'UTC',
   });
-}
-
-function visitDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
-}
-
-function hostnameOf(url: string): string {
-  try {
-    return new URL(url).hostname;
-  } catch {
-    return url;
-  }
 }
 
 function badgeProgress(badgeId: string, visits: Visit[]): string {
@@ -68,17 +59,22 @@ export default function CollectionPage({
   onUncollect,
   onUploadPhoto,
   onRemovePhoto,
+  initialVisitId,
 }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pendingPhotoVisit, setPendingPhotoVisit] = useState<string | null>(null);
   const [collectionView, setCollectionView] = useState<'grid' | 'timeline'>(
     () => (localStorage.getItem('collectionView') === 'timeline' ? 'timeline' : 'grid'),
   );
-  const [lightboxVisitId, setLightboxVisitId] = useState<string | null>(null);
+  const [detailVisitId, setDetailVisitId] = useState<string | null>(initialVisitId ?? null);
 
   useEffect(() => {
     localStorage.setItem('collectionView', collectionView);
   }, [collectionView]);
+
+  useEffect(() => {
+    if (initialVisitId) setDetailVisitId(initialVisitId);
+  }, [initialVisitId]);
 
   const level = levelForPoints(points);
   const pct = level.next
@@ -100,8 +96,8 @@ export default function CollectionPage({
   const hasConversationFor = (visit: Visit) =>
     !!visit.conversationId && conversations.some(c => c.id === visit.conversationId);
 
-  const lightboxVisit = lightboxVisitId
-    ? visits.find(v => v.id === lightboxVisitId) ?? null
+  const detailVisit = detailVisitId
+    ? visits.find(v => v.id === detailVisitId) ?? null
     : null;
 
   const pickPhoto = (visitId: string) => {
@@ -275,28 +271,15 @@ export default function CollectionPage({
                 {/* Image area */}
                 <div className="relative">
                   {visit.photoUrl ? (
-                    <>
-                      <img
-                        src={visit.photoThumbnailUrl ?? visit.photoUrl}
-                        alt={`Your photo of ${visit.title}`}
-                        loading="lazy"
-                        onClick={() => pickPhoto(visit.id)}
-                        title="Replace photo"
-                        className="w-full aspect-square object-cover cursor-pointer"
-                      />
-                      <button
-                        onClick={() => onRemovePhoto(visit.id)}
-                        title="Remove photo"
-                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-slate-900/60 text-white text-xs leading-none hidden sm:group-hover:flex items-center justify-center"
-                      >
-                        ×
-                      </button>
-                    </>
+                    <img
+                      src={visit.photoThumbnailUrl ?? visit.photoUrl}
+                      alt={`Your photo of ${visit.title}`}
+                      loading="lazy"
+                      className="w-full aspect-square object-cover"
+                    />
                   ) : (
                     <div
-                      onClick={() => pickPhoto(visit.id)}
-                      title="Add a photo of your visit"
-                      className="w-full aspect-square flex flex-col items-center justify-center cursor-pointer bg-gradient-to-br from-indigo-100 to-slate-200 dark:from-indigo-900/30 dark:to-slate-700 text-slate-400 hover:text-indigo-500 transition-colors"
+                      className="w-full aspect-square flex flex-col items-center justify-center bg-gradient-to-br from-indigo-100 to-slate-200 dark:from-indigo-900/30 dark:to-slate-700 text-slate-400 group-hover:text-indigo-500 transition-colors"
                     >
                       <img
                         src={`/api/favicon?domain=${encodeURIComponent(hostnameOf(visit.exhibitionUrl))}`}
@@ -307,12 +290,12 @@ export default function CollectionPage({
                       <span className="text-[10px]">📷 add</span>
                     </div>
                   )}
-                  {/* Mobile: tap opens lightbox (hidden on desktop so image click = replace) */}
+                  {/* Tap anywhere on the tile opens the detail panel, at every width */}
                   <button
                     type="button"
                     aria-label={`Open ${visit.title}`}
-                    onClick={() => setLightboxVisitId(visit.id)}
-                    className="absolute inset-0 sm:hidden"
+                    onClick={() => setDetailVisitId(visit.id)}
+                    className="absolute inset-0 cursor-pointer"
                   />
                 </div>
 
@@ -370,26 +353,17 @@ export default function CollectionPage({
                         {/* Thumbnail: photo or favicon */}
                         <div className="relative flex-shrink-0">
                           {visit.photoUrl ? (
-                            <>
-                              <img
-                                src={visit.photoThumbnailUrl ?? visit.photoUrl}
-                                alt={`Your photo of ${visit.title}`}
-                                className="w-14 h-14 rounded-lg object-cover cursor-pointer hover:opacity-80 transition-opacity"
-                                onClick={() => pickPhoto(visit.id)}
-                                title="Replace photo"
-                              />
-                              <button
-                                onClick={() => onRemovePhoto(visit.id)}
-                                title="Remove photo"
-                                className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-slate-600 text-white text-[9px] leading-none flex items-center justify-center md:opacity-0 md:group-hover:opacity-100 transition-opacity"
-                              >
-                                ×
-                              </button>
-                            </>
+                            <img
+                              src={visit.photoThumbnailUrl ?? visit.photoUrl}
+                              alt={`Your photo of ${visit.title}`}
+                              className="w-14 h-14 rounded-lg object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                              onClick={() => setDetailVisitId(visit.id)}
+                              title={`Open ${visit.title}`}
+                            />
                           ) : (
                             <button
-                              onClick={() => pickPhoto(visit.id)}
-                              title="Add a photo of your visit"
+                              onClick={() => setDetailVisitId(visit.id)}
+                              title={`Open ${visit.title}`}
                               className="w-14 h-14 rounded-lg border border-dashed border-slate-300 dark:border-slate-600 flex flex-col items-center justify-center text-slate-400 hover:text-indigo-500 hover:border-indigo-400 transition-colors"
                             >
                               <img
@@ -446,95 +420,18 @@ export default function CollectionPage({
       )}
 
       {/* ------------------------------------------------------------------ */}
-      {/* Mobile lightbox                                                     */}
+      {/* Visit detail panel                                                  */}
       {/* ------------------------------------------------------------------ */}
-      {lightboxVisit && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4 sm:hidden"
-          onClick={() => setLightboxVisitId(null)}
-        >
-          <div
-            className="relative w-full max-w-sm bg-white dark:bg-slate-800 rounded-2xl overflow-hidden"
-            onClick={e => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setLightboxVisitId(null)}
-              aria-label="Close"
-              className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center text-lg leading-none"
-            >
-              ×
-            </button>
-
-            {lightboxVisit.photoUrl ? (
-              <img
-                src={lightboxVisit.photoUrl}
-                alt={`Your photo of ${lightboxVisit.title}`}
-                className="w-full aspect-square object-cover"
-              />
-            ) : (
-              <div className="w-full aspect-square flex items-center justify-center bg-gradient-to-br from-indigo-100 to-slate-200 dark:from-indigo-900/30 dark:to-slate-700">
-                <img
-                  src={`/api/favicon?domain=${encodeURIComponent(hostnameOf(lightboxVisit.exhibitionUrl))}`}
-                  alt=""
-                  className="w-10 h-10"
-                  onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                />
-              </div>
-            )}
-
-            <div className="p-4 flex flex-col gap-3">
-              <div>
-                <div className="font-serif text-base text-slate-900 dark:text-slate-100">
-                  {lightboxVisit.title}
-                </div>
-                <div className="text-xs text-slate-400 dark:text-slate-500">
-                  {hostnameOf(lightboxVisit.exhibitionUrl)} · {visitDate(lightboxVisit.visitedAt)}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 flex-wrap">
-                <span className="inline-flex px-1.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 text-[10px] font-medium">
-                  +{VISIT_POINTS} pts
-                </span>
-                {hasConversationFor(lightboxVisit) && (
-                  <button
-                    onClick={() => onReopenTour(lightboxVisit.conversationId!)}
-                    className="text-xs text-indigo-600 dark:text-indigo-400 font-medium"
-                  >
-                    Reopen tour →
-                  </button>
-                )}
-              </div>
-
-              <div className="flex items-center gap-2 flex-wrap pt-1">
-                <button
-                  onClick={() => pickPhoto(lightboxVisit.id)}
-                  className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 text-xs font-medium text-slate-700 dark:text-slate-200 hover:border-indigo-400 hover:text-indigo-500 transition-colors"
-                >
-                  {lightboxVisit.photoUrl ? 'Replace photo' : '📷 Add photo'}
-                </button>
-                {lightboxVisit.photoUrl && (
-                  <button
-                    onClick={() => onRemovePhoto(lightboxVisit.id)}
-                    className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 text-xs font-medium text-slate-700 dark:text-slate-200 hover:border-red-400 hover:text-red-500 transition-colors"
-                  >
-                    Remove photo
-                  </button>
-                )}
-                <button
-                  onClick={async () => {
-                    const id = lightboxVisit.id;
-                    setLightboxVisitId(null);
-                    await onUncollect(id);
-                  }}
-                  className="ml-auto px-3 py-1.5 rounded-lg text-xs font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                >
-                  Un-collect
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+      {detailVisit && (
+        <VisitDetail
+          visit={detailVisit}
+          hasConversation={hasConversationFor(detailVisit)}
+          onClose={() => setDetailVisitId(null)}
+          onReopenTour={onReopenTour}
+          onPickPhoto={pickPhoto}
+          onRemovePhoto={onRemovePhoto}
+          onUncollect={onUncollect}
+        />
       )}
     </div>
   );
