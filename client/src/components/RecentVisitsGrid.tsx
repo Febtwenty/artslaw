@@ -28,26 +28,24 @@ export default function RecentVisitsGrid({ visits, onOpenVisit, onViewCollection
         </button>
       </div>
 
-      <div className="grid grid-cols-3 gap-2.5">
+      {/* Same bare image wall as /collection's grid on mobile: 2px gutters,
+          square photos, no chrome and no captions. */}
+      <div className="grid grid-cols-3 gap-0.5">
         {tiles.map(visit => (
           <button
             key={visit.id}
             type="button"
             onClick={() => onOpenVisit(visit.id)}
             aria-label={visit.title}
-            className="group relative rounded-xl overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+            title={visit.title}
+            className="focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500"
           >
             <img
               src={visit.photoThumbnailUrl ?? visit.photoUrl!}
               alt=""
               loading="lazy"
-              className="w-full aspect-square object-cover transition-transform group-hover:scale-105"
+              className="w-full aspect-square object-cover"
             />
-            <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2 pt-6 pb-1.5">
-              <span className="block text-[10px] leading-tight text-white text-left line-clamp-2">
-                {visit.title}
-              </span>
-            </span>
           </button>
         ))}
       </div>

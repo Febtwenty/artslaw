@@ -46,11 +46,11 @@ export default function VisitDetail({
       role="dialog"
       aria-modal="true"
       aria-label={visit.title}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 sm:px-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4"
       onClick={onClose}
     >
       <div
-        className="relative w-full h-full overflow-y-auto bg-white dark:bg-slate-800 sm:h-auto sm:max-w-lg sm:rounded-2xl sm:overflow-hidden"
+        className="relative w-full max-w-sm max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-800 rounded-2xl"
         onClick={e => e.stopPropagation()}
       >
         <button
